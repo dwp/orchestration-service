@@ -14,19 +14,19 @@ repositories {
 }
 
 dependencies {
+	// Kotlin things
+	implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	// AWS
 	implementation(platform("software.amazon.awssdk:bom:2.10.89"))
 	implementation("software.amazon.awssdk:regions")
-
+	// Spring
+	implementation("org.springframework.boot:spring-boot-starter-web")
+	implementation("org.springdoc:springdoc-openapi-core:1.1.49")
+	// JWT
 	implementation ("com.auth0:java-jwt:3.10.0")
 	implementation ("com.auth0:jwks-rsa:0.11.0")
-	implementation ("com.fasterxml.jackson.core:jackson-annotations:2.10.2")
-	implementation ("com.fasterxml.jackson.core:jackson-core:2.10.2")
-	implementation ("com.fasterxml.jackson.core:jackson-databind:2.10.2")
-	implementation("org.springframework.boot:spring-boot-starter-web")
-	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
-	implementation("org.jetbrains.kotlin:kotlin-reflect")
-	implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+	// Testing
 	testImplementation("org.springframework.boot:spring-boot-starter-test") {
 		exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
 	}

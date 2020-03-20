@@ -55,5 +55,6 @@ class ConfigurationService {
 }
 
 enum class ConfigKey(val key: String, val isList: Boolean) {
-    AWS_REGION("clusterBroker.awsRegion", false),
+    AWS_REGION("orchestrationService.awsRegion", false),
+    COGNITO_USER_POOL_ID("orchestrationService.userPool", false)
 }
