@@ -16,12 +16,8 @@ import java.security.interfaces.RSAPublicKey
 @RestController
 class ConnectionController {
 
-    @GetMapping("/hello")
-    fun hello() = "hello"
     @PostMapping("/connect")
     fun connect(@RequestHeader(value = "Authorisation") token: String): DecodedJWT {
-
-
         //  fetching the JWKS
         val jwkProvider = UrlJwkProvider(
                 URL("https://cognito-idp.{region}.amazonaws.com/{userPool-Id}/.well-known/jwks.json")
@@ -44,8 +40,5 @@ class ConnectionController {
                 .build()
         println("success!")
         return verifier.verify(token)
-
-
     }
-
 }
