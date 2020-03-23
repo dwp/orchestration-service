@@ -54,3 +54,20 @@ module "ecs-fargate-service" {
   root_dns_prefix      = local.root_dns_prefix[local.environment]
   cert_authority_arn   = data.terraform_remote_state.aws_certificate_authority.outputs.cert_authority.arn
 }
+
+module "ecs-user-host" {
+  source = "../../modules/ecs-user"
+  ami_id = ""
+  auto_scaling = {
+    max_size              = 3
+    min_size              = 1
+    max_instance_lifetime = 604800
+  }
+  common_tags   = local.common_tags
+  instance_type = "t3.medium"
+  name_prefix   = var.name_prefix
+  vpc = {
+    id                  = data.terraform_remote_state.emr_cluster_broker_infra.outputs.vpc.aws_vpc.id
+    aws_subnets_private = data.terraform_remote_state.emr_cluster_broker_infra.outputs.vpc.aws_subnets_private
+  }
+}
