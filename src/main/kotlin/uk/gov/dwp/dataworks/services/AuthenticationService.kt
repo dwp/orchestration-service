@@ -21,8 +21,8 @@ class AuthenticationService {
     @Autowired
     private lateinit var configService: ConfigurationService;
 
-    private lateinit var jwkProvider : JwkProvider;
-    private lateinit var issuerUrl: String;
+    private lateinit var jwkProvider: JwkProvider
+    private lateinit var issuerUrl: String
 
     @PostConstruct
     fun init() {
@@ -31,7 +31,7 @@ class AuthenticationService {
         jwkProvider = UrlJwkProvider(URL("$issuerUrl/.well-known/jwks.json"))
     }
 
-    fun validate(jwtToken: String):DecodedJWT {
+    fun validate(jwtToken: String): DecodedJWT {
         val userJwt = JWT.decode(jwtToken)
         val jwk = jwkProvider.get(userJwt.keyId)
         val publicKey = jwk.publicKey as? RSAPublicKey ?: throw Exception("Invalid key type")
@@ -40,10 +40,9 @@ class AuthenticationService {
             else -> throw JwkException("Unsupported JWK algorithm")
         }
 
-        val verifier = JWT.require(algorithm)
+        return JWT.require(algorithm)
                 .withIssuer(issuerUrl)
                 .build()
-
-        return verifier.verify(userJwt)
+                .verify(userJwt)
     }
 }

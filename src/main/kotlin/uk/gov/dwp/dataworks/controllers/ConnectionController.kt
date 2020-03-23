@@ -2,11 +2,7 @@ package uk.gov.dwp.dataworks.controllers
 
 
 import com.auth0.jwk.SigningKeyNotFoundException
-import com.auth0.jwk.UrlJwkProvider
-import com.auth0.jwt.JWT
-import com.auth0.jwt.algorithms.Algorithm
 import com.auth0.jwt.exceptions.JWTVerificationException
-import com.auth0.jwt.interfaces.DecodedJWT
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
@@ -14,17 +10,11 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.*
 import uk.gov.dwp.dataworks.services.AuthenticationService
-import uk.gov.dwp.dataworks.services.ConfigKey
-import uk.gov.dwp.dataworks.services.ConfigurationService
-import java.net.URL
-import java.security.interfaces.RSAPublicKey
 
 
 @RestController
 class ConnectionController {
 
-    @Autowired
-    private lateinit var configService: ConfigurationService
     @Autowired
     private lateinit var authService: AuthenticationService
 
@@ -44,7 +34,7 @@ class ConnectionController {
             description = "Performs clean-up tasks after a user has disconnected")
     @ApiResponses(value = [
         ApiResponse(responseCode = "200", description = "Success"),
-        ApiResponse(responseCode = "400", description = "Failure, bad request")
+        ApiResponse(responseCode = "401", description = "Failure, unauthorized")
     ])
     @PostMapping("/disconnect")
     @ResponseStatus(HttpStatus.OK)
@@ -54,7 +44,7 @@ class ConnectionController {
 
 
     @ExceptionHandler(JWTVerificationException::class, SigningKeyNotFoundException::class)
-    @ResponseStatus(value = HttpStatus.BAD_REQUEST, reason = "Invalid authentication token")
+    @ResponseStatus(value = HttpStatus.UNAUTHORIZED, reason = "Invalid authentication token")
     fun handleInvalidToken() {
         // Do nothing - annotations handle response
         // TODO: add logging
