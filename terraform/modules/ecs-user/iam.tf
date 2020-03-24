@@ -33,7 +33,7 @@ resource "aws_iam_role_policy_attachment" "cloudwatch_loggin" {
 
 data "aws_iam_policy_document" "ecr" {
   statement {
-    effect = "Allow"
+    effect  = "Allow"
     actions = ["ecr:GetAuthorizationToken"]
 
     resources = ["*"]
