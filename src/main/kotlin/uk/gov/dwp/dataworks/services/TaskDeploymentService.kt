@@ -2,6 +2,7 @@ package uk.gov.dwp.dataworks.services
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider
 import software.amazon.awssdk.auth.credentials.AwsSessionCredentials
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider
 import software.amazon.awssdk.regions.Region
@@ -10,10 +11,11 @@ import software.amazon.awssdk.services.ecs.model.*
 
 @Service
 class TaskDeploymentService {
-    val awsRegion: Region = kotlin.runCatching { Region.of(System.getenv(ConfigKey.AWS_REGION.toString())) }.getOrDefault(Region.EU_WEST_2)
-    //      TODO : Export to env variable
     @Autowired
-    lateinit var configService: ConfigurationService
+    lateinit var credentialsService: CredentialsService
+
+    val awsRegion: Region = kotlin.runCatching { Region.of(System.getenv(ConfigKey.AWS_REGION.toString()))}.getOrDefault(Region.EU_WEST_2)
+    //      TODO : Export to env variable
 
     fun createService (ecs_cluster_name: String, user_name: String, ecsClient: EcsClient) {
 
@@ -32,13 +34,10 @@ class TaskDeploymentService {
 
     fun taskDefinitionWithOverride(ecs_cluster_name: String, emr_cluster_host_name: String , user_name: String) {
 
-        val access_key = configService.getStringConfig(ConfigKey.ACCESS_KEY)
-        val secret_key = configService.getStringConfig(ConfigKey.SECRET_ACCESS_KEY)
-        val session_token = configService.getStringConfig(ConfigKey.SESSION_TOKEN)
+        val credentials: AwsCredentialsProvider = credentialsService.getSessionCredentials()
 
-        val awsSessionCredentials = AwsSessionCredentials.create(access_key, secret_key, session_token)
-        val scp = StaticCredentialsProvider.create(awsSessionCredentials)
-        val ecsClient = EcsClient.builder().credentialsProvider(scp).region(awsRegion).build()
+        val ecsClient = EcsClient.builder().credentialsProvider(credentials).region(awsRegion).build()
+//        val ecsClient = EcsClient.builder().region(awsRegion).build()
 
         createService(emr_cluster_host_name, user_name, ecsClient)
 
