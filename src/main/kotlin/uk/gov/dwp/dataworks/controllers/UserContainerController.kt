@@ -21,7 +21,7 @@ class UserContainerController {
     @Autowired
     lateinit var configService: ConfigurationService
 
-    @PostMapping("/fesreq")
+    @PostMapping("/frontendrequest")
     fun launchTask(@RequestBody requestBody: UserRequestFramework){
         taskDeploymentService.taskDefinitionWithOverride(requestBody.getEcs_cluster_name(), requestBody.getEmr_cluster_host_name(), requestBody.getUser_name())
     }

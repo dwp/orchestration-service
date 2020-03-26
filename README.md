@@ -2,7 +2,7 @@
 The service orchestrator for providing remote access into the analytical environment
 
 ###Endpoint ot submit request fo user containers
- To be submitted as a post request to `/fesreq`  
+ To be submitted as a post request to `/frontendrequest`  
  
  Body of request must contain the following fields:
   - `ecs_cluster_name`
