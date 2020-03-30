@@ -1,28 +1,8 @@
-data "aws_iam_policy_document" "task_definition_role" {
-  statement {
-    actions = [
-      "ec2:DescribeImages",
-    ]
-
-    resources = [
-      "*",
-    ]
-  }
+resource "aws_iam_role" "task_execution_iam_role" {
+  name="${var.name_prefix}-td-role"
+  assume_role_policy = data.aws_iam_policy_document.task_execution_iam_policy.json
 }
-
-data "aws_iam_policy_document" "ui_task_role" {
-  statement {
-    actions = [
-      "ec2:DescribeImages",
-    ]
-
-    resources = [
-      "*",
-    ]
-  }
-}
-
-data "aws_iam_policy_document" "ui_task_execution_role" {
+data "aws_iam_policy_document" "task_execution_iam_policy" {
   statement {
     actions = [
       "ecr:GetAuthorizationToken",
@@ -38,8 +18,11 @@ data "aws_iam_policy_document" "ui_task_execution_role" {
     ]
   }
 }
-
-data "aws_iam_policy_document" "ecs_ui_service_role" {
+resource "aws_iam_role" "ui_task_iam_role" {
+  name="${var.name_prefix}-task-role"
+  assume_role_policy = data.aws_iam_policy_document.ui_task_policy.json
+}
+data "aws_iam_policy_document" "ui_task_policy" {
   statement {
     actions = [
       "ec2:DescribeImages",
@@ -48,17 +31,5 @@ data "aws_iam_policy_document" "ecs_ui_service_role" {
     resources = [
       "*",
     ]
-  }
-}
-
-
-data "aws_iam_policy_document" "assume_role_ec2" {
-  statement {
-    actions = ["sts:AssumeRole"]
-
-    principals {
-      identifiers = ["ec2.amazonaws.com"]
-      type        = "Service"
-    }
   }
 }

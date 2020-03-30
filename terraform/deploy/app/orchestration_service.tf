@@ -87,14 +87,16 @@ module "ecs-user-host" {
 ## ---------------------------------------------------------------------------------------------------------------------
 ## ECS UserService
 ## ---------------------------------------------------------------------------------------------------------------------
-module "UserContainerController"{
-  source                       = "../../modules/fargate-task-definition"
-  name_prefix                  = var.name_prefix
-  container_name               = var.name_prefix
-  container_image              = local.container_image
-  container_port               = var.container_port
-  container_cpu                = var.container_cpu
-  container_memory             = var.container_memory
-  role_arn                     = "arn:aws:iam::${local.account[local.environment]}:role/${var.assume_role}"
-  account                      = lookup(local.account, local.environment)
+module "ec2_task_definition"{
+  source                       = "../../modules/ec2-task-definition"
+  region                       = var.region
+  name_prefix                  = "${var.name_prefix}-task-definition"
+//  role_arn                     = "arn:aws:iam::${local.account[local.environment]}:role/${var.assume_role}"
+//  account                      = lookup(local.account, local.environment)
+
+
+  chrome_image                 = "${local.account[local.environment]}.dkr.ecr.${var.region}.amazonaws.com/aws-analytical-env/hardened-guac-chrome"
+  guacd_image                 = "${local.account[local.environment]}.dkr.ecr.${var.region}.amazonaws.com/aws-analytical-env/guacd"
+  jupyterhub_image                 = "${local.account[local.environment]}.dkr.ecr.${var.region}.amazonaws.com/aws-analytical-env/jupyterhub"
 }
+

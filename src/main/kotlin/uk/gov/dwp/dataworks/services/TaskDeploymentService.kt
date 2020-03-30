@@ -16,6 +16,9 @@ class TaskDeploymentService {
 
     fun createService (ecs_cluster_name: String, user_name: String, ecsClient: EcsClient) {
 
+//        ecsClient.
+//        val alb : LoadBalancer = LoadBalancer().toBuilder().build()
+//        .loadBalancers().
         val serviceBuilder = CreateServiceRequest.builder().cluster(ecs_cluster_name).serviceName("${user_name}_test").taskDefinition("mhf_sample_task").desiredCount(1).build()
 
         println("Creating Service...")
@@ -27,7 +30,8 @@ class TaskDeploymentService {
         }
     }
 
-    fun taskDefinitionWithOverride(ecs_cluster_name: String, emr_cluster_host_name: String , user_name: String) {
+
+    fun taskDefinitionWithOverride(ecs_cluster_name: String, emr_cluster_host_name: String , user_name: String, jupyterCpu : Int=512, jupyterMemory: Int = 512) {
 
         val credentials: AwsCredentialsProvider = credentialsService.getSessionCredentials()
 
@@ -36,7 +40,7 @@ class TaskDeploymentService {
         createService(emr_cluster_host_name, user_name, ecsClient)
 
         val clusterResponse = ecsClient.describeClusters(DescribeClustersRequest.builder().clusters(ecs_cluster_name).build());
-
+   //     val ecsClient = EcsClient.builder().region(awsRegion).build()
         val clusterArn = clusterResponse.clusters()[0].clusterArn()
         println("clusterResponse = ${clusterResponse}")
         println("clusterArn = ${clusterArn}")
@@ -59,6 +63,8 @@ class TaskDeploymentService {
         val jupyterOverride: ContainerOverride = ContainerOverride.builder()
                 .name("jupyterHub")
                 .environment(userName, emrClusterHostName)
+                .cpu(jupyterCpu)
+                .memory(jupyterMemory)
                 .build()
         val guacDOverride: ContainerOverride = ContainerOverride.builder()
                 .name("guacD")
@@ -75,7 +81,7 @@ class TaskDeploymentService {
                 .launchType("EC2")
                 .overrides(overrides)
                 .build()
-
+            //    .taskDefinition("ui_service")
         println("Starting Task...")
         try {
             val response: RunTaskResponse = ecsClient.runTask(request)
