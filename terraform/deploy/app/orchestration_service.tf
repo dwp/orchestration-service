@@ -87,3 +87,14 @@ module "ecs-user-host" {
 ## ---------------------------------------------------------------------------------------------------------------------
 ## ECS UserService
 ## ---------------------------------------------------------------------------------------------------------------------
+module "UserContainerController"{
+  source                       = "../../modules/fargate-task-definition"
+  name_prefix                  = var.name_prefix
+  container_name               = var.name_prefix
+  container_image              = local.container_image
+  container_port               = var.container_port
+  container_cpu                = var.container_cpu
+  container_memory             = var.container_memory
+  role_arn                     = "arn:aws:iam::${local.account[local.environment]}:role/${var.assume_role}"
+  account                      = lookup(local.account, local.environment)
+}

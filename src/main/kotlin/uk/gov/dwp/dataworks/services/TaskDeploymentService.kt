@@ -3,8 +3,6 @@ package uk.gov.dwp.dataworks.services
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider
-import software.amazon.awssdk.auth.credentials.AwsSessionCredentials
-import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.ecs.EcsClient
 import software.amazon.awssdk.services.ecs.model.*
@@ -15,11 +13,8 @@ class TaskDeploymentService {
     lateinit var credentialsService: CredentialsService
 
     val awsRegion: Region = kotlin.runCatching { Region.of(System.getenv(ConfigKey.AWS_REGION.toString()))}.getOrDefault(Region.EU_WEST_2)
-    //      TODO : Export to env variable
 
     fun createService (ecs_cluster_name: String, user_name: String, ecsClient: EcsClient) {
-
-//    val ecsClient = EcsClient.builder().region(awsRegion).build()
 
         val serviceBuilder = CreateServiceRequest.builder().cluster(ecs_cluster_name).serviceName("${user_name}_test").taskDefinition("mhf_sample_task").desiredCount(1).build()
 
@@ -37,7 +32,6 @@ class TaskDeploymentService {
         val credentials: AwsCredentialsProvider = credentialsService.getSessionCredentials()
 
         val ecsClient = EcsClient.builder().credentialsProvider(credentials).region(awsRegion).build()
-//        val ecsClient = EcsClient.builder().region(awsRegion).build()
 
         createService(emr_cluster_host_name, user_name, ecsClient)
 
@@ -76,7 +70,6 @@ class TaskDeploymentService {
                 .build()
 
         val request: RunTaskRequest = RunTaskRequest.builder()
-//                .taskDefinition("ui_service")
                 .taskDefinition("mhf_sample_task") // USING FOR TESTING BEFORE TERRAFORM
                 .cluster(ecs_cluster_name)
                 .launchType("EC2")
