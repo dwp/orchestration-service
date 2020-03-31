@@ -61,6 +61,6 @@ enum class ConfigKey(val key: String, val isList: Boolean) {
     //   Access token env vars
     ACCESS_KEY("ACCESS_KEY", false),
     SECRET_ACCESS_KEY("SECRET_ACCESS_KEY", false),
-    SESSION_TOKEN("SESSION_TOKEN", false)
-
+    SESSION_TOKEN("SESSION_TOKEN", false),
+    EMR_CLUSTER_HOST_NAME("EMR_CLUSTER_HOST_NAME", false)
 }
