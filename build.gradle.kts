@@ -21,6 +21,9 @@ dependencies {
 	// AWS
 	implementation(platform("software.amazon.awssdk:bom:2.10.89"))
 	implementation("software.amazon.awssdk:regions")
+	implementation("software.amazon.awssdk:codegen")
+	implementation("software.amazon.awssdk:elasticloadbalancing")
+
 	// Spring
 	implementation("org.springframework.boot:spring-boot-starter-web")
 	implementation("org.springdoc:springdoc-openapi-core:1.1.49")

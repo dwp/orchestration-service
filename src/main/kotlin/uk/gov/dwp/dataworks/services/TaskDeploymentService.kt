@@ -7,10 +7,11 @@ import software.amazon.awssdk.awscore.AwsRequest
 import software.amazon.awssdk.core.SdkRequest
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.ecs.EcsClient
-import software.amazon.awssdk.services.ecs.model.CreateServiceRequest
-import software.amazon.awssdk.services.ecs.model.DescribeClustersRequest
-import software.amazon.awssdk.services.ecs.model.LoadBalancer
+import software.amazon.awssdk.services.ecs.model.*
+import software.amazon.awssdk.services.elasticloadbalancing.ElasticLoadBalancingClient
+
 import java.net.http.HttpRequest
+
 
 
 @Service
@@ -21,12 +22,10 @@ class TaskDeploymentService {
     val awsRegion: Region = kotlin.runCatching { Region.of(System.getenv(ConfigKey.AWS_REGION.toString()))}.getOrDefault(Region.EU_WEST_2)
 
     fun createService (ecs_cluster_name: String, user_name: String, ecsClient: EcsClient) {
-
-        val alb: LoadBalancer = LoadBalancer.builder().loadBalancerName("***TO ADD***").containerName("***TO ADD***").containerPort(8000).build()
+        val alb: LoadBalancer = LoadBalancer.builder().loadBalancerName("***TO_ADD***").containerName("***TO_ADD***").containerPort(8000).build()
 
         val serviceBuilder = CreateServiceRequest.builder().cluster(ecs_cluster_name).serviceName("${user_name}_test").taskDefinition("mhf_sample_task").loadBalancers(alb).desiredCount(1).build()
         println("Creating Service...")
-
 
         try {
             val service = ecsClient.createService(serviceBuilder)
@@ -36,12 +35,19 @@ class TaskDeploymentService {
         }
     }
 
+    fun createAlbRuleAndPath(ecsClient: EcsClient, loadBalancer: LoadBalancer, user_name: String): String {
+
+        return "lol"
+
+    }
+
 
     fun taskDefinitionWithOverride(ecs_cluster_name: String, emr_cluster_host_name: String = "" , user_name: String = "", jupyterCpu : Int=512, jupyterMemory: Int = 512) {
 
         val credentials: AwsCredentialsProvider = credentialsService.getSessionCredentials()
 
         val ecsClient = EcsClient.builder().credentialsProvider(credentials).region(awsRegion).build()
+        val albClient : ElasticLoadBalancingClient = ElasticLoadBalancingClient.builder().credentialsProvider(credentials).region(awsRegion).build()
 
         createService(ecs_cluster_name, user_name, ecsClient)
 
@@ -50,6 +56,8 @@ class TaskDeploymentService {
         val clusterArn = clusterResponse.clusters()[0].clusterArn()
         println("clusterResponse = ${clusterResponse}")
         println("clusterArn = ${clusterArn}")
+
+        ecsClient.describeContainerInstances(DescribeContainerInstancesRequest.builder().cluster(clusterArn).build())
 
 
 //        val userName: KeyValuePair = KeyValuePair.builder()
