@@ -8,7 +8,9 @@ import software.amazon.awssdk.core.SdkRequest
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.ecs.EcsClient
 import software.amazon.awssdk.services.ecs.model.*
-import software.amazon.awssdk.services.elasticloadbalancing.ElasticLoadBalancingClient
+import software.amazon.awssdk.services.ecs.model.LoadBalancer
+import software.amazon.awssdk.services.elasticloadbalancingv2.ElasticLoadBalancingV2Client
+import software.amazon.awssdk.services.elasticloadbalancingv2.model.*
 
 import java.net.http.HttpRequest
 
@@ -21,43 +23,80 @@ class TaskDeploymentService {
 
     val awsRegion: Region = kotlin.runCatching { Region.of(System.getenv(ConfigKey.AWS_REGION.toString()))}.getOrDefault(Region.EU_WEST_2)
 
-    fun createService (ecs_cluster_name: String, user_name: String, ecsClient: EcsClient) {
-        val alb: LoadBalancer = LoadBalancer.builder().loadBalancerName("***TO_ADD***").containerName("***TO_ADD***").containerPort(8000).build()
+    fun createService (ecs_cluster_name: String, user_name: String, ecsClient: EcsClient, targetGroupArn: String) {
 
-        val serviceBuilder = CreateServiceRequest.builder().cluster(ecs_cluster_name).serviceName("${user_name}_test").taskDefinition("mhf_sample_task").loadBalancers(alb).desiredCount(1).build()
+        val alb: LoadBalancer = LoadBalancer.builder().targetGroupArn(targetGroupArn).containerPort(443).build()
+
+        val serviceBuilder = CreateServiceRequest.builder().cluster(ecs_cluster_name).loadBalancers(alb).serviceName("${user_name}_test").taskDefinition("mhf_sample_task").loadBalancers(alb).desiredCount(1).build()
         println("Creating Service...")
 
         try {
             val service = ecsClient.createService(serviceBuilder)
             println("service.responseMetadata = ${service.responseMetadata()}")
         } catch (e: Exception) {
-            e.printStackTrace()
+            println(e.message)
+//            e.printStackTrace()
         }
     }
 
-    fun createAlbRuleAndPath(ecsClient: EcsClient, loadBalancer: LoadBalancer, user_name: String): String {
 
-        return "lol"
-
-    }
-
-
-    fun taskDefinitionWithOverride(ecs_cluster_name: String, emr_cluster_host_name: String = "" , user_name: String = "", jupyterCpu : Int=512, jupyterMemory: Int = 512) {
+    fun taskDefinitionWithOverride(ecs_cluster_name: String, emr_cluster_host_name: String = "" , albName :String = "orchestration-service-lb", user_name: String = "test-user", jupyterCpu : Int=512, jupyterMemory: Int = 512) {
 
         val credentials: AwsCredentialsProvider = credentialsService.getSessionCredentials()
 
-        val ecsClient = EcsClient.builder().credentialsProvider(credentials).region(awsRegion).build()
-        val albClient : ElasticLoadBalancingClient = ElasticLoadBalancingClient.builder().credentialsProvider(credentials).region(awsRegion).build()
+        val ecsClient: EcsClient = EcsClient.builder().credentialsProvider(credentials).region(awsRegion).build()
+        val albClient: ElasticLoadBalancingV2Client = ElasticLoadBalancingV2Client.builder().credentialsProvider(credentials).region(awsRegion).build()
 
-        createService(ecs_cluster_name, user_name, ecsClient)
+        println("Getting alb information...")
 
-        val clusterResponse = ecsClient.describeClusters(DescribeClustersRequest.builder().clusters(ecs_cluster_name).build());
-   //     val ecsClient = EcsClient.builder().region(awsRegion).build()
-        val clusterArn = clusterResponse.clusters()[0].clusterArn()
-        println("clusterResponse = ${clusterResponse}")
-        println("clusterArn = ${clusterArn}")
+        val albRequest = DescribeLoadBalancersRequest.builder().names("orchestration-service-lb").build()
+        val albResponse: DescribeLoadBalancersResponse = albClient.describeLoadBalancers(albRequest)
 
-        ecsClient.describeContainerInstances(DescribeContainerInstancesRequest.builder().cluster(clusterArn).build())
+        println(albResponse)
+        println("Getting Listener information...")
+
+        val albListenerRequest = DescribeListenersRequest.builder().loadBalancerArn(albResponse.loadBalancers()[0].loadBalancerArn()).build()
+        val albListenerResponse = albClient.describeListeners(albListenerRequest)
+
+//      TODO - get weight from forward config in response to above ^^^
+
+        println(albListenerResponse)
+        println("Creating target group...")
+
+        val tgRequest = CreateTargetGroupRequest.builder().name("$user_name-target-group").protocol("HTTPS").vpcId(albResponse.loadBalancers()[0].vpcId()).port(443).build()
+        val targetGroupResponse = albClient.createTargetGroup(tgRequest)
+
+        println(targetGroupResponse)
+        println("Getting target group arn...")
+
+        val albTargetGroupRequest = albClient.describeTargetGroups(DescribeTargetGroupsRequest.builder().names("$user_name-target-group").build())
+        val albTargetGroupArn = albTargetGroupRequest.targetGroups()[0].targetGroupArn()
+
+        println(albTargetGroupArn)
+
+
+//        TODO - Add new target group to alb that points to Guacd container then add arn to userTargetGroup
+        val pathPattern = PathPatternConditionConfig.builder().values("/$user_name/*").build()
+        val albRuleCondition :RuleCondition = RuleCondition.builder().pathPatternConfig(pathPattern).build()
+        val userTargetGroup = TargetGroupTuple.builder().targetGroupArn(albTargetGroupArn).build()
+        val forwardAction = ForwardActionConfig.builder().targetGroups(userTargetGroup).build()
+        val albRuleAction = Action.builder().type("instance").forwardConfig(forwardAction).build()
+
+        println("Creating listener rule...")
+
+        val createRule = albClient.createRule(CreateRuleRequest.builder().listenerArn(albListenerResponse.listeners()[0].listenerArn()).conditions(albRuleCondition).actions(albRuleAction).build())
+        println(createRule)
+//        println(albClient.describeLoadBalancers(DescribeLoadBalancersRequest.builder().loadBalancerArns(alb.loadBalancerArn()).build()))
+
+////        createService(ecs_cluster_name, user_name, ecsClient, albTargetGroupArn)
+//
+//        val clusterResponse = ecsClient.describeClusters(DescribeClustersRequest.builder().clusters(ecs_cluster_name).build());
+//   //     val ecsClient = EcsClient.builder().region(awsRegion).build()
+//        val clusterArn = clusterResponse.clusters()[0].clusterArn()
+//        println("clusterResponse = ${clusterResponse}")
+//        println("clusterArn = ${clusterArn}")
+
+//        ecsClient.describeContainerInstances(DescribeContainerInstancesRequest.builder().cluster(clusterArn).build())
 
 
 //        val userName: KeyValuePair = KeyValuePair.builder()
