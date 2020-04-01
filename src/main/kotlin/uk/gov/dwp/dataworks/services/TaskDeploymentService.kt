@@ -77,15 +77,18 @@ class TaskDeploymentService {
 
 //        TODO - Add new target group to alb that points to Guacd container then add arn to userTargetGroup
         val pathPattern = PathPatternConditionConfig.builder().values("/$user_name/*").build()
-        val albRuleCondition :RuleCondition = RuleCondition.builder().pathPatternConfig(pathPattern).build()
+        val albRuleCondition :RuleCondition = RuleCondition.builder().field("path-pattern").pathPatternConfig(pathPattern).build()
         val userTargetGroup = TargetGroupTuple.builder().targetGroupArn(albTargetGroupArn).build()
         val forwardAction = ForwardActionConfig.builder().targetGroups(userTargetGroup).build()
-        val albRuleAction = Action.builder().type("instance").forwardConfig(forwardAction).build()
+        val albRuleAction = Action.builder().type("forward").forwardConfig(forwardAction).build()
 
         println("Creating listener rule...")
 
-        val createRule = albClient.createRule(CreateRuleRequest.builder().listenerArn(albListenerResponse.listeners()[0].listenerArn()).conditions(albRuleCondition).actions(albRuleAction).build())
+        val createRule = albClient.createRule(CreateRuleRequest.builder().listenerArn(albListenerResponse.listeners()[0].listenerArn()).priority(123).conditions(albRuleCondition).actions(albRuleAction).build())
         println(createRule)
+
+
+
 //        println(albClient.describeLoadBalancers(DescribeLoadBalancersRequest.builder().loadBalancerArns(alb.loadBalancerArn()).build()))
 
 ////        createService(ecs_cluster_name, user_name, ecsClient, albTargetGroupArn)
