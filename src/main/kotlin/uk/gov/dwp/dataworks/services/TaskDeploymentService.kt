@@ -39,19 +39,17 @@ class TaskDeploymentService {
         }
     }
 
-    private fun getPriorityVal (rulesResponse : DescribeRulesResponse) : Int {
-        var priorityVal : Int = 0;
+    fun getPriorityVal (rulesResponse : DescribeRulesResponse) : Int {
+
         var consecVals : Int = 1
         for (i in rulesResponse.rules()) {
             println(i.priority())
             if (i.priority() != "default") {
                 var intVal = Integer.parseInt(i.priority())
-                if (intVal >= priorityVal) priorityVal = intVal + 1
                 if (intVal == consecVals) consecVals = consecVals + 1
             }
         }
-        if (consecVals < priorityVal) priorityVal = consecVals
-        return priorityVal
+        return consecVals;
     }
 
     fun taskDefinitionWithOverride(ecs_cluster_name: String, emr_cluster_host_name: String = "" , albName :String = "orchestration-service-lb", user_name: String = "test-user", jupyterCpu : Int=512, jupyterMemory: Int = 512) {
@@ -100,7 +98,7 @@ class TaskDeploymentService {
 //        println(albClient.describeLoadBalancers(DescribeLoadBalancersRequest.builder().loadBalancerArns(alb.loadBalancerArn()).build()))
 
 ////        createService(ecs_cluster_name, user_name, ecsClient, albTargetGroupArn)
-//
+//          TODO: work out if we need the below 6-7 lines
 //        val clusterResponse = ecsClient.describeClusters(DescribeClustersRequest.builder().clusters(ecs_cluster_name).build());
 //   //     val ecsClient = EcsClient.builder().region(awsRegion).build()
 //        val clusterArn = clusterResponse.clusters()[0].clusterArn()

@@ -46,9 +46,7 @@ dependencies {
 	implementation ("software.amazon.awssdk:ecs")
 //	implementation ("software.amazon.awssdk:auth")
 	implementation ("software.amazon.awssdk:s3")
-	testImplementation("org.springframework.boot:spring-boot-starter-test") {
-		exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
-	}
+	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.springframework.batch:spring-batch-test")
 	testImplementation("io.kotlintest:kotlintest-runner-junit5:3.3.3")
 	testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0")
@@ -64,4 +62,10 @@ tasks.withType<KotlinCompile> {
 		jvmTarget = "1.8"
 	}
 
+
+}
+tasks.withType<Test> {
+	this.testLogging {
+		this.showStandardStreams = true
+	}
 }

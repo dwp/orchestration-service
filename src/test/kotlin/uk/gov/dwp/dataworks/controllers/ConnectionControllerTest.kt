@@ -19,7 +19,7 @@ import uk.gov.dwp.dataworks.services.ConfigurationService
 
 @RunWith(SpringRunner::class)
 @WebMvcTest(ConnectionController::class)
-class ClusterCreationControllerTest {
+class ConnectionControllerTest {
     @Autowired
     private lateinit var mvc: MockMvc
 
