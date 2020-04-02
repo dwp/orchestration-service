@@ -23,7 +23,7 @@ class TaskDeploymentService {
 
     val awsRegion: Region = kotlin.runCatching { Region.of(System.getenv(ConfigKey.AWS_REGION.toString()))}.getOrDefault(Region.EU_WEST_2)
 
-    fun createService (ecs_cluster_name: String, user_name: String, ecsClient: EcsClient, targetGroupArn: String) {
+    private fun createService (ecs_cluster_name: String, user_name: String, ecsClient: EcsClient, targetGroupArn: String) {
 
         val alb: LoadBalancer = LoadBalancer.builder().targetGroupArn(targetGroupArn).containerPort(443).build()
 
@@ -39,6 +39,20 @@ class TaskDeploymentService {
         }
     }
 
+    private fun getPriorityVal (rulesResponse : DescribeRulesResponse) : Int {
+        var priorityVal : Int = 0;
+        var consecVals : Int = 1
+        for (i in rulesResponse.rules()) {
+            println(i.priority())
+            if (i.priority() != "default") {
+                var intVal = Integer.parseInt(i.priority())
+                if (intVal >= priorityVal) priorityVal = intVal + 1
+                if (intVal == consecVals) consecVals = consecVals + 1
+            }
+        }
+        if (consecVals < priorityVal) priorityVal = consecVals
+        return priorityVal
+    }
 
     fun taskDefinitionWithOverride(ecs_cluster_name: String, emr_cluster_host_name: String = "" , albName :String = "orchestration-service-lb", user_name: String = "test-user", jupyterCpu : Int=512, jupyterMemory: Int = 512) {
 
@@ -58,8 +72,6 @@ class TaskDeploymentService {
         val albListenerRequest = DescribeListenersRequest.builder().loadBalancerArn(albResponse.loadBalancers()[0].loadBalancerArn()).build()
         val albListenerResponse = albClient.describeListeners(albListenerRequest)
 
-//      TODO - get weight from forward config in response to above ^^^
-
         println(albListenerResponse)
         println("Creating target group...")
 
@@ -74,8 +86,6 @@ class TaskDeploymentService {
 
         println(albTargetGroupArn)
 
-
-//        TODO - Add new target group to alb that points to Guacd container then add arn to userTargetGroup
         val pathPattern = PathPatternConditionConfig.builder().values("/$user_name/*").build()
         val albRuleCondition :RuleCondition = RuleCondition.builder().field("path-pattern").pathPatternConfig(pathPattern).build()
         val userTargetGroup = TargetGroupTuple.builder().targetGroupArn(albTargetGroupArn).build()
@@ -84,10 +94,8 @@ class TaskDeploymentService {
 
         println("Creating listener rule...")
 
-        val createRule = albClient.createRule(CreateRuleRequest.builder().listenerArn(albListenerResponse.listeners()[0].listenerArn()).priority(123).conditions(albRuleCondition).actions(albRuleAction).build())
-        println(createRule)
-
-
+        var rulesResponse = albClient.describeRules(DescribeRulesRequest.builder().listenerArn(albListenerResponse.listeners()[0].listenerArn()).build())
+        val createRule = albClient.createRule(CreateRuleRequest.builder().listenerArn(albListenerResponse.listeners()[0].listenerArn()).priority(getPriorityVal(rulesResponse)).conditions(albRuleCondition).actions(albRuleAction).build())
 
 //        println(albClient.describeLoadBalancers(DescribeLoadBalancersRequest.builder().loadBalancerArns(alb.loadBalancerArn()).build()))
 
