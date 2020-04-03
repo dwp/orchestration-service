@@ -1,5 +1,5 @@
 resource "aws_ecs_task_definition" "service" {
-  family = "${var.name_prefix}-ui_service"
+  family = "${var.name_prefix}-ui-service"
   execution_role_arn = aws_iam_role.task_execution_iam_role.arn
   task_role_arn = aws_iam_role.ui_task_iam_role.arn
   container_definitions = <<TASK_DEFINITION
@@ -21,7 +21,7 @@ resource "aws_ecs_task_definition" "service" {
 
          },
       {
-          "name": "guacD",
+          "name": "guacd",
           "image": "${var.guacd_image}",
           "cpu": 128,
           "memory": 128,

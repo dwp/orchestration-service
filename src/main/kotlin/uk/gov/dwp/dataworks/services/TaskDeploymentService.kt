@@ -14,8 +14,6 @@ import software.amazon.awssdk.services.elasticloadbalancingv2.model.*
 
 import java.net.http.HttpRequest
 
-
-
 @Service
 class TaskDeploymentService {
     @Autowired
@@ -34,8 +32,7 @@ class TaskDeploymentService {
             val service = ecsClient.createService(serviceBuilder)
             println("service.responseMetadata = ${service.responseMetadata()}")
         } catch (e: Exception) {
-            println(e.message)
-//            e.printStackTrace()
+            e.printStackTrace()
         }
     }
 
@@ -43,16 +40,16 @@ class TaskDeploymentService {
 
         var consecVals : Int = 1
         for (i in rulesResponse.rules()) {
-            println(i.priority())
             if (i.priority() != "default") {
                 var intVal = Integer.parseInt(i.priority())
                 if (intVal == consecVals) consecVals = consecVals + 1
             }
         }
+        if (consecVals >= 1000) throw Exception("The upper limit of 1000 rules has been reached for this load balancer.")
         return consecVals;
     }
 
-    fun taskDefinitionWithOverride(ecs_cluster_name: String, emr_cluster_host_name: String = "" , albName :String = "orchestration-service-lb", user_name: String = "test-user", jupyterCpu : Int=512, jupyterMemory: Int = 512) {
+    fun taskDefinitionWithOverride(ecs_cluster_name: String, emr_cluster_host_name: String, albName :String, user_name: String, jupyterCpu : Int=512, jupyterMemory: Int = 512) {
 
         val credentials: AwsCredentialsProvider = credentialsService.getSessionCredentials()
 
@@ -64,25 +61,20 @@ class TaskDeploymentService {
         val albRequest = DescribeLoadBalancersRequest.builder().names("orchestration-service-lb").build()
         val albResponse: DescribeLoadBalancersResponse = albClient.describeLoadBalancers(albRequest)
 
-        println(albResponse)
         println("Getting Listener information...")
 
         val albListenerRequest = DescribeListenersRequest.builder().loadBalancerArn(albResponse.loadBalancers()[0].loadBalancerArn()).build()
         val albListenerResponse = albClient.describeListeners(albListenerRequest)
 
-        println(albListenerResponse)
         println("Creating target group...")
 
         val tgRequest = CreateTargetGroupRequest.builder().name("$user_name-target-group").protocol("HTTPS").vpcId(albResponse.loadBalancers()[0].vpcId()).port(443).build()
         val targetGroupResponse = albClient.createTargetGroup(tgRequest)
 
-        println(targetGroupResponse)
         println("Getting target group arn...")
 
         val albTargetGroupRequest = albClient.describeTargetGroups(DescribeTargetGroupsRequest.builder().names("$user_name-target-group").build())
         val albTargetGroupArn = albTargetGroupRequest.targetGroups()[0].targetGroupArn()
-
-        println(albTargetGroupArn)
 
         val pathPattern = PathPatternConditionConfig.builder().values("/$user_name/*").build()
         val albRuleCondition :RuleCondition = RuleCondition.builder().field("path-pattern").pathPatternConfig(pathPattern).build()
@@ -95,61 +87,52 @@ class TaskDeploymentService {
         var rulesResponse = albClient.describeRules(DescribeRulesRequest.builder().listenerArn(albListenerResponse.listeners()[0].listenerArn()).build())
         val createRule = albClient.createRule(CreateRuleRequest.builder().listenerArn(albListenerResponse.listeners()[0].listenerArn()).priority(getPriorityVal(rulesResponse)).conditions(albRuleCondition).actions(albRuleAction).build())
 
-//        println(albClient.describeLoadBalancers(DescribeLoadBalancersRequest.builder().loadBalancerArns(alb.loadBalancerArn()).build()))
-
-////        createService(ecs_cluster_name, user_name, ecsClient, albTargetGroupArn)
-//          TODO: work out if we need the below 6-7 lines
-//        val clusterResponse = ecsClient.describeClusters(DescribeClustersRequest.builder().clusters(ecs_cluster_name).build());
-//   //     val ecsClient = EcsClient.builder().region(awsRegion).build()
-//        val clusterArn = clusterResponse.clusters()[0].clusterArn()
-//        println("clusterResponse = ${clusterResponse}")
-//        println("clusterArn = ${clusterArn}")
-
-//        ecsClient.describeContainerInstances(DescribeContainerInstancesRequest.builder().cluster(clusterArn).build())
+       createService(ecs_cluster_name, user_name, ecsClient, albTargetGroupArn)
 
 
-//        val userName: KeyValuePair = KeyValuePair.builder()
-//                .name("user_name")
-//                .value(user_name)
-//                .build()
-//
-//        val emrClusterHostName: KeyValuePair = KeyValuePair.builder()
-//                .name("emr_cluster_host_name")
-//                .value(emr_cluster_host_name)
-//                .build()
-//
-//        val chromeOverride: ContainerOverride = ContainerOverride.builder()
-//                .name("headless_chrome")
-//                .environment(userName)
-//                .build()
-//        val jupyterOverride: ContainerOverride = ContainerOverride.builder()
-//                .name("jupyterHub")
-//                .environment(userName, emrClusterHostName)
-//                .cpu(jupyterCpu)
-//                .memory(jupyterMemory)
-//                .build()
-//        val guacDOverride: ContainerOverride = ContainerOverride.builder()
-//                .name("guacD")
-//                .environment(userName)
-//                .build()
-//
-//        val overrides: TaskOverride = TaskOverride.builder()
-//                .containerOverrides(guacDOverride, chromeOverride, jupyterOverride)
-//                .build()
-//
-//        val request: RunTaskRequest = RunTaskRequest.builder()
+        val userName: KeyValuePair = KeyValuePair.builder()
+                .name("user_name")
+                .value(user_name)
+                .build()
+
+        val emrClusterHostName: KeyValuePair = KeyValuePair.builder()
+                .name("emr_cluster_host_name")
+                .value(emr_cluster_host_name)
+                .build()
+
+        val chromeOverride: ContainerOverride = ContainerOverride.builder()
+                .name("headless_chrome")
+                .environment(userName)
+                .build()
+        val jupyterOverride: ContainerOverride = ContainerOverride.builder()
+                .name("jupyterHub")
+                .environment(userName, emrClusterHostName)
+                .cpu(jupyterCpu)
+                .memory(jupyterMemory)
+                .build()
+        val guacDOverride: ContainerOverride = ContainerOverride.builder()
+                .name("guacd")
+                .environment(userName)
+                .build()
+
+        val overrides: TaskOverride = TaskOverride.builder()
+                .containerOverrides(guacDOverride, chromeOverride, jupyterOverride)
+                .build()
+
+        val request: RunTaskRequest = RunTaskRequest.builder()
 //                .taskDefinition("mhf_sample_task") // USING FOR TESTING BEFORE TERRAFORM
-//                .cluster(ecs_cluster_name)
-//                .launchType("EC2")
-//                .overrides(overrides)
-//                .build()
-//            //    .taskDefinition("ui_service")
-//        println("Starting Task...")
-//        try {
-//            val response: RunTaskResponse = ecsClient.runTask(request)
-//            println("response.tasks = ${response.tasks()}")
-//        } catch (e: Exception) {
-//            e.printStackTrace()
-//        }
+                .cluster(ecs_cluster_name)
+                .launchType("EC2")
+                .overrides(overrides)
+                .taskDefinition("orchestration-service-ui-service")
+                .build()
+
+        println("Starting Task...")
+        try {
+            val response: RunTaskResponse = ecsClient.runTask(request)
+            println("response.tasks = ${response.tasks()}")
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 }
