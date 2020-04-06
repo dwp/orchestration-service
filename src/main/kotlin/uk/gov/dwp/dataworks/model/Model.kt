@@ -7,7 +7,7 @@ data class Model @JsonCreator constructor(
         val userName: String,
         val emrClusterHostName: String,
         val albName: String,
-        val containerPort: Int,
-        val jupyterCpu: Int,
-        val jupyterMemory: Int
+        val containerPort: Int = 443,
+        val jupyterCpu: Int = 512,
+        val jupyterMemory: Int = 512
 )

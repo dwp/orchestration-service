@@ -48,7 +48,7 @@ class TaskDeploymentService {
         return consecVals;
     }
 
-    fun taskDefinitionWithOverride(ecsClusterName: String, emrClusterHostName: String, albName :String, userName: String, containerPort : Int = 443, jupyterCpu : Int=512, jupyterMemory: Int = 512) {
+    fun taskDefinitionWithOverride(ecsClusterName: String, emrClusterHostName: String, albName :String, userName: String, containerPort : Int , jupyterCpu : Int, jupyterMemory: Int) {
 
         val credentials: AwsCredentialsProvider = credentialsService.getDefaultCredentialsProvider()
 
