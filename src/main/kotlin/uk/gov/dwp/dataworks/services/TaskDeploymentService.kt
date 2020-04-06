@@ -89,7 +89,6 @@ class TaskDeploymentService {
 
        createService(ecs_cluster_name, user_name, ecsClient, albTargetGroupArn)
 
-
         val userName: KeyValuePair = KeyValuePair.builder()
                 .name("user_name")
                 .value(user_name)
@@ -120,7 +119,6 @@ class TaskDeploymentService {
                 .build()
 
         val request: RunTaskRequest = RunTaskRequest.builder()
-//                .taskDefinition("mhf_sample_task") // USING FOR TESTING BEFORE TERRAFORM
                 .cluster(ecs_cluster_name)
                 .launchType("EC2")
                 .overrides(overrides)

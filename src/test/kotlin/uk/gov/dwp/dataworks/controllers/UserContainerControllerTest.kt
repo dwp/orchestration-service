@@ -54,6 +54,5 @@ class UserContainerControllerTest{
                         "}")
                 .header("content-type", "application/json"))
                 .andExpect(MockMvcResultMatchers.status().isOk)
-
     }
 }

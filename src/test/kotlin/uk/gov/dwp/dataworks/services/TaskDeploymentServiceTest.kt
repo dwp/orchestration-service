@@ -1,7 +1,5 @@
 package uk.gov.dwp.dataworks.services
 
-
-import com.nhaarman.mockitokotlin2.any
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
