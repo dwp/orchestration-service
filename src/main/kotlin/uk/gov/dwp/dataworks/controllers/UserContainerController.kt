@@ -23,7 +23,7 @@ class UserContainerController {
 
     @PostMapping("/frontendrequest")
     fun launchTask(@RequestBody requestBody: UserRequestFramework){
-        taskDeploymentService.taskDefinitionWithOverride(requestBody.getEcs_cluster_name(), requestBody.getEmr_cluster_host_name(), requestBody.getUser_name())
+        taskDeploymentService.taskDefinitionWithOverride(requestBody.getEcs_cluster_name(),requestBody.getEmr_cluster_host_name(),requestBody.getalb_name() ,requestBody.getUser_name())
     }
 
 }

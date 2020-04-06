@@ -9,7 +9,8 @@ resource "aws_ecs_task_definition" "service" {
           "image" : "${var.chrome_image}",
           "cpu": 256,
           "memory": 256,
-          "essential": true
+          "essential": true,
+          "links":["name:jupyterHub"]
       },
       {
 
@@ -18,7 +19,6 @@ resource "aws_ecs_task_definition" "service" {
           "cpu": 512,
           "memory": 512,
           "essential": true
-
          },
       {
           "name": "guacd",
@@ -26,6 +26,7 @@ resource "aws_ecs_task_definition" "service" {
           "cpu": 128,
           "memory": 128,
           "essential": true,
+          "links":["name:headless_chrome"],
           "portMappings": [
             {
               "containerPort": 8000,

@@ -4,8 +4,8 @@ import com.auth0.jwt.interfaces.DecodedJWT
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.whenever
+import org.junit.Test
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
@@ -49,7 +49,8 @@ class UserContainerControllerTest{
         mvc.perform(MockMvcRequestBuilders.post("/frontendrequest")
                 .content("{\"ecs_cluster_name\": \"Test Cluster Name\","
                         + " \"user_name\": \"Test User Name\"," +
-                        "\"emr_cluster_host_name\": \"Test EMR Host Name\"" +
+                        "\"emr_cluster_host_name\": \"Test EMR Host Name\"," +
+                        "\"alb_name\": \"Test alb Name\"" +
                         "}")
                 .header("content-type", "application/json"))
                 .andExpect(MockMvcResultMatchers.status().isOk)
