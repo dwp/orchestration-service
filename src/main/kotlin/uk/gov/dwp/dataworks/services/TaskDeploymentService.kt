@@ -51,7 +51,7 @@ class TaskDeploymentService {
 
     fun taskDefinitionWithOverride(ecs_cluster_name: String, emr_cluster_host_name: String, albName :String, user_name: String, jupyterCpu : Int=512, jupyterMemory: Int = 512) {
 
-        val credentials: AwsCredentialsProvider = credentialsService.getSessionCredentials()
+        val credentials: AwsCredentialsProvider = credentialsService.getDefaultCredentialsProvider()
 
         val ecsClient: EcsClient = EcsClient.builder().credentialsProvider(credentials).region(awsRegion).build()
         val albClient: ElasticLoadBalancingV2Client = ElasticLoadBalancingV2Client.builder().credentialsProvider(credentials).region(awsRegion).build()
