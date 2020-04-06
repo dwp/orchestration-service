@@ -31,19 +31,19 @@ class TaskDeploymentServiceTest{
 
     @Test
     fun `testPriorityNumberForNoRuleSetExpectOne`(){
-        val actual =  taskDeploymentService.getPriorityVal(createDescribeRulesResponse(ArrayList<Rule>()))
+        val actual =  taskDeploymentService.getVacantPriorityValue(createDescribeRulesResponse(ArrayList<Rule>()))
         Assert.assertEquals(1, actual)
     }
 
     @Test
     fun `testPriorityNumberForNonConsecutiveRuleSetExpectThree`(){
-        val actual =  taskDeploymentService.getPriorityVal(createDescribeRulesResponse(nonConsecutiveCol))
+        val actual =  taskDeploymentService.getVacantPriorityValue(createDescribeRulesResponse(nonConsecutiveCol))
         Assert.assertEquals(3, actual)
     }
 
     @Test (expected = Exception::class)
     fun `testPriorityNumberFor1000PlusExpectError`(){
-        val actual =  taskDeploymentService.getPriorityVal(createDescribeRulesResponse(create1000()))
+        val actual =  taskDeploymentService.getVacantPriorityValue(createDescribeRulesResponse(create1000()))
         Assert.assertEquals("The upper limit of 1000 rules has been reached for this load balancer.", actual)
     }
 
