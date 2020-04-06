@@ -11,8 +11,13 @@ group = "uk.gov.dwp.dataworks"
 
 repositories {
 	mavenCentral()
+	jcenter()
+	maven(url = "https://jitpack.io")
 }
 
+configurations.all {
+	exclude(group="org.slf4j", module="slf4j-log4j12")
+}
 
 dependencies {
 	// Kotlin things
@@ -34,6 +39,10 @@ dependencies {
 	// JWT
 	implementation ("com.auth0:java-jwt:3.10.0")
 	implementation ("com.auth0:jwks-rsa:0.11.0")
+	// Logging things
+	implementation("com.github.dwp:dataworks-common-logging:0.0.4")
+	runtimeOnly("ch.qos.logback:logback-classic:1.2.3")
+	runtimeOnly("ch.qos.logback:logback-core:1.2.3")
 
 	// Testing
 	implementation ("com.fasterxml.jackson.core:jackson-annotations:2.10.2")
@@ -44,7 +53,6 @@ dependencies {
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 	implementation ("software.amazon.awssdk:ecs")
-//	implementation ("software.amazon.awssdk:auth")
 	implementation ("software.amazon.awssdk:s3")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.springframework.batch:spring-batch-test")

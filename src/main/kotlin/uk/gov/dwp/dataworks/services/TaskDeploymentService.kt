@@ -1,36 +1,35 @@
 package uk.gov.dwp.dataworks.services
 
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider
-import software.amazon.awssdk.awscore.AwsRequest
-import software.amazon.awssdk.core.SdkRequest
-import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.ecs.EcsClient
 import software.amazon.awssdk.services.ecs.model.*
 import software.amazon.awssdk.services.ecs.model.LoadBalancer
 import software.amazon.awssdk.services.elasticloadbalancingv2.ElasticLoadBalancingV2Client
 import software.amazon.awssdk.services.elasticloadbalancingv2.model.*
-
-import java.net.http.HttpRequest
+import uk.gov.dwp.dataworks.logging.DataworksLogger
 
 @Service
 class TaskDeploymentService {
+    companion object {
+        val logger: DataworksLogger = DataworksLogger(LoggerFactory.getLogger(TaskDeploymentService ::class.java))
+    }
+
     @Autowired
     lateinit var credentialsService: CredentialsService
 
-    val awsRegion: Region = kotlin.runCatching { Region.of(System.getenv(ConfigKey.AWS_REGION.toString()))}.getOrDefault(Region.EU_WEST_2)
+    private fun createService (ecs_cluster_name: String, user_name: String, ecsClient: EcsClient, containerPort : Int,targetGroupArn: String) {
 
-    private fun createService (ecs_cluster_name: String, user_name: String, ecsClient: EcsClient, targetGroupArn: String) {
-
-        val alb: LoadBalancer = LoadBalancer.builder().targetGroupArn(targetGroupArn).containerPort(443).build()
+        val alb: LoadBalancer = LoadBalancer.builder().targetGroupArn(targetGroupArn).containerPort(containerPort).build()
 
         val serviceBuilder = CreateServiceRequest.builder().cluster(ecs_cluster_name).loadBalancers(alb).serviceName("${user_name}_test").taskDefinition("mhf_sample_task").loadBalancers(alb).desiredCount(1).build()
-        println("Creating Service...")
+        logger.info("Creating Service...")
 
         try {
             val service = ecsClient.createService(serviceBuilder)
-            println("service.responseMetadata = ${service.responseMetadata()}")
+            logger.info("service.responseMetadata = ${service.responseMetadata()}")
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -49,54 +48,54 @@ class TaskDeploymentService {
         return consecVals;
     }
 
-    fun taskDefinitionWithOverride(ecs_cluster_name: String, emr_cluster_host_name: String, albName :String, user_name: String, jupyterCpu : Int=512, jupyterMemory: Int = 512) {
+    fun taskDefinitionWithOverride(ecsClusterName: String, emrClusterHostName: String, albName :String, userName: String, containerPort : Int = 443, jupyterCpu : Int=512, jupyterMemory: Int = 512) {
 
         val credentials: AwsCredentialsProvider = credentialsService.getDefaultCredentialsProvider()
 
-        val ecsClient: EcsClient = EcsClient.builder().credentialsProvider(credentials).region(awsRegion).build()
-        val albClient: ElasticLoadBalancingV2Client = ElasticLoadBalancingV2Client.builder().credentialsProvider(credentials).region(awsRegion).build()
+        val ecsClient: EcsClient = EcsClient.builder().credentialsProvider(credentials).region(credentialsService.getAwsRegion()).build()
+        val albClient: ElasticLoadBalancingV2Client = ElasticLoadBalancingV2Client.builder().credentialsProvider(credentials).region(credentialsService.getAwsRegion()).build()
 
-        println("Getting alb information...")
+        logger.info("Getting alb information...")
 
         val albRequest = DescribeLoadBalancersRequest.builder().names("orchestration-service-lb").build()
         val albResponse: DescribeLoadBalancersResponse = albClient.describeLoadBalancers(albRequest)
 
-        println("Getting Listener information...")
+        logger.info("Getting Listener information...")
 
         val albListenerRequest = DescribeListenersRequest.builder().loadBalancerArn(albResponse.loadBalancers()[0].loadBalancerArn()).build()
         val albListenerResponse = albClient.describeListeners(albListenerRequest)
 
-        println("Creating target group...")
+        logger.info("Creating target group...")
 
-        val tgRequest = CreateTargetGroupRequest.builder().name("$user_name-target-group").protocol("HTTPS").vpcId(albResponse.loadBalancers()[0].vpcId()).port(443).build()
+        val tgRequest = CreateTargetGroupRequest.builder().name("$userName-target-group").protocol("HTTPS").vpcId(albResponse.loadBalancers()[0].vpcId()).port(443).build()
         val targetGroupResponse = albClient.createTargetGroup(tgRequest)
 
-        println("Getting target group arn...")
+        logger.info("Getting target group arn...")
 
-        val albTargetGroupRequest = albClient.describeTargetGroups(DescribeTargetGroupsRequest.builder().names("$user_name-target-group").build())
+        val albTargetGroupRequest = albClient.describeTargetGroups(DescribeTargetGroupsRequest.builder().names("$userName-target-group").build())
         val albTargetGroupArn = albTargetGroupRequest.targetGroups()[0].targetGroupArn()
 
-        val pathPattern = PathPatternConditionConfig.builder().values("/$user_name/*").build()
+        val pathPattern = PathPatternConditionConfig.builder().values("/$userName/*").build()
         val albRuleCondition :RuleCondition = RuleCondition.builder().field("path-pattern").pathPatternConfig(pathPattern).build()
         val userTargetGroup = TargetGroupTuple.builder().targetGroupArn(albTargetGroupArn).build()
         val forwardAction = ForwardActionConfig.builder().targetGroups(userTargetGroup).build()
         val albRuleAction = Action.builder().type("forward").forwardConfig(forwardAction).build()
 
-        println("Creating listener rule...")
+        logger.info("Creating listener rule...")
 
         var rulesResponse = albClient.describeRules(DescribeRulesRequest.builder().listenerArn(albListenerResponse.listeners()[0].listenerArn()).build())
         val createRule = albClient.createRule(CreateRuleRequest.builder().listenerArn(albListenerResponse.listeners()[0].listenerArn()).priority(getPriorityVal(rulesResponse)).conditions(albRuleCondition).actions(albRuleAction).build())
 
-       createService(ecs_cluster_name, user_name, ecsClient, albTargetGroupArn)
+       createService(ecsClusterName, userName, ecsClient, containerPort ,albTargetGroupArn)
 
         val userName: KeyValuePair = KeyValuePair.builder()
                 .name("user_name")
-                .value(user_name)
+                .value(userName)
                 .build()
 
         val emrClusterHostName: KeyValuePair = KeyValuePair.builder()
                 .name("emr_cluster_host_name")
-                .value(emr_cluster_host_name)
+                .value(emrClusterHostName)
                 .build()
 
         val chromeOverride: ContainerOverride = ContainerOverride.builder()
@@ -119,16 +118,16 @@ class TaskDeploymentService {
                 .build()
 
         val request: RunTaskRequest = RunTaskRequest.builder()
-                .cluster(ecs_cluster_name)
+                .cluster(ecsClusterName)
                 .launchType("EC2")
                 .overrides(overrides)
                 .taskDefinition("orchestration-service-ui-service")
                 .build()
 
-        println("Starting Task...")
+        logger.info("Starting Task...")
         try {
             val response: RunTaskResponse = ecsClient.runTask(request)
-            println("response.tasks = ${response.tasks()}")
+            logger.info("response.tasks = ${response.tasks()}")
         } catch (e: Exception) {
             e.printStackTrace()
         }
