@@ -55,6 +55,12 @@ class ConfigurationService {
 }
 
 enum class ConfigKey(val key: String, val isList: Boolean) {
-    AWS_REGION("orchestrationService.awsRegion", false),
-    COGNITO_USER_POOL_ID("orchestrationService.userPool", false)
+    AWS_REGION("AWS_REGION", false),
+    COGNITO_USER_POOL_ID("COGNITO_USER_POOL_ID", false),
+
+    //   Access token env vars
+    ACCESS_KEY("ACCESS_KEY", false),
+    SECRET_ACCESS_KEY("SECRET_ACCESS_KEY", false),
+    SESSION_TOKEN("SESSION_TOKEN", false)
+
 }

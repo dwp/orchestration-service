@@ -30,15 +30,24 @@ dependencies {
 	// JWT
 	implementation ("com.auth0:java-jwt:3.10.0")
 	implementation ("com.auth0:jwks-rsa:0.11.0")
+
 	// Testing
+	implementation ("com.fasterxml.jackson.core:jackson-annotations:2.10.2")
+	implementation ("com.fasterxml.jackson.core:jackson-core:2.10.2")
+	implementation ("com.fasterxml.jackson.core:jackson-databind:2.10.2")
+	implementation("org.springframework.boot:spring-boot-starter-web")
+	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+	implementation("org.jetbrains.kotlin:kotlin-reflect")
+	implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+	implementation ("software.amazon.awssdk:ecs")
+//	implementation ("software.amazon.awssdk:auth")
+	implementation ("software.amazon.awssdk:s3")
 	testImplementation("org.springframework.boot:spring-boot-starter-test") {
 		exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
 	}
 	testImplementation("org.springframework.batch:spring-batch-test")
 	testImplementation("io.kotlintest:kotlintest-runner-junit5:3.3.3")
 	testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0")
-
-
 }
 
 tasks.withType<Test> {
@@ -52,4 +61,3 @@ tasks.withType<KotlinCompile> {
 	}
 
 }
-
