@@ -14,7 +14,15 @@ class UserContainerController {
 
     @PostMapping("/deployusercontainers")
     fun launchTask(@RequestBody requestBody: Model){
-        taskDeploymentService.taskDefinitionWithOverride(requestBody.ecsClusterName,requestBody.emrClusterHostName,requestBody.albName ,requestBody.userName)
+        taskDeploymentService.taskDefinitionWithOverride(
+                requestBody.ecsClusterName,
+                requestBody.emrClusterHostName,
+                requestBody.albName ,
+                requestBody.userName,
+                requestBody.containerPort,
+                requestBody.jupyterCpu,
+                requestBody.jupyterMemory
+        )
     }
 
 }

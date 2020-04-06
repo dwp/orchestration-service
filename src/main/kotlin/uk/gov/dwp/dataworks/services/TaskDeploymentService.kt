@@ -48,7 +48,7 @@ class TaskDeploymentService {
         return consecVals;
     }
 
-    fun taskDefinitionWithOverride(ecsClusterName: String, emrClusterHostName: String, albName :String, userName: String, containerPort : Int , jupyterCpu : Int, jupyterMemory: Int) {
+    fun taskDefinitionWithOverride(ecsClusterName: String, emrClusterHostName: String, albName :String, userName: String, containerPort : Int , jupyterCpu : Int , jupyterMemory: Int ) {
 
         val credentials: AwsCredentialsProvider = credentialsService.getDefaultCredentialsProvider()
 
@@ -67,7 +67,7 @@ class TaskDeploymentService {
 
         logger.info("Creating target group...")
 
-        val tgRequest = CreateTargetGroupRequest.builder().name("$userName-target-group").protocol("HTTPS").vpcId(albResponse.loadBalancers()[0].vpcId()).port(443).build()
+        val tgRequest = CreateTargetGroupRequest.builder().name("$userName-target-group").protocol("HTTPS").vpcId(albResponse.loadBalancers()[0].vpcId()).port(containerPort).build()
         val targetGroupResponse = albClient.createTargetGroup(tgRequest)
 
         logger.info("Getting target group arn...")
