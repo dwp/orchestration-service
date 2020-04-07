@@ -23,7 +23,7 @@ resource "aws_iam_role_policy" "ecs_autoscaling" {
 
 data "aws_iam_policy_document" "ecs_autoscaling" {
   statement {
-    sid = "ECSAutoscaling"
+    sid    = "ECSAutoscaling"
     effect = "Allow"
 
     actions = [
