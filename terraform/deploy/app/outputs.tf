@@ -1,5 +1,3 @@
-output "outputs" {
-  value = {
-    ecs_user_host = module.ecs-user-host.outputs
-  }
+output "ecs_user_host" {
+  value = module.ecs-user-host.outputs
 }

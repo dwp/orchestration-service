@@ -74,7 +74,7 @@ module "ecs-user-host" {
     max_instance_lifetime = 604800
   }
   common_tags   = merge(local.common_tags, { Name = "${var.name_prefix}-user-host" })
-  instance_type = "t3.medium"
+  instance_type = "t3.2xlarge"
   name_prefix   = "${var.name_prefix}-user-host"
   vpc = {
     id                   = data.terraform_remote_state.aws_analytical_env_infra.outputs.vpc.aws_vpc
