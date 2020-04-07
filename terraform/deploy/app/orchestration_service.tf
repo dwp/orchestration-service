@@ -22,7 +22,29 @@ module "ecs-fargate-task-definition" {
       "awslogs-stream-prefix" = "ecs"
     }
   }
-  environment = []
+  environment = [
+   {
+      name  = "orchestrationService.user_container_task_definition"
+      value = "${var.name_prefix}-ui-service"
+   },
+   {
+      name  = "orchestrationService.load_balancer_name"
+      value ="${var.name_prefix}-lb"
+   },
+    {
+      name  = "orchestrationService.aws_region"
+      value = var.region
+    },
+    {
+      name  = "orchestrationSerice.emr_cluster_host_name"
+//      value =
+    },
+    {
+      name  = "orchestrationService.cognito_user_pool_id"
+//      value =
+    }
+
+  ]
 }
 #
 ## ---------------------------------------------------------------------------------------------------------------------
@@ -88,15 +110,12 @@ module "ecs-user-host" {
 ## ECS UserService
 ## ---------------------------------------------------------------------------------------------------------------------
 module "ec2_task_definition" {
-  source      = "../../modules/ec2-task-definition"
-  region      = var.region
+  source = "../../modules/ec2-task-definition"
+  region = var.region
   name_prefix = "${var.name_prefix}-task-definition"
-  //  role_arn                     = "arn:aws:iam::${local.account[local.environment]}:role/${var.assume_role}"
-  //  account                      = lookup(local.account, local.environment)
 
-
-  chrome_image     = "${local.account[local.environment]}.dkr.ecr.${var.region}.amazonaws.com/aws-analytical-env/hardened-guac-chrome"
-  guacd_image      = "${local.account[local.environment]}.dkr.ecr.${var.region}.amazonaws.com/aws-analytical-env/guacd"
+  chrome_image = "${local.account[local.environment]}.dkr.ecr.${var.region}.amazonaws.com/aws-analytical-env/hardened-guac-chrome"
+  guacd_image = "${local.account[local.environment]}.dkr.ecr.${var.region}.amazonaws.com/aws-analytical-env/guacd"
   jupyterhub_image = "${local.account[local.environment]}.dkr.ecr.${var.region}.amazonaws.com/aws-analytical-env/jupyterhub"
-}
 
+}

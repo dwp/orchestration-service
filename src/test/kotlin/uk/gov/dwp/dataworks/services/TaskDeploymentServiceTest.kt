@@ -30,24 +30,24 @@ class TaskDeploymentServiceTest{
     val nonConsecutiveCol : Collection<Rule> = listOf(Rule.builder().priority("1").build(), Rule.builder().priority("2").build(), Rule.builder().priority("4").build())
 
     @Test
-    fun `testPriorityNumberForNoRuleSetExpectOne`(){
+    fun testPriorityNumberForNoRuleSetExpectOne(){
         val actual =  taskDeploymentService.getVacantPriorityValue(createDescribeRulesResponse(ArrayList<Rule>()))
         Assert.assertEquals(1, actual)
     }
 
     @Test
-    fun `testPriorityNumberForNonConsecutiveRuleSetExpectThree`(){
+    fun testPriorityNumberForNonConsecutiveRuleSetExpectThree(){
         val actual =  taskDeploymentService.getVacantPriorityValue(createDescribeRulesResponse(nonConsecutiveCol))
         Assert.assertEquals(3, actual)
     }
 
     @Test (expected = Exception::class)
-    fun `testPriorityNumberFor1000PlusExpectError`(){
+    fun testPriorityNumberFor1000PlusExpectError(){
         val actual =  taskDeploymentService.getVacantPriorityValue(createDescribeRulesResponse(create1000()))
         Assert.assertEquals("The upper limit of 1000 rules has been reached for this load balancer.", actual)
     }
 
-    fun  `createDescribeRulesResponse`(array: Collection<Rule>): DescribeRulesResponse {
+    fun  createDescribeRulesResponse(array: Collection<Rule>): DescribeRulesResponse {
         val  list: Collection<Rule> = array
         val describeRulesResponse: DescribeRulesResponse = DescribeRulesResponse.builder().rules(list).build();
             return describeRulesResponse;

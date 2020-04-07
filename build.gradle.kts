@@ -69,11 +69,4 @@ tasks.withType<KotlinCompile> {
 		freeCompilerArgs = listOf("-Xjsr305=strict")
 		jvmTarget = "1.8"
 	}
-
-
-}
-tasks.withType<Test> {
-	this.testLogging {
-		this.showStandardStreams = true
-	}
 }

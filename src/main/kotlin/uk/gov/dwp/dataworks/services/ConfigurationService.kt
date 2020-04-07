@@ -58,5 +58,6 @@ enum class ConfigKey(val key: String, val isList: Boolean) {
     AWS_REGION("orchestrationService.aws_region", false),
     COGNITO_USER_POOL_ID("orchestrationService.cognito_user_pool_id", false),
     EMR_CLUSTER_HOST_NAME("orchestrationSerice.emr_cluster_host_name", false),
-    LOAD_BALANCER_NAME("orchestrationService.load_balancer_name",false)
+    LOAD_BALANCER_NAME("orchestrationService.load_balancer_name",false),
+    USER_CONTAINER_TASK_DEFINITION("orchestrationService.user_container_task_definition",false)
 }

@@ -1,13 +1,14 @@
 package uk.gov.dwp.dataworks.services
 
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import software.amazon.awssdk.services.ecs.EcsClient
 import software.amazon.awssdk.services.ecs.model.*
 import software.amazon.awssdk.services.ecs.model.LoadBalancer
 import software.amazon.awssdk.services.elasticloadbalancingv2.ElasticLoadBalancingV2Client
 import software.amazon.awssdk.services.elasticloadbalancingv2.model.*
+import uk.gov.dwp.dataworks.exceptions.ErrorWhileProcessingRequestException
+import uk.gov.dwp.dataworks.exceptions.UpperRuleLimitReachedException
 import uk.gov.dwp.dataworks.logging.DataworksLogger
 
 @Service
@@ -16,14 +17,13 @@ class TaskDeploymentService {
         val logger: DataworksLogger = DataworksLogger(LoggerFactory.getLogger(TaskDeploymentService ::class.java))
     }
 
-    @Autowired
-    lateinit var credentialsService: CredentialsService
+    val configurationService = ConfigurationService()
 
     private fun createService (ecs_cluster_name: String, user_name: String, ecsClient: EcsClient, containerPort : Int,targetGroupArn: String) {
 
         val alb: LoadBalancer = LoadBalancer.builder().targetGroupArn(targetGroupArn).containerPort(containerPort).build()
 
-        val serviceBuilder = CreateServiceRequest.builder().cluster(ecs_cluster_name).loadBalancers(alb).serviceName("${user_name}_test").taskDefinition("mhf_sample_task").loadBalancers(alb).desiredCount(1).build()
+        val serviceBuilder = CreateServiceRequest.builder().cluster(ecs_cluster_name).loadBalancers(alb).serviceName("${user_name}_test").taskDefinition(configurationService.getStringConfig(ConfigKey.USER_CONTAINER_TASK_DEFINITION)).loadBalancers(alb).desiredCount(1).build()
         logger.info("Creating Service...")
 
         try {
@@ -31,32 +31,28 @@ class TaskDeploymentService {
             logger.info("service.responseMetadata = ${service.responseMetadata()}")
         } catch (e: Exception) {
             logger.error("Error while creating the service", e)
-            throw e
+            throw ErrorWhileProcessingRequestException("create service")
         }
     }
 
     fun getVacantPriorityValue (rulesResponse : DescribeRulesResponse) : Int {
 
-        var nextVacantValue : Int = 1
-        for (i in rulesResponse.rules()) {
-            if (i.priority() != "default") {
-                var intVal = Integer.parseInt(i.priority())
-                if (intVal == nextVacantValue) nextVacantValue = nextVacantValue + 1
-            }
+        val rulePriorities = rulesResponse.rules().map { it.priority() }.filter { it != "default" }.map { Integer.parseInt(it) }.toSet()
+        if (rulePriorities.size >= 1000) throw UpperRuleLimitReachedException()
+        for(priority in 0..1000) {
+            if(!rulePriorities.contains(priority)) return priority
         }
-        if (nextVacantValue >= 1000) throw Exception("The upper limit of 1000 rules has been reached for this load balancer.")
-        return nextVacantValue;
+        throw UpperRuleLimitReachedException()
     }
 
     fun taskDefinitionWithOverride(ecsClusterName: String, emrClusterHostName: String, albName :String, userName: String, containerPort : Int , jupyterCpu : Int , jupyterMemory: Int ) {
 
-        val configurationService = ConfigurationService()
-        val ecsClient = EcsClient.builder().region(credentialsService.getAwsRegion()).build()
-        val albClient = ElasticLoadBalancingV2Client.builder().region(credentialsService.getAwsRegion()).build()
+        val ecsClient = EcsClient.builder().region(configurationService.awsRegion).build()
+        val albClient = ElasticLoadBalancingV2Client.builder().region(configurationService.awsRegion).build()
 
         logger.info("Getting alb information...")
 
-        val albRequest = DescribeLoadBalancersRequest.builder().names(configurationService.getStringConfig(ConfigKey.LOAD_BALANCER_NAME)).build()
+        val albRequest = DescribeLoadBalancersRequest.builder().names(albName).build()
         val albResponse = albClient.describeLoadBalancers(albRequest)
 
         logger.info("Getting Listener information...")
@@ -87,6 +83,17 @@ class TaskDeploymentService {
 
        createService(ecsClusterName, userName, ecsClient, containerPort ,albTargetGroupArn)
 
+        logger.info("Starting Task...")
+        try {
+            val response = ecsClient.runTask(createRunTaskRequestWithOverides(userName,emrClusterHostName,jupyterMemory,jupyterCpu,ecsClusterName))
+            logger.info("response.tasks = ${response.tasks()}")
+        } catch (e: Exception) {
+            logger.error("Error while processing the run task request", e)
+            throw ErrorWhileProcessingRequestException("run task")
+        }
+    }
+
+    fun createRunTaskRequestWithOverides(userName: String,emrClusterHostName: String,jupyterMemory: Int,jupyterCpu: Int,ecsClusterName: String):RunTaskRequest{
         val userName = KeyValuePair.builder()
                 .name("user_name")
                 .value(userName)
@@ -116,20 +123,12 @@ class TaskDeploymentService {
                 .containerOverrides(guacDOverride, chromeOverride, jupyterOverride)
                 .build()
 
-        val request = RunTaskRequest.builder()
+        return RunTaskRequest.builder()
                 .cluster(ecsClusterName)
                 .launchType("EC2")
                 .overrides(overrides)
                 .taskDefinition("orchestration-service-ui-service")
                 .build()
-
-        logger.info("Starting Task...")
-        try {
-            val response = ecsClient.runTask(request)
-            logger.info("response.tasks = ${response.tasks()}")
-        } catch (e: Exception) {
-            logger.error("Error while processing the run task request", e)
-            throw e
-        }
     }
 }
+
