@@ -40,17 +40,17 @@ class UserContainerControllerTest{
 
     @Test
     fun `Endpoints return '405 not supported' for GET requests`() {
-        mvc.perform(MockMvcRequestBuilders.get("/frontendrequest"))
+        mvc.perform(MockMvcRequestBuilders.get("/deployusercontainers"))
                 .andExpect(MockMvcResultMatchers.status().isMethodNotAllowed)
     }
     @Test
     fun `200 returned with well formed request`() {
         whenever(authService.validate(any())).thenReturn(mock<DecodedJWT>())
-        mvc.perform(MockMvcRequestBuilders.post("/frontendrequest")
-                .content("{\"ecs_cluster_name\": \"Test Cluster Name\","
-                        + " \"user_name\": \"Test User Name\"," +
-                        "\"emr_cluster_host_name\": \"Test EMR Host Name\"," +
-                        "\"alb_name\": \"Test alb Name\"" +
+        mvc.perform(MockMvcRequestBuilders.post("/deployusercontainers")
+                .content("{\"ecsClusterName\": \"Test Cluster Name\","
+                        + " \"userName\": \"Test User Name\"," +
+                        "\"emrClusterHostName\": \"Test EMR Host Name\"," +
+                        "\"albName\": \"Test alb Name\"" +
                         "}")
                 .header("content-type", "application/json"))
                 .andExpect(MockMvcResultMatchers.status().isOk)
