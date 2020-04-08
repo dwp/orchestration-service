@@ -53,7 +53,6 @@ dependencies {
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 	implementation ("software.amazon.awssdk:ecs")
-	implementation ("software.amazon.awssdk:s3")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.springframework.batch:spring-batch-test")
 	testImplementation("io.kotlintest:kotlintest-runner-junit5:3.3.3")
