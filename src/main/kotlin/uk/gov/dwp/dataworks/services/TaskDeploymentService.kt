@@ -7,7 +7,8 @@ import software.amazon.awssdk.services.ecs.model.*
 import software.amazon.awssdk.services.ecs.model.LoadBalancer
 import software.amazon.awssdk.services.elasticloadbalancingv2.ElasticLoadBalancingV2Client
 import software.amazon.awssdk.services.elasticloadbalancingv2.model.*
-import uk.gov.dwp.dataworks.exceptions.ErrorWhileProcessingRequestException
+import uk.gov.dwp.dataworks.exceptions.FailedToExecuteCreateServiceRequestException
+import uk.gov.dwp.dataworks.exceptions.FailedToExecuteRunTaskRequestException
 import uk.gov.dwp.dataworks.exceptions.UpperRuleLimitReachedException
 import uk.gov.dwp.dataworks.logging.DataworksLogger
 
@@ -31,7 +32,7 @@ class TaskDeploymentService {
             logger.info("service.responseMetadata = ${service.responseMetadata()}")
         } catch (e: Exception) {
             logger.error("Error while creating the service", e)
-            throw ErrorWhileProcessingRequestException("create service")
+            throw FailedToExecuteCreateServiceRequestException()
         }
     }
 
@@ -89,7 +90,7 @@ class TaskDeploymentService {
             logger.info("response.tasks = ${response.tasks()}")
         } catch (e: Exception) {
             logger.error("Error while processing the run task request", e)
-            throw ErrorWhileProcessingRequestException("run task")
+            throw FailedToExecuteRunTaskRequestException()
         }
     }
 
