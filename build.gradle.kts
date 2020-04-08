@@ -24,7 +24,7 @@ dependencies {
 	implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	// AWS
-	implementation(platform("software.amazon.awssdk:bom:2.10.89"))
+	implementation(platform("software.amazon.awssdk:bom:2.11.11"))
 	implementation("software.amazon.awssdk:regions")
 	implementation("software.amazon.awssdk:codegen")
 	implementation("software.amazon.awssdk:elasticloadbalancingv2")
