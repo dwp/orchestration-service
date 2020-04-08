@@ -23,14 +23,14 @@ module "ecs-fargate-task-definition" {
     }
   }
   environment = [
-   {
+    {
       name  = "orchestrationService.user_container_task_definition"
       value = "${var.name_prefix}-ui-service"
-   },
-   {
+    },
+    {
       name  = "orchestrationService.load_balancer_name"
-      value ="${var.name_prefix}-lb"
-   },
+      value = "${var.name_prefix}-lb"
+    },
     {
       name  = "orchestrationService.aws_region"
       value = var.region
@@ -105,12 +105,12 @@ module "ecs-user-host" {
 ## ECS UserService
 ## ---------------------------------------------------------------------------------------------------------------------
 module "ec2_task_definition" {
-  source = "../../modules/ec2-task-definition"
-  region = var.region
+  source      = "../../modules/ec2-task-definition"
+  region      = var.region
   name_prefix = "${var.name_prefix}-task-definition"
 
-  chrome_image = "${local.account[local.environment]}.dkr.ecr.${var.region}.amazonaws.com/aws-analytical-env/hardened-guac-chrome"
-  guacd_image = "${local.account[local.environment]}.dkr.ecr.${var.region}.amazonaws.com/aws-analytical-env/guacd"
+  chrome_image     = "${local.account[local.environment]}.dkr.ecr.${var.region}.amazonaws.com/aws-analytical-env/hardened-guac-chrome"
+  guacd_image      = "${local.account[local.environment]}.dkr.ecr.${var.region}.amazonaws.com/aws-analytical-env/guacd"
   jupyterhub_image = "${local.account[local.environment]}.dkr.ecr.${var.region}.amazonaws.com/aws-analytical-env/jupyterhub"
 
 }
