@@ -8,6 +8,6 @@ import software.amazon.awssdk.services.ecs.model.DescribeServicesResponse
 @Service
 class EcsDescribeServicesCall{
     fun servicesResponse(ecsClient: EcsClient, ecsClusterName: String, userName: String): DescribeServicesResponse {
-        return ecsClient.describeServices(DescribeServicesRequest.builder().cluster(ecsClusterName).services("${userName}-ui-service").build())
+        return ecsClient.describeServices(DescribeServicesRequest.builder().cluster(ecsClusterName).services("${userName}-analytical-workspace").build())
     }
 }

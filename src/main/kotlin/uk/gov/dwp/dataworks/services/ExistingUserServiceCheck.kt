@@ -14,9 +14,6 @@ class ExistingUserServiceCheck{
     fun check(userName: String, ecsClusterName: String):Boolean{
         val ecsClient = EcsClient.builder().region(configService.awsRegion).build()
         val listOfService = ecsDescribeServicesCall.servicesResponse(ecsClient, ecsClusterName, userName).services()
-
-        println(listOfService)
-
         if(listOfService.size > 0 && listOfService[0].status()=="ACTIVE"){
             return true
         }

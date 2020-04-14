@@ -48,13 +48,13 @@ class ExistingUserServiceCheckTest{
 
     @Test
     fun `Existing Service prevent duplicates from spinning up`(){
-        whenever(ecsDescribeServicesCall.servicesResponse(any(), anyString(), anyString())).thenReturn(createDescribeServiceResponse( "$testUserName-ui-service", "ACTIVE"))
+        whenever(ecsDescribeServicesCall.servicesResponse(any(), anyString(), anyString())).thenReturn(createDescribeServiceResponse( "$testUserName-analytical-workspace", "ACTIVE"))
         Assert.assertEquals(true, existingUserServiceCheckForTest.check(testUserName, "test"))
     }
 
     @Test
     fun `Existing inactive service allows creation`(){
-        whenever(ecsDescribeServicesCall.servicesResponse(any(), anyString(), anyString())).thenReturn(createDescribeServiceResponse( "$testUserName-ui-service", "INACTIVE"))
+        whenever(ecsDescribeServicesCall.servicesResponse(any(), anyString(), anyString())).thenReturn(createDescribeServiceResponse( "$testUserName-analytical-workspace", "INACTIVE"))
         Assert.assertEquals(false, existingUserServiceCheckForTest.check(testUserName, "test"))
     }
 

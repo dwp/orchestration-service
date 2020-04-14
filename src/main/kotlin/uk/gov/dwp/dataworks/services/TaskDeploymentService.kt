@@ -24,7 +24,7 @@ class TaskDeploymentService {
 
         val alb: LoadBalancer = LoadBalancer.builder().targetGroupArn(targetGroupArn).containerPort(containerPort).build()
 
-        val serviceBuilder = CreateServiceRequest.builder().cluster(ecs_cluster_name).loadBalancers(alb).serviceName("${user_name}-ui-service").taskDefinition(configurationService.getStringConfig(ConfigKey.USER_CONTAINER_TASK_DEFINITION)).loadBalancers(alb).desiredCount(1).build()
+        val serviceBuilder = CreateServiceRequest.builder().cluster(ecs_cluster_name).loadBalancers(alb).serviceName("${user_name}-analytical-workspace").taskDefinition(configurationService.getStringConfig(ConfigKey.USER_CONTAINER_TASK_DEFINITION)).loadBalancers(alb).desiredCount(1).build()
         logger.info("Creating Service...")
 
         try {
@@ -128,7 +128,7 @@ class TaskDeploymentService {
                 .cluster(ecsClusterName)
                 .launchType("EC2")
                 .overrides(overrides)
-                .taskDefinition("orchestration-service-ui-service")
+                .taskDefinition("orchestration-service-analytical-workspace")
                 .build()
     }
 }
