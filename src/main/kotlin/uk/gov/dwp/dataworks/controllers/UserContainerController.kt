@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RestController
 import uk.gov.dwp.dataworks.model.Model
 import uk.gov.dwp.dataworks.services.ExistingUserServiceCheck
 import uk.gov.dwp.dataworks.services.TaskDeploymentService
+import uk.gov.dwp.dataworks.services.TaskDeploymentService.Companion.logger
 
 @RestController
 class UserContainerController {
@@ -26,16 +27,18 @@ class UserContainerController {
     ])
     @PostMapping("/deployusercontainers")
     fun launchTask(@RequestBody requestBody: Model){
-        if (!existingUserServiceCheck.check(requestBody.userName, requestBody.ecsClusterName)){
-            taskDeploymentService.taskDefinitionWithOverride(
-                    requestBody.ecsClusterName,
-                    requestBody.emrClusterHostName,
-                    requestBody.albName ,
-                    requestBody.userName,
-                    requestBody.containerPort,
-                    requestBody.jupyterCpu,
-                    requestBody.jupyterMemory
-            )
+        if (existingUserServiceCheck.check(requestBody.userName, requestBody.ecsClusterName)){
+            logger.info("Redirecting user to running containers, as they exist")
+            return
         }
+        taskDeploymentService.taskDefinitionWithOverride(
+                requestBody.ecsClusterName,
+                requestBody.emrClusterHostName,
+                requestBody.albName ,
+                requestBody.userName,
+                requestBody.containerPort,
+                requestBody.jupyterCpu,
+                requestBody.jupyterMemory
+        )
     }
 }
