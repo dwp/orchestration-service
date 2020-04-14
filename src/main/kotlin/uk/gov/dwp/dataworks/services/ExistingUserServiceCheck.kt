@@ -8,17 +8,18 @@ import software.amazon.awssdk.services.ecs.EcsClient
 class ExistingUserServiceCheck{
     @Autowired
     private lateinit var ecsDescribeServicesCall: EcsDescribeServicesCall
-    val configService = ConfigurationService()
+    @Autowired
+    private lateinit var configService : ConfigurationService
 
     fun check(userName: String, ecsClusterName: String):Boolean{
         val ecsClient = EcsClient.builder().region(configService.awsRegion).build()
+        val listOfService = ecsDescribeServicesCall.servicesResponse(ecsClient, ecsClusterName, userName).services()
 
-        for (i in ecsDescribeServicesCall.servicesResponse(ecsClient, ecsClusterName).services()){
-            if(i.serviceName()=="${userName}-ui-service" && i.status()=="ACTIVE"){
-                return true
-            }
+        println(listOfService)
+
+        if(listOfService.size > 0 && listOfService[0].status()=="ACTIVE"){
+            return true
         }
         return false
     }
 }
-

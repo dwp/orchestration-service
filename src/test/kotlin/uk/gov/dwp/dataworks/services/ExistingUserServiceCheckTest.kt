@@ -8,6 +8,7 @@ import org.junit.Assert
 import org.junit.Test
 import org.junit.jupiter.api.BeforeEach
 import org.junit.runner.RunWith
+import org.mockito.ArgumentMatchers.anyString
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.boot.test.mock.mockito.MockBean
@@ -37,29 +38,29 @@ class ExistingUserServiceCheckTest{
     }
 
     private val testUserName = "testUser"
-    private fun createTestService(name: String, status: String): Service {
+    private fun createTestService(name: String?, status: String?): Service {
         return Service.builder().serviceName(name).status(status).build()
     }
 
-    private fun createDescribeServiceResponse(name1: String, state1: String, name2: String, state2: String, name3: String, state3: String): DescribeServicesResponse {
-        return DescribeServicesResponse.builder().services(listOf(createTestService(name1, state1), createTestService(name2, state2), createTestService(name3, state3))).build()
+    private fun createDescribeServiceResponse(name: String, state: String): DescribeServicesResponse {
+        return DescribeServicesResponse.builder().services(listOf(createTestService(name, state))).build()
     }
 
     @Test
     fun `Existing Service prevent duplicates from spinning up`(){
-        whenever(ecsDescribeServicesCall.servicesResponse(any(), any())).thenReturn(createDescribeServiceResponse("testName1", "ACTIVE", "$testUserName-ui-service", "ACTIVE", "testName3", "ACTIVE"))
-        Assert.assertEquals(true, existingUserServiceCheckForTest.check(testUserName, "test" ))
+        whenever(ecsDescribeServicesCall.servicesResponse(any(), anyString(), anyString())).thenReturn(createDescribeServiceResponse( "$testUserName-ui-service", "ACTIVE"))
+        Assert.assertEquals(true, existingUserServiceCheckForTest.check(testUserName, "test"))
     }
 
     @Test
     fun `Existing inactive service allows creation`(){
-        whenever(ecsDescribeServicesCall.servicesResponse(any(), any())).thenReturn(createDescribeServiceResponse("testName1", "ACTIVE", "$testUserName-ui-service", "INACTIVE", "testName3", "ACTIVE"))
-        Assert.assertEquals(false, existingUserServiceCheckForTest.check(testUserName, "test" ))
+        whenever(ecsDescribeServicesCall.servicesResponse(any(), anyString(), anyString())).thenReturn(createDescribeServiceResponse( "$testUserName-ui-service", "INACTIVE"))
+        Assert.assertEquals(false, existingUserServiceCheckForTest.check(testUserName, "test"))
     }
 
     @Test
     fun `No matching service allows creation`(){
-        whenever(ecsDescribeServicesCall.servicesResponse(any(), any())).thenReturn(createDescribeServiceResponse("testName1", "ACTIVE", "testName2", "ACTIVE", "testName3", "ACTIVE"))
-        Assert.assertEquals(false, existingUserServiceCheckForTest.check(testUserName, "test" ))
+        whenever(ecsDescribeServicesCall.servicesResponse(any(), anyString(), anyString())).thenReturn(DescribeServicesResponse.builder().build())
+        Assert.assertEquals(false, existingUserServiceCheckForTest.check(testUserName, "test"))
     }
 }
