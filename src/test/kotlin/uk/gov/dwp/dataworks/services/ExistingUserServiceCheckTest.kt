@@ -38,7 +38,7 @@ class ExistingUserServiceCheckTest{
     }
 
     private val testUserName = "testUser"
-    private fun createTestService(name: String?, status: String?): Service {
+    private fun createTestService(name: String, status: String): Service {
         return Service.builder().serviceName(name).status(status).build()
     }
 
