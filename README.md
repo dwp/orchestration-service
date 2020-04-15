@@ -14,5 +14,8 @@ The service orchestrator for providing remote access into the analytical environ
   - `containerPorts`        - default : 443
   - `jupyterCpu`            - default : 512
   - `jupyterMemory `        - default : 512
+  - `listOfAdditionalPermissions`* - default : null
+  
+     \* `listOfAdditionalPermissions` should be an array eg. `["s3:List*", "s3:Get*"]`
 
 ![Image of Orchestration Service](OrchestrationService.png)

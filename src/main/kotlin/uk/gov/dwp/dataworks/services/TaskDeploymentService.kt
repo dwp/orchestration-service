@@ -2,15 +2,21 @@ package uk.gov.dwp.dataworks.services
 
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.ecs.EcsClient
 import software.amazon.awssdk.services.ecs.model.*
 import software.amazon.awssdk.services.ecs.model.LoadBalancer
 import software.amazon.awssdk.services.elasticloadbalancingv2.ElasticLoadBalancingV2Client
 import software.amazon.awssdk.services.elasticloadbalancingv2.model.*
+import software.amazon.awssdk.services.iam.IamClient
+import software.amazon.awssdk.services.iam.model.AttachRolePolicyRequest
+import software.amazon.awssdk.services.iam.model.CreatePolicyRequest
+import software.amazon.awssdk.services.iam.model.CreateRoleRequest
 import uk.gov.dwp.dataworks.exceptions.FailedToExecuteCreateServiceRequestException
 import uk.gov.dwp.dataworks.exceptions.FailedToExecuteRunTaskRequestException
 import uk.gov.dwp.dataworks.exceptions.UpperRuleLimitReachedException
 import uk.gov.dwp.dataworks.logging.DataworksLogger
+import java.lang.StringBuilder
 
 @Service
 class TaskDeploymentService {
@@ -46,7 +52,7 @@ class TaskDeploymentService {
         throw UpperRuleLimitReachedException()
     }
 
-    fun taskDefinitionWithOverride(ecsClusterName: String, emrClusterHostName: String, albName :String, userName: String, containerPort : Int , jupyterCpu : Int , jupyterMemory: Int ) {
+    fun taskDefinitionWithOverride(ecsClusterName: String, emrClusterHostName: String, albName :String, userName: String, containerPort : Int , jupyterCpu : Int , jupyterMemory: Int, listOfAdditionalPermissions: List<String>) {
 
         val ecsClient = EcsClient.builder().region(configurationService.awsRegion).build()
         val albClient = ElasticLoadBalancingV2Client.builder().region(configurationService.awsRegion).build()
@@ -86,7 +92,7 @@ class TaskDeploymentService {
 
         logger.info("Starting Task...")
         try {
-            val response = ecsClient.runTask(createRunTaskRequestWithOverides(userName,emrClusterHostName,jupyterMemory,jupyterCpu,ecsClusterName))
+            val response = ecsClient.runTask(createRunTaskRequestWithOverides(userName,emrClusterHostName,jupyterMemory,jupyterCpu,ecsClusterName,listOfAdditionalPermissions))
             logger.info("response.tasks = ${response.tasks()}")
         } catch (e: Exception) {
             logger.error("Error while processing the run task request", e)
@@ -94,8 +100,8 @@ class TaskDeploymentService {
         }
     }
 
-    fun createRunTaskRequestWithOverides(userName: String,emrClusterHostName: String,jupyterMemory: Int,jupyterCpu: Int,ecsClusterName: String):RunTaskRequest{
-        val userName = KeyValuePair.builder()
+    fun createRunTaskRequestWithOverides(userName: String,emrClusterHostName: String,jupyterMemory: Int,jupyterCpu: Int,ecsClusterName: String, listOfAdditionalPermissions: List<String>):RunTaskRequest{
+        val userNamePair = KeyValuePair.builder()
                 .name("user_name")
                 .value(userName)
                 .build()
@@ -107,21 +113,22 @@ class TaskDeploymentService {
 
         val chromeOverride= ContainerOverride.builder()
                 .name("headless_chrome")
-                .environment(userName)
+                .environment(userNamePair)
                 .build()
         val jupyterOverride= ContainerOverride.builder()
                 .name("jupyterHub")
-                .environment(userName, emrClusterHostName)
+                .environment(userNamePair, emrClusterHostName)
                 .cpu(jupyterCpu)
                 .memory(jupyterMemory)
                 .build()
         val guacDOverride = ContainerOverride.builder()
                 .name("guacd")
-                .environment(userName)
+                .environment(userNamePair)
                 .build()
 
         val overrides = TaskOverride.builder()
                 .containerOverrides(guacDOverride, chromeOverride, jupyterOverride)
+                .taskRoleArn(createTaskRoleOverride(listOfAdditionalPermissions, userName))
                 .build()
 
         return RunTaskRequest.builder()
@@ -131,5 +138,58 @@ class TaskDeploymentService {
                 .taskDefinition("orchestration-service-analytical-workspace")
                 .build()
     }
-}
 
+    fun createTaskRoleOverride(list: List<String>, userName: String): String{
+        val iamClient = IamClient.builder().region(Region.AWS_GLOBAL).build()
+        fun additionalPermissions(): String{
+            val listToString = StringBuilder()
+            if(list.isNotEmpty()) for (i in list) listToString.append(",\"$i\"")
+            return listToString.toString()
+        }
+        val assumeRolePolicyDocument = "{" +
+        "  \"Version\": \"2012-10-17\"," +
+                "  \"Statement\": [" +
+                "    {" +
+                "        \"Effect\": \"Allow\"," +
+                "        \"Action\": [" +
+                "           \"sts:AssumeRole\"" +
+                "       ]," +
+                "       \"Principal\": {"  +
+                "           \"Service\": ["  +
+                "           \"ecs-tasks.amazonaws.com\"" +
+                "           ]" +
+                "        }" +
+                "     }" +
+                "   ]" +
+                "}"
+
+        val taskRolePolicyDocument = "{" +
+                "  \"Version\": \"2012-10-17\"," +
+                "  \"Statement\": [" +
+                    "     {" +
+                    "        \"Effect\": \"Allow\"," +
+                    "        \"Action\": [" +
+                    "            \"ecr:BatchCheckLayerAvailability\"," +
+                    "            \"ecr:GetDownloadUrlForLayer\"," +
+                    "            \"ecr:BatchGetImage\"," +
+                    "            \"logs:CreateLogStream\"," +
+                    "            \"logs:PutLogEvents\"" +
+                                additionalPermissions() +
+                    "       ]," +
+                    "       \"Resource\": \"*\"" +
+                    "      }" +
+                    "   ]" +
+                    "}"
+
+        println(taskRolePolicyDocument)
+        println(assumeRolePolicyDocument)
+
+        val userPolicyDocument = CreatePolicyRequest.builder().policyDocument(taskRolePolicyDocument).policyName("$userName-task-role-document").build()
+        val userTaskPolicy = iamClient.createPolicy(userPolicyDocument)
+        val iamRole = iamClient.createRole(CreateRoleRequest.builder().assumeRolePolicyDocument(assumeRolePolicyDocument).roleName("$userName-iam-role").build())
+        iamClient.attachRolePolicy(AttachRolePolicyRequest.builder().policyArn(userTaskPolicy.policy().arn()).roleName(iamRole.role().roleName()).build())
+        val taskRoleArn = iamRole.role().arn()
+
+        return taskRoleArn
+    }
+}

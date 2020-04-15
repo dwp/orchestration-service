@@ -28,6 +28,7 @@ dependencies {
 	implementation("software.amazon.awssdk:regions")
 	implementation("software.amazon.awssdk:codegen")
 	implementation("software.amazon.awssdk:elasticloadbalancingv2")
+	implementation("software.amazon.awssdk:iam")
 
 	// Spring
 	implementation("org.springframework.boot:spring-boot-starter-web")
