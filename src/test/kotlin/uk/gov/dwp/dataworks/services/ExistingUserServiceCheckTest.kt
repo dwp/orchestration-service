@@ -14,6 +14,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.test.context.junit4.SpringRunner
 import org.springframework.test.web.servlet.MockMvc
+import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.ecs.model.DescribeServicesResponse
 import software.amazon.awssdk.services.ecs.model.Service
 
@@ -35,6 +36,7 @@ class ExistingUserServiceCheckTest{
     @BeforeEach
     fun setup() {
         whenever(authService.validate(any())).thenReturn(mock<DecodedJWT>())
+        whenever(configService.awsRegion).thenReturn(Region.EU_WEST_2)
     }
 
     private val testUserName = "testUser"
