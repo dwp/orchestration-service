@@ -40,7 +40,7 @@ class UserContainerController {
                 requestBody.containerPort,
                 requestBody.jupyterCpu,
                 requestBody.jupyterMemory,
-                requestBody.listOfAdditionalPermissions
+                requestBody.additionalPermissions
         )
     }
 }

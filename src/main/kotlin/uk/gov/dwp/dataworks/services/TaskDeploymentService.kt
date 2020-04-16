@@ -52,7 +52,7 @@ class TaskDeploymentService {
         throw UpperRuleLimitReachedException()
     }
 
-    fun taskDefinitionWithOverride(ecsClusterName: String, emrClusterHostName: String, albName :String, userName: String, containerPort : Int , jupyterCpu : Int , jupyterMemory: Int, listOfAdditionalPermissions: List<String>) {
+    fun taskDefinitionWithOverride(ecsClusterName: String, emrClusterHostName: String, albName :String, userName: String, containerPort : Int , jupyterCpu : Int , jupyterMemory: Int, additionalPermissions: List<String>) {
 
         val ecsClient = EcsClient.builder().region(configurationService.awsRegion).build()
         val albClient = ElasticLoadBalancingV2Client.builder().region(configurationService.awsRegion).build()
@@ -92,7 +92,7 @@ class TaskDeploymentService {
 
         logger.info("Starting Task...")
         try {
-            val response = ecsClient.runTask(createRunTaskRequestWithOverides(userName,emrClusterHostName,jupyterMemory,jupyterCpu,ecsClusterName,listOfAdditionalPermissions))
+            val response = ecsClient.runTask(createRunTaskRequestWithOverides(userName,emrClusterHostName,jupyterMemory,jupyterCpu,ecsClusterName,additionalPermissions))
             logger.info("response.tasks = ${response.tasks()}")
         } catch (e: Exception) {
             logger.error("Error while processing the run task request", e)
@@ -100,7 +100,7 @@ class TaskDeploymentService {
         }
     }
 
-    fun createRunTaskRequestWithOverides(userName: String,emrClusterHostName: String,jupyterMemory: Int,jupyterCpu: Int,ecsClusterName: String, listOfAdditionalPermissions: List<String>):RunTaskRequest{
+    fun createRunTaskRequestWithOverides(userName: String,emrClusterHostName: String,jupyterMemory: Int,jupyterCpu: Int,ecsClusterName: String, additionalPermissions: List<String>):RunTaskRequest{
         val userNamePair = KeyValuePair.builder()
                 .name("user_name")
                 .value(userName)
@@ -128,7 +128,7 @@ class TaskDeploymentService {
 
         val overrides = TaskOverride.builder()
                 .containerOverrides(guacDOverride, chromeOverride, jupyterOverride)
-                .taskRoleArn(createTaskRoleOverride(listOfAdditionalPermissions, userName))
+                .taskRoleArn(createTaskRoleOverride(additionalPermissions, userName))
                 .build()
 
         return RunTaskRequest.builder()
@@ -181,15 +181,10 @@ class TaskDeploymentService {
                     "   ]" +
                     "}"
 
-        println(taskRolePolicyDocument)
-        println(assumeRolePolicyDocument)
-
         val userPolicyDocument = CreatePolicyRequest.builder().policyDocument(taskRolePolicyDocument).policyName("$userName-task-role-document").build()
         val userTaskPolicy = iamClient.createPolicy(userPolicyDocument)
         val iamRole = iamClient.createRole(CreateRoleRequest.builder().assumeRolePolicyDocument(assumeRolePolicyDocument).roleName("$userName-iam-role").build())
         iamClient.attachRolePolicy(AttachRolePolicyRequest.builder().policyArn(userTaskPolicy.policy().arn()).roleName(iamRole.role().roleName()).build())
-        val taskRoleArn = iamRole.role().arn()
-
-        return taskRoleArn
+        return iamRole.role().arn()
     }
 }
