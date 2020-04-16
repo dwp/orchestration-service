@@ -103,8 +103,8 @@ class TaskDeploymentService {
         }
     }
     
-    private fun createRunTaskRequestWithOverrides(username: String, emrHostname: String, jupyterMemory: Int, jupyterCpu: Int, ecsClusterName: String): RunTaskRequest {
-        val usernamePair = "USER" to username
+    private fun createRunTaskRequestWithOverrides(userName: String, emrHostname: String, jupyterMemory: Int, jupyterCpu: Int, ecsClusterName: String, additionalPermissions: List<String>): RunTaskRequest {
+        val usernamePair = "USER" to userName
         val hostnamePair = "EMR_HOST_NAME" to emrHostname
 
         val chrome = containerOverrideBuilder("headless_chrome", usernamePair).build()
@@ -114,7 +114,8 @@ class TaskDeploymentService {
 
         val overrides = TaskOverride.builder()
                 .containerOverrides(guacd, chrome, jupyter)
-        .build()
+                .taskRoleArn(createTaskRoleOverride(additionalPermissions, userName))
+                .build()
 
         return RunTaskRequest.builder()
                 .cluster(ecsClusterName)
