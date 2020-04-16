@@ -40,5 +40,5 @@ resource "aws_iam_role_policy_attachment" "ecs_task_execution" {
 
 resource "aws_iam_role_policy" "ecs_task_role" {
   policy = data.aws_iam_policy_document.task_role.json
-  role = aws_iam_role.ecs_task_role.id
+  role   = aws_iam_role.ecs_task_role.id
 }
