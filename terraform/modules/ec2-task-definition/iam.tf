@@ -16,8 +16,8 @@ data "aws_iam_policy_document" "ecs_tasks" {
 }
 
 resource "aws_iam_policy" "task_execution_iam_policy" {
-  policy             = data.aws_iam_policy_document.task_execution_iam_policy_document.json
-  name               = "${var.name_prefix}-td-role-policy"
+  policy = data.aws_iam_policy_document.task_execution_iam_policy_document.json
+  name   = "${var.name_prefix}-td-role-policy"
 }
 
 data "aws_iam_policy_document" "task_execution_iam_policy_document" {
@@ -44,8 +44,8 @@ resource "aws_iam_role" "ui_task_iam_role" {
   assume_role_policy = data.aws_iam_policy_document.ecs_tasks.json
 }
 resource "aws_iam_policy" "ui_task_policy" {
-  policy             = data.aws_iam_policy_document.ui_task_policy_document.json
-  name               = "${var.name_prefix}-task-role-policy"
+  policy = data.aws_iam_policy_document.ui_task_policy_document.json
+  name   = "${var.name_prefix}-task-role-policy"
 }
 data "aws_iam_policy_document" "ui_task_policy_document" {
   statement {
