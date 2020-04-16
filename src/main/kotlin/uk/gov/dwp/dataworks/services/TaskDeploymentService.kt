@@ -21,16 +21,17 @@ import java.lang.StringBuilder
 @Service
 class TaskDeploymentService {
     companion object {
-        val logger: DataworksLogger = DataworksLogger(LoggerFactory.getLogger(TaskDeploymentService ::class.java))
+        val logger: DataworksLogger = DataworksLogger(LoggerFactory.getLogger(TaskDeploymentService::class.java))
     }
 
     val configurationService = ConfigurationService()
 
-    private fun createService (ecs_cluster_name: String, user_name: String, ecsClient: EcsClient, containerPort : Int,targetGroupArn: String) {
+    private fun createService(ecsClusterName: String, userName: String, ecsClient: EcsClient, containerPort: Int, targetGroupArn: String) {
 
         val alb: LoadBalancer = LoadBalancer.builder().targetGroupArn(targetGroupArn).containerPort(containerPort).build()
 
-        val serviceBuilder = CreateServiceRequest.builder().cluster(ecs_cluster_name).loadBalancers(alb).serviceName("${user_name}-analytical-workspace").taskDefinition(configurationService.getStringConfig(ConfigKey.USER_CONTAINER_TASK_DEFINITION)).loadBalancers(alb).desiredCount(1).build()
+        val serviceBuilder = CreateServiceRequest.builder().cluster(ecsClusterName).loadBalancers(alb).serviceName("${userName}-analytical-workspace").taskDefinition(configurationService.getStringConfig(ConfigKey.USER_CONTAINER_TASK_DEFINITION)).loadBalancers(alb).desiredCount(1).build()
+
         logger.info("Creating Service...")
 
         try {
@@ -42,12 +43,12 @@ class TaskDeploymentService {
         }
     }
 
-    fun getVacantPriorityValue (rulesResponse : DescribeRulesResponse) : Int {
+    fun getVacantPriorityValue(rulesResponse: DescribeRulesResponse): Int {
 
         val rulePriorities = rulesResponse.rules().map { it.priority() }.filter { it != "default" }.map { Integer.parseInt(it) }.toSet()
         if (rulePriorities.size >= 1000) throw UpperRuleLimitReachedException()
-        for(priority in 0..1000) {
-            if(!rulePriorities.contains(priority)) return priority
+        for (priority in 0..1000) {
+            if (!rulePriorities.contains(priority)) return priority
         }
         throw UpperRuleLimitReachedException()
     }
@@ -85,51 +86,35 @@ class TaskDeploymentService {
 
         logger.info("Creating listener rule...")
 
-        var rulesResponse = albClient.describeRules(DescribeRulesRequest.builder().listenerArn(albListenerResponse.listeners()[0].listenerArn()).build())
+        val rulesResponse = albClient.describeRules(DescribeRulesRequest.builder().listenerArn(albListenerResponse.listeners()[0].listenerArn()).build())
         albClient.createRule(CreateRuleRequest.builder().listenerArn(albListenerResponse.listeners()[0].listenerArn()).priority(getVacantPriorityValue(rulesResponse)).conditions(albRuleCondition).actions(albRuleAction).build())
 
-       createService(ecsClusterName, userName, ecsClient, containerPort ,albTargetGroupArn)
+        createService(ecsClusterName, userName, ecsClient, containerPort, albTargetGroupArn)
 
         logger.info("Starting Task...")
         try {
-            val response = ecsClient.runTask(createRunTaskRequestWithOverides(userName,emrClusterHostName,jupyterMemory,jupyterCpu,ecsClusterName,additionalPermissions))
+
+            val response = ecsClient.runTask(createRunTaskRequestWithOverrides(userName,emrClusterHostName,jupyterMemory,jupyterCpu,ecsClusterName,additionalPermissions))
+
             logger.info("response.tasks = ${response.tasks()}")
         } catch (e: Exception) {
             logger.error("Error while processing the run task request", e)
             throw FailedToExecuteRunTaskRequestException()
         }
     }
+    
+    private fun createRunTaskRequestWithOverrides(username: String, emrHostname: String, jupyterMemory: Int, jupyterCpu: Int, ecsClusterName: String): RunTaskRequest {
+        val usernamePair = "USER" to username
+        val hostnamePair = "EMR_HOST_NAME" to emrHostname
 
-    fun createRunTaskRequestWithOverides(userName: String,emrClusterHostName: String,jupyterMemory: Int,jupyterCpu: Int,ecsClusterName: String, additionalPermissions: List<String>):RunTaskRequest{
-        val userNamePair = KeyValuePair.builder()
-                .name("user_name")
-                .value(userName)
-                .build()
-
-        val emrClusterHostName= KeyValuePair.builder()
-                .name("emr_cluster_host_name")
-                .value(emrClusterHostName)
-                .build()
-
-        val chromeOverride= ContainerOverride.builder()
-                .name("headless_chrome")
-                .environment(userNamePair)
-                .build()
-        val jupyterOverride= ContainerOverride.builder()
-                .name("jupyterHub")
-                .environment(userNamePair, emrClusterHostName)
-                .cpu(jupyterCpu)
-                .memory(jupyterMemory)
-                .build()
-        val guacDOverride = ContainerOverride.builder()
-                .name("guacd")
-                .environment(userNamePair)
-                .build()
+        val chrome = containerOverrideBuilder("headless_chrome", usernamePair).build()
+        val guacd = containerOverrideBuilder("guacd", usernamePair).build()
+        // Jupyter also has configurable resources
+        val jupyter = containerOverrideBuilder("jupyterHub", usernamePair, hostnamePair).cpu(jupyterCpu).memory(jupyterMemory).build()
 
         val overrides = TaskOverride.builder()
-                .containerOverrides(guacDOverride, chromeOverride, jupyterOverride)
-                .taskRoleArn(createTaskRoleOverride(additionalPermissions, userName))
-                .build()
+                .containerOverrides(guacd, chrome, jupyter)
+        .build()
 
         return RunTaskRequest.builder()
                 .cluster(ecsClusterName)
@@ -137,6 +122,17 @@ class TaskDeploymentService {
                 .overrides(overrides)
                 .taskDefinition("orchestration-service-analytical-workspace")
                 .build()
+    }
+
+    /**
+     * Helper method to wrap a container name and set of overrides into an incomplete [ContainerOverride.Builder] for
+     * later consumption.
+     */
+    private fun containerOverrideBuilder(containerName: String, vararg overrides: Pair<String, String>): ContainerOverride.Builder {
+        val overrideKeyPairs = overrides.map { KeyValuePair.builder().name(it.first).value(it.second).build() }
+        return ContainerOverride.builder()
+                .name(containerName)
+                .environment(overrideKeyPairs)
     }
 
     fun createTaskRoleOverride(list: List<String>, userName: String): String{
@@ -147,7 +143,7 @@ class TaskDeploymentService {
             return listToString.toString()
         }
         val assumeRolePolicyDocument = "{" +
-        "  \"Version\": \"2012-10-17\"," +
+                "  \"Version\": \"2012-10-17\"," +
                 "  \"Statement\": [" +
                 "    {" +
                 "        \"Effect\": \"Allow\"," +
@@ -166,20 +162,20 @@ class TaskDeploymentService {
         val taskRolePolicyDocument = "{" +
                 "  \"Version\": \"2012-10-17\"," +
                 "  \"Statement\": [" +
-                    "     {" +
-                    "        \"Effect\": \"Allow\"," +
-                    "        \"Action\": [" +
-                    "            \"ecr:BatchCheckLayerAvailability\"," +
-                    "            \"ecr:GetDownloadUrlForLayer\"," +
-                    "            \"ecr:BatchGetImage\"," +
-                    "            \"logs:CreateLogStream\"," +
-                    "            \"logs:PutLogEvents\"" +
-                                additionalPermissions() +
-                    "       ]," +
-                    "       \"Resource\": \"*\"" +
-                    "      }" +
-                    "   ]" +
-                    "}"
+                "     {" +
+                "        \"Effect\": \"Allow\"," +
+                "        \"Action\": [" +
+                "            \"ecr:BatchCheckLayerAvailability\"," +
+                "            \"ecr:GetDownloadUrlForLayer\"," +
+                "            \"ecr:BatchGetImage\"," +
+                "            \"logs:CreateLogStream\"," +
+                "            \"logs:PutLogEvents\"" +
+                additionalPermissions() +
+                "       ]," +
+                "       \"Resource\": \"*\"" +
+                "      }" +
+                "   ]" +
+                "}"
 
         val userPolicyDocument = CreatePolicyRequest.builder().policyDocument(taskRolePolicyDocument).policyName("$userName-task-role-document").build()
         val userTaskPolicy = iamClient.createPolicy(userPolicyDocument)
