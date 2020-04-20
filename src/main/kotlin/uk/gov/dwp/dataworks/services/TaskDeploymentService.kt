@@ -150,11 +150,12 @@ class TaskDeploymentService {
         parsePolicyDocuments(additionalPermissions)
 
         val userPolicyDocument = CreatePolicyRequest.builder().policyDocument(taskRolePolicyString).policyName("$userName-task-role-document").build()
-        val userTaskPolicy = iamClient.createPolicy(userPolicyDocument)
-        val iamRole = iamClient.createRole(CreateRoleRequest.builder().assumeRolePolicyDocument(taskAssumeRoleString).roleName("$userName-iam-role").build())
+        val userTaskPolicy = iamClient.createPolicy(userPolicyDocument).policy()
+        val iamRole = iamClient.createRole(CreateRoleRequest.builder().assumeRolePolicyDocument(taskAssumeRoleString).roleName("$userName-iam-role").build()).role()
 
-        iamClient.attachRolePolicy(AttachRolePolicyRequest.builder().policyArn(userTaskPolicy.policy().arn()).roleName(iamRole.role().roleName()).build())
-        return iamRole.role().arn()
+        iamClient.attachRolePolicy(AttachRolePolicyRequest.builder().policyArn(userTaskPolicy.arn()).roleName(iamRole.roleName()).build())
+        logger.info("created iam roles", "role_name" to iamRole.roleName(), "role_arn" to iamRole.arn())
+        return iamRole.arn()
     }
 
     /**
@@ -165,6 +166,7 @@ class TaskDeploymentService {
      * @return [Pair] of [taskRolePolicyString] to [taskAssumeRoleString] for ease of access.
      */
     fun parsePolicyDocuments(additionalPermissions: List<String>): Pair<String, String> {
+        logger.info("Adding permissions to containers", "permissions" to additionalPermissions.joinToString())
         val permissionsJson = additionalPermissions.joinToString(prefix = "\"", separator = "\",\"", postfix = "\"")
 
         taskAssumeRoleString = taskAssumeRoleDocument.inputStream.bufferedReader().use { it.readText() }
