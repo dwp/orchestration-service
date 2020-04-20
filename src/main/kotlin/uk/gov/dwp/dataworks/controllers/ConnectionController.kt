@@ -35,17 +35,17 @@ class ConnectionController {
     @ResponseStatus(HttpStatus.OK)
     fun connect(@RequestHeader("Authorization") token: String, @RequestBody requestBody: uk.gov.dwp.dataworks.model.Model): String {
         val jwtObject = authService.validate(token)
-        if (existingUserServiceCheck.check(requestBody.userName, configService.getStringConfig(ConfigKey.ECS_CLUSTER_NAME))){
+        if (existingUserServiceCheck.check(jwtObject.userName, configService.getStringConfig(ConfigKey.ECS_CLUSTER_NAME))){
             UserContainerController.logger.info("Redirecting user to running containers, as they exist")
         } else {
             taskDeploymentService.taskDefinitionWithOverride(
-                    requestBody.userName,
+                    jwtObject.userName,
                     requestBody.containerPort,
                     requestBody.jupyterCpu,
                     requestBody.jupyterMemory,
                     requestBody.additionalPermissions
             )
-            UserContainerController.logger.info("Submitted request", "cluster_name" to configService.getStringConfig(ConfigKey.ECS_CLUSTER_NAME), "user_name" to requestBody.userName)
+            UserContainerController.logger.info("Submitted request", "cluster_name" to configService.getStringConfig(ConfigKey.ECS_CLUSTER_NAME), "user_name" to jwtObject.userName)
         }
         return jwtObject.userUrl
     }

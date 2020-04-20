@@ -32,14 +32,14 @@ class ExistingUserServiceCheckTest {
     private lateinit var configService: ConfigurationService
 
     private val decodedJWT = mock<DecodedJWT>()
+    private val testUserName = "testUser"
 
     @BeforeEach
     fun setup() {
-        val jwtObject = JWTObject(decodedJWT, "test_user")
+        val jwtObject = JWTObject(decodedJWT, testUserName)
         whenever(authService.validate(any())).thenReturn(jwtObject)
     }
 
-    private val testUserName = "testUser"
     private fun createTestService(name: String, status: String): Service {
         return Service.builder().serviceName(name).status(status).build()
     }
