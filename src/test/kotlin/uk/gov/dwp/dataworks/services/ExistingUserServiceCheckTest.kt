@@ -10,12 +10,14 @@ import org.junit.Test
 import org.junit.jupiter.api.BeforeEach
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyString
+import org.mockito.Mock
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.boot.test.mock.mockito.SpyBean
 import org.springframework.test.context.junit4.SpringRunner
 import software.amazon.awssdk.services.ecs.model.DescribeServicesResponse
 import software.amazon.awssdk.services.ecs.model.Service
+import uk.gov.dwp.dataworks.model.JWTObject
 
 @RunWith(SpringRunner::class)
 @WebMvcTest(ExistingUserServiceCheck::class)
@@ -29,9 +31,12 @@ class ExistingUserServiceCheckTest {
     @MockBean
     private lateinit var configService: ConfigurationService
 
+    private val decodedJWT = mock<DecodedJWT>()
+
     @BeforeEach
     fun setup() {
-        whenever(authService.validate(any())).thenReturn(mock<DecodedJWT>())
+        val jwtObject = JWTObject(decodedJWT, "test_user")
+        whenever(authService.validate(any())).thenReturn(jwtObject)
     }
 
     private val testUserName = "testUser"

@@ -16,6 +16,7 @@ import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.elasticloadbalancingv2.model.DescribeRulesResponse
 import software.amazon.awssdk.services.elasticloadbalancingv2.model.Rule
 import uk.gov.dwp.dataworks.Application
+import uk.gov.dwp.dataworks.model.JWTObject
 import java.lang.Exception
 import java.util.*
 
@@ -32,9 +33,12 @@ class TaskDeploymentServiceTest{
     @Autowired
     private lateinit var taskDeploymentService: TaskDeploymentService
 
+    private val decodedJWT = mock<DecodedJWT>()
+
     @BeforeEach
     fun setup() {
-        whenever(authService.validate(any())).thenReturn(mock<DecodedJWT>())
+        val jwtObject = JWTObject(decodedJWT, "test_user")
+        whenever(authService.validate(any())).thenReturn(jwtObject)
         whenever(configService.awsRegion).thenReturn(Region.EU_WEST_2)
     }
 
