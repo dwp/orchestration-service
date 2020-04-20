@@ -15,6 +15,7 @@ import org.springframework.test.context.junit4.SpringRunner
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers
+import uk.gov.dwp.dataworks.model.JWTObject
 import uk.gov.dwp.dataworks.services.*
 
 @RunWith(SpringRunner::class)
@@ -32,10 +33,12 @@ class UserContainerControllerTest {
     @MockBean
     private lateinit var existingUserServiceCheck: ExistingUserServiceCheck
 
+    private val decodedJWT = mock<DecodedJWT>()
 
     @BeforeEach
     fun setup() {
-        whenever(authService.validate(any())).thenReturn(mock<DecodedJWT>())
+        val jwtObject = JWTObject(decodedJWT, "test_user")
+        whenever(authService.validate(any())).thenReturn(jwtObject)
         whenever(existingUserServiceCheck.check(anyString(), anyString())).thenReturn(false)
     }
 
@@ -48,11 +51,7 @@ class UserContainerControllerTest {
     @Test
     fun `200 returned with well formed request`() {
         mvc.perform(MockMvcRequestBuilders.post("/deployusercontainers")
-                .content("{\"ecsClusterName\": \"Test Cluster Name\","
-                        + " \"userName\": \"Test User Name\"," +
-                        "\"emrClusterHostName\": \"Test EMR Host Name\"," +
-                        "\"albName\": \"Test alb Name\"" +
-                        "}")
+                .content("{\"userName\": \"Test User Name\"}")
                 .header("content-type", "application/json"))
                 .andExpect(MockMvcResultMatchers.status().isOk)
     }

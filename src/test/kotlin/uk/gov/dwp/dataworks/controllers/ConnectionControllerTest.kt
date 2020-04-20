@@ -14,6 +14,7 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+import uk.gov.dwp.dataworks.model.JWTObject
 import uk.gov.dwp.dataworks.services.AuthenticationService
 import uk.gov.dwp.dataworks.services.ConfigurationService
 
@@ -28,9 +29,12 @@ class ConnectionControllerTest {
     @MockBean
     private lateinit var configService: ConfigurationService
 
+    private val decodedJWT = mock<DecodedJWT>()
+
     @BeforeEach
     fun setup() {
-        whenever(authService.validate(any())).thenReturn(mock<DecodedJWT>())
+        val jwtObject = JWTObject(decodedJWT, "test_user")
+        whenever(authService.validate(any())).thenReturn(jwtObject)
     }
 
     @Test
@@ -65,7 +69,6 @@ class ConnectionControllerTest {
 
     @Test
     fun `200 returned with well formed request`() {
-        whenever(authService.validate(any())).thenReturn(mock<DecodedJWT>())
         mvc.perform(post("/connect")
                 .header("Authorization", "testGoodToken"))
                 .andExpect(status().isOk)

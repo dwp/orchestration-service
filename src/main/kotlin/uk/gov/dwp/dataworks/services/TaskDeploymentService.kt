@@ -71,7 +71,10 @@ class TaskDeploymentService {
         throw UpperRuleLimitReachedException("The upper limit of 1000 rules has been reached on this listener.")
     }
 
-    fun taskDefinitionWithOverride(ecsClusterName: String, emrClusterHostName: String, albName: String, userName: String, containerPort: Int, jupyterCpu: Int, jupyterMemory: Int, additionalPermissions: List<String>) {
+    fun taskDefinitionWithOverride(userName: String, containerPort : Int , jupyterCpu : Int , jupyterMemory: Int, additionalPermissions: List<String>) {
+        val ecsClusterName = configurationService.getStringConfig(ConfigKey.ECS_CLUSTER_NAME)
+        val emrClusterHostName = configurationService.getStringConfig(ConfigKey.EMR_CLUSTER_HOST_NAME)
+        val albName = configurationService.getStringConfig(ConfigKey.LOAD_BALANCER_NAME)
 
         val ecsClient = EcsClient.builder().region(configurationService.awsRegion).build()
         val albClient = ElasticLoadBalancingV2Client.builder().region(configurationService.awsRegion).build()

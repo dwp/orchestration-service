@@ -38,6 +38,10 @@ module "ecs-fargate-task-definition" {
     {
       name  = "orchestrationService.cognito_user_pool_id"
       value = data.terraform_remote_state.aws_analytical_env_cognito.outputs.cognito.user_pool_id
+    },
+    {
+      name  = "orchestrationService.ecs_cluster_name"
+      value = "${var.name_prefix}-user-host"
     }
   ]
 }
