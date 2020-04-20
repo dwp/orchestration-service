@@ -6,6 +6,7 @@ import com.nhaarman.mockitokotlin2.*
 import org.junit.Test
 import org.junit.jupiter.api.BeforeEach
 import org.junit.runner.RunWith
+import org.mockito.ArgumentMatchers.anyString
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.boot.test.mock.mockito.MockBean
@@ -15,8 +16,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import uk.gov.dwp.dataworks.model.JWTObject
-import uk.gov.dwp.dataworks.services.AuthenticationService
-import uk.gov.dwp.dataworks.services.ConfigurationService
+import uk.gov.dwp.dataworks.services.*
 
 @RunWith(SpringRunner::class)
 @WebMvcTest(ConnectionController::class)
@@ -28,6 +28,10 @@ class ConnectionControllerTest {
     private lateinit var authService: AuthenticationService
     @MockBean
     private lateinit var configService: ConfigurationService
+    @MockBean
+    private lateinit var existingUserServiceCheck: ExistingUserServiceCheck
+    @MockBean
+    private lateinit var taskDeploymentService: TaskDeploymentService
 
     private val decodedJWT = mock<DecodedJWT>()
 
@@ -35,6 +39,8 @@ class ConnectionControllerTest {
     fun setup() {
         val jwtObject = JWTObject(decodedJWT, "test_user")
         whenever(authService.validate(any())).thenReturn(jwtObject)
+        doReturn(false).whenever(existingUserServiceCheck.check(any(), anyString()))
+        doReturn("Test").whenever(configService.getStringConfig(ConfigKey.ECS_CLUSTER_NAME))
     }
 
     @Test
@@ -60,6 +66,8 @@ class ConnectionControllerTest {
     fun `401 returned when bad token`() {
         whenever(authService.validate(any())).thenThrow(JWTVerificationException(""))
         mvc.perform(post("/connect")
+                .content("{}")
+                .header("content-type", "application/json")
                 .header("Authorization", "testBadToken"))
                 .andExpect(status().isUnauthorized)
         mvc.perform(post("/disconnect")
@@ -70,6 +78,8 @@ class ConnectionControllerTest {
     @Test
     fun `200 returned with well formed request`() {
         mvc.perform(post("/connect")
+                .content("{}")
+                .header("content-type", "application/json")
                 .header("Authorization", "testGoodToken"))
                 .andExpect(status().isOk)
         mvc.perform(post("/disconnect")
