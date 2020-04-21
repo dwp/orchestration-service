@@ -32,8 +32,6 @@ class UserContainerController {
     @Autowired
     lateinit var configService: ConfigurationService
 
-    lateinit var jwtObject: JWTObject
-
     @Operation(summary = "Requests the user containers",
             description = "Provisions the user containers for remote desktops")
     @ApiResponses(value = [
@@ -42,19 +40,22 @@ class UserContainerController {
     ])
     @PostMapping("/deployusercontainers")
     fun launchTask(@RequestBody requestBody: Model): String{
-        if (existingUserServiceCheck.check(jwtObject.userName, configService.getStringConfig(ConfigKey.ECS_CLUSTER_NAME))){
+        if (requestBody.userName!=null){
+        if (existingUserServiceCheck.check(requestBody.userName, configService.getStringConfig(ConfigKey.ECS_CLUSTER_NAME))){
             logger.info("Redirecting user to running containers, as they exist")
         } else {
             taskDeploymentService.taskDefinitionWithOverride(
-                    jwtObject.userName,
+                    requestBody.userName,
                     requestBody.containerPort,
                     requestBody.jupyterCpu,
                     requestBody.jupyterMemory,
                     requestBody.additionalPermissions
             )
-            logger.info("Submitted request", "cluster_name" to configService.getStringConfig(ConfigKey.ECS_CLUSTER_NAME), "user_name" to jwtObject.userName)
+            logger.info("Submitted request", "cluster_name" to configService.getStringConfig(ConfigKey.ECS_CLUSTER_NAME), "user_name" to requestBody.userName)
         }
-        return jwtObject.userUrl
+            return "../${requestBody.userName}"
+        }else {
+            throw IllegalArgumentException("No userName found in Request")
+        }
     }
-
 }

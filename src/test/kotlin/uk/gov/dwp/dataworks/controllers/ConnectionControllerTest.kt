@@ -3,6 +3,7 @@ package uk.gov.dwp.dataworks.controllers
 import com.auth0.jwt.exceptions.JWTVerificationException
 import com.auth0.jwt.interfaces.DecodedJWT
 import com.nhaarman.mockitokotlin2.*
+import org.junit.Before
 import org.junit.Test
 import org.junit.jupiter.api.BeforeEach
 import org.junit.runner.RunWith
@@ -10,6 +11,7 @@ import org.mockito.ArgumentMatchers.anyString
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.boot.test.mock.mockito.MockBean
+import org.springframework.boot.test.mock.mockito.SpyBean
 import org.springframework.test.context.junit4.SpringRunner
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
@@ -33,14 +35,12 @@ class ConnectionControllerTest {
     @MockBean
     private lateinit var taskDeploymentService: TaskDeploymentService
 
-    private val decodedJWT = mock<DecodedJWT>()
-
-    @BeforeEach
+    @Before
     fun setup() {
-        val jwtObject = JWTObject(decodedJWT, "test_user")
+        val jwtObject = JWTObject(mock<DecodedJWT>(), "test_user")
         whenever(authService.validate(any())).thenReturn(jwtObject)
-        doReturn(false).whenever(existingUserServiceCheck.check(any(), anyString()))
-        doReturn("Test").whenever(configService.getStringConfig(ConfigKey.ECS_CLUSTER_NAME))
+        whenever(existingUserServiceCheck.check(any(), anyString())).thenReturn(false)
+        whenever(configService.getStringConfig(any())).thenReturn("Test")
     }
 
     @Test
