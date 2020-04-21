@@ -1,8 +1,9 @@
 resource "aws_ecs_task_definition" "service" {
-  family                = "${var.name_prefix}-ui-service"
-  execution_role_arn    = aws_iam_role.ecs_task_execution_role.arn
-  task_role_arn         = aws_iam_role.ecs_task_role.arn
-  network_mode          = "bridge"
+  family             = "${var.name_prefix}-ui-service"
+  execution_role_arn = aws_iam_role.ecs_task_execution_role.arn
+  task_role_arn      = aws_iam_role.ecs_task_role.arn
+  network_mode       = "bridge"
+
   container_definitions = <<TASK_DEFINITION
       [
       {
@@ -89,12 +90,8 @@ resource "aws_ecs_task_definition" "service" {
             },
             {
               "name": "CLIENT_PARAMS",
-              "value": "${join(",", [
-                "hostname=headless_chrome",
-                "port=5900",
-                "disable-copy=true",
-              ])}"
-            },
+              "value": "hostname=headless_chrome,port=5900,disable-copy=true"
+            }
           ]
       }
 ]
