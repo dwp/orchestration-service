@@ -63,7 +63,7 @@ resource "aws_ecs_task_definition" "service" {
           "links":["guacd", "headless_chrome"],
           "portMappings": [
             {
-              "containerPort": ${local.guacamole_port}
+              "containerPort": ${local.guacamole_port},
               "hostPort": ${local.guacamole_port}
             }
           ],
