@@ -1,41 +1,31 @@
 package uk.gov.dwp.dataworks.services
 
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.core.io.Resource
 import org.springframework.stereotype.Service
 import software.amazon.awssdk.regions.Region
-import software.amazon.awssdk.services.ecs.EcsClient
 import software.amazon.awssdk.services.ecs.model.ContainerOverride
-import software.amazon.awssdk.services.ecs.model.CreateServiceRequest
 import software.amazon.awssdk.services.ecs.model.KeyValuePair
 import software.amazon.awssdk.services.ecs.model.LoadBalancer
 import software.amazon.awssdk.services.ecs.model.RunTaskRequest
 import software.amazon.awssdk.services.ecs.model.TaskOverride
-import software.amazon.awssdk.services.elasticloadbalancingv2.ElasticLoadBalancingV2Client
-import software.amazon.awssdk.services.elasticloadbalancingv2.model.Action
-import software.amazon.awssdk.services.elasticloadbalancingv2.model.CreateRuleRequest
-import software.amazon.awssdk.services.elasticloadbalancingv2.model.CreateTargetGroupRequest
-import software.amazon.awssdk.services.elasticloadbalancingv2.model.DescribeListenersRequest
-import software.amazon.awssdk.services.elasticloadbalancingv2.model.DescribeLoadBalancersRequest
-import software.amazon.awssdk.services.elasticloadbalancingv2.model.DescribeRulesRequest
-import software.amazon.awssdk.services.elasticloadbalancingv2.model.DescribeRulesResponse
-import software.amazon.awssdk.services.elasticloadbalancingv2.model.DescribeTargetGroupsRequest
-import software.amazon.awssdk.services.elasticloadbalancingv2.model.ForwardActionConfig
-import software.amazon.awssdk.services.elasticloadbalancingv2.model.PathPatternConditionConfig
-import software.amazon.awssdk.services.elasticloadbalancingv2.model.RuleCondition
-import software.amazon.awssdk.services.elasticloadbalancingv2.model.TargetGroupTuple
 import software.amazon.awssdk.services.iam.IamClient
 import software.amazon.awssdk.services.iam.model.AttachRolePolicyRequest
 import software.amazon.awssdk.services.iam.model.CreatePolicyRequest
 import software.amazon.awssdk.services.iam.model.CreateRoleRequest
-import uk.gov.dwp.dataworks.FailedToExecuteCreateServiceRequestException
 import uk.gov.dwp.dataworks.FailedToExecuteRunTaskRequestException
-import uk.gov.dwp.dataworks.UpperRuleLimitReachedException
 import uk.gov.dwp.dataworks.logging.DataworksLogger
 
 @Service
 class TaskDeploymentService {
+    @Autowired
+    private lateinit var awsCommunicator: AwsCommunicator
+
+    @Autowired
+    private lateinit var configurationService: ConfigurationService
+
     @Value("classpath:policyDocuments/taskAssumeRolePolicy.json")
     lateinit var taskAssumeRoleDocument: Resource
     private lateinit var taskAssumeRoleString: String
@@ -48,62 +38,26 @@ class TaskDeploymentService {
         val logger: DataworksLogger = DataworksLogger(LoggerFactory.getLogger(TaskDeploymentService::class.java))
     }
 
-    val configurationService = ConfigurationService()
-
-    private fun createService(ecsClusterName: String, userName: String, ecsClient: EcsClient, containerPort: Int, targetGroupArn: String) {
-        val alb: LoadBalancer = LoadBalancer.builder().targetGroupArn(targetGroupArn).containerPort(containerPort).build()
-        val serviceBuilder = CreateServiceRequest.builder().cluster(ecsClusterName).loadBalancers(alb).serviceName("${userName}-analytical-workspace").taskDefinition(configurationService.getStringConfig(ConfigKey.USER_CONTAINER_TASK_DEFINITION)).loadBalancers(alb).desiredCount(1).build()
-
-        try {
-            val service = ecsClient.createService(serviceBuilder).service()
-            logger.info("Created ECS Service", "cluster_arn" to service.clusterArn(), "service_name" to service.serviceName(), "task_definition" to service.taskDefinition())
-        } catch (e: Exception) {
-            logger.error("Failed to create ECS Service", e, "cluster_arn" to serviceBuilder.cluster(), "service_name" to serviceBuilder.serviceName(), "task_definition" to serviceBuilder.taskDefinition())
-            throw FailedToExecuteCreateServiceRequestException("Error while processing the Create Service request", e)
-        }
-    }
-
-    fun getVacantPriorityValue(rulesResponse: DescribeRulesResponse): Int {
-        val rulePriorities = rulesResponse.rules().map { it.priority() }.filter { it != "default" }.map { Integer.parseInt(it) }.toSet()
-        for (priority in 0..999) {
-            if (!rulePriorities.contains(priority)) return priority
-        }
-        throw UpperRuleLimitReachedException("The upper limit of 1000 rules has been reached on this listener.")
-    }
-
-    fun taskDefinitionWithOverride(userName: String, jupyterCpu : Int , jupyterMemory: Int, additionalPermissions: List<String>) {
-        val ecsClusterName = configurationService.getStringConfig(ConfigKey.ECS_CLUSTER_NAME)
+    fun taskDefinitionWithOverride(userName: String, jupyterCpu: Int, jupyterMemory: Int, additionalPermissions: List<String>) {
+        val containerPort = Integer.parseInt(configurationService.getStringConfig(ConfigKey.USER_CONTAINER_PORT))
         val emrClusterHostName = configurationService.getStringConfig(ConfigKey.EMR_CLUSTER_HOST_NAME)
         val albName = configurationService.getStringConfig(ConfigKey.LOAD_BALANCER_NAME)
-        val containerPort = Integer.parseInt(configurationService.getStringConfig(ConfigKey.USER_CONTAINER_PORT))
+        val ecsClusterName = configurationService.getStringConfig(ConfigKey.ECS_CLUSTER_NAME)
 
-        val ecsClient = EcsClient.builder().region(configurationService.awsRegion).build()
-        val albClient = ElasticLoadBalancingV2Client.builder().region(configurationService.awsRegion).build()
+        val loadBalancer = awsCommunicator.getLoadBalancerByName(albName)
+        val listener = awsCommunicator.getAlbListenerByPort(loadBalancer.loadBalancerArn())
+        val targetGroup = awsCommunicator.createTargetGroup(loadBalancer.vpcId(), "$userName-target-group", containerPort)
+        // There are 2 LoadBalancer classes in the AWS SDK. The following is the load balancer needed to create an ECS service.
+        val ecsLoadBalancer = LoadBalancer.builder()
+                .targetGroupArn(targetGroup.targetGroupArn())
+                .loadBalancerName(loadBalancer.loadBalancerName())
+                .containerName("") //TODO
+                .containerPort(containerPort)
+                .build()
 
-        val albRequest = DescribeLoadBalancersRequest.builder().names(albName).build()
-        val albResponse = albClient.describeLoadBalancers(albRequest)
+        awsCommunicator.createAlbRoutingRule(listenerArn = listener.listenerArn(), targetGroupArn = targetGroup.targetGroupArn(), pathPattern = "/$userName/*")
+        awsCommunicator.createEcsService(ecsClusterName, "${userName}-analytical-workspace", ecsLoadBalancer)
 
-        val albListenerRequest = DescribeListenersRequest.builder().loadBalancerArn(albResponse.loadBalancers()[0].loadBalancerArn()).build()
-        val albListenerResponse = albClient.describeListeners(albListenerRequest)
-
-        val tgRequest = CreateTargetGroupRequest.builder().name("$userName-target-group").protocol("HTTPS").vpcId(albResponse.loadBalancers()[0].vpcId()).port(containerPort).build()
-        val targetGroupResponse = albClient.createTargetGroup(tgRequest)
-
-        logger.info("Created target groups", "target_groups" to targetGroupResponse.targetGroups().joinToString { it.targetGroupName() })
-
-        val albTargetGroupRequest = albClient.describeTargetGroups(DescribeTargetGroupsRequest.builder().names("$userName-target-group").build())
-        val albTargetGroupArn = albTargetGroupRequest.targetGroups()[0].targetGroupArn()
-
-        val pathPattern = PathPatternConditionConfig.builder().values("/$userName/*").build()
-        val albRuleCondition = RuleCondition.builder().field("path-pattern").pathPatternConfig(pathPattern).build()
-        val userTargetGroup = TargetGroupTuple.builder().targetGroupArn(albTargetGroupArn).build()
-        val forwardAction = ForwardActionConfig.builder().targetGroups(userTargetGroup).build()
-        val albRuleAction = Action.builder().type("forward").forwardConfig(forwardAction).build()
-
-        val rulesResponse = albClient.describeRules(DescribeRulesRequest.builder().listenerArn(albListenerResponse.listeners()[0].listenerArn()).build())
-        albClient.createRule(CreateRuleRequest.builder().listenerArn(albListenerResponse.listeners()[0].listenerArn()).priority(getVacantPriorityValue(rulesResponse)).conditions(albRuleCondition).actions(albRuleAction).build())
-
-        createService(ecsClusterName, userName, ecsClient, containerPort, albTargetGroupArn)
 
         try {
             val response = ecsClient.runTask(createRunTaskRequestWithOverrides(userName, emrClusterHostName, jupyterMemory, jupyterCpu, ecsClusterName, additionalPermissions))
