@@ -21,13 +21,13 @@ class ConfigurationService {
     private val listConfigs: MutableMap<ConfigKey, List<String>> = mutableMapOf()
     val awsRegion: Region = kotlin.runCatching { Region.of(getStringConfig(AWS_REGION)) }.getOrDefault(Region.EU_WEST_2)
 
-    fun getStringConfig(configKey: ConfigKey): String {
+    final fun getStringConfig(configKey: ConfigKey): String {
         return stringConfigs.computeIfAbsent(configKey) {
             env.getProperty(configKey.key) ?: throw SystemArgumentException("No value found for ${configKey.key}")
         }
     }
 
-    fun getListConfig(configKey: ConfigKey): List<String> {
+    final fun getListConfig(configKey: ConfigKey): List<String> {
         return listConfigs.computeIfAbsent(configKey) {
             val sysConfig = env.getProperty(configKey.key) ?: throw SystemArgumentException("No value found for ${configKey.key}")
             sysConfig.split(",").toList()
@@ -61,5 +61,6 @@ enum class ConfigKey(val key: String, val isList: Boolean) {
     LOAD_BALANCER_NAME("orchestrationService.load_balancer_name",false),
     USER_CONTAINER_TASK_DEFINITION("orchestrationService.user_container_task_definition",false),
     ECS_CLUSTER_NAME("orchestrationService.ecs_cluster_name", false),
-    USER_CONTAINER_URL("orchestrationService.user_container_url", false)
+    USER_CONTAINER_URL("orchestrationService.user_container_url", false),
+    USER_CONTAINER_PORT("orchestrationService.user_container_port", false)
 }
