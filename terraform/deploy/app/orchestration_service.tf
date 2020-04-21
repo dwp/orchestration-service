@@ -46,6 +46,10 @@ module "ecs-fargate-task-definition" {
     {
       name  = "orchestrationService.user_container_url"
       value = "aws-analytical-env.${local.root_dns_prefix[local.environment]}.${local.parent_domain_name[local.environment]}"
+    },
+    {
+      name  = "orchestrationService.user_container_port"
+      value = 8443
     }
   ]
 }
