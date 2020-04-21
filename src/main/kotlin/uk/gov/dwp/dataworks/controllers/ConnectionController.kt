@@ -47,7 +47,7 @@ class ConnectionController {
             )
             UserContainerController.logger.info("Submitted request", "cluster_name" to configService.getStringConfig(ConfigKey.ECS_CLUSTER_NAME), "user_name" to jwtObject.userName)
         }
-        return jwtObject.userUrl
+        return "${configService.getStringConfig(ConfigKey.USER_CONTAINER_URL)}/${jwtObject.userName}"
     }
 
     @Operation(summary = "Disconnect from Analytical Environment",

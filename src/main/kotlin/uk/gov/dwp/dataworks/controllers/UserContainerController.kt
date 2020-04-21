@@ -5,18 +5,15 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.dwp.dataworks.logging.DataworksLogger
-import uk.gov.dwp.dataworks.model.JWTObject
 import uk.gov.dwp.dataworks.model.Model
 import uk.gov.dwp.dataworks.services.ConfigKey
 import uk.gov.dwp.dataworks.services.ConfigurationService
 import uk.gov.dwp.dataworks.services.ExistingUserServiceCheck
 import uk.gov.dwp.dataworks.services.TaskDeploymentService
-import uk.gov.dwp.dataworks.services.TaskDeploymentService.Companion.logger
 import java.lang.IllegalArgumentException
 
 @RestController
@@ -53,7 +50,7 @@ class UserContainerController {
             )
             logger.info("Submitted request", "cluster_name" to configService.getStringConfig(ConfigKey.ECS_CLUSTER_NAME), "user_name" to requestBody.userName)
         }
-            return "../${requestBody.userName}"
+            return "${configService.getStringConfig(ConfigKey.USER_CONTAINER_URL)}/${requestBody.userName}"
         }else {
             throw IllegalArgumentException("No userName found in Request")
         }
