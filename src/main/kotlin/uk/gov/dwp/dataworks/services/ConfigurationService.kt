@@ -60,5 +60,6 @@ enum class ConfigKey(val key: String, val isList: Boolean) {
     EMR_CLUSTER_HOST_NAME("orchestrationSerice.emr_cluster_host_name", false),
     LOAD_BALANCER_NAME("orchestrationService.load_balancer_name",false),
     USER_CONTAINER_TASK_DEFINITION("orchestrationService.user_container_task_definition",false),
-    ECS_CLUSTER_NAME("orchestrationService.ecs_cluster_name", false)
+    ECS_CLUSTER_NAME("orchestrationService.ecs_cluster_name", false),
+    USER_CONTAINER_URL("orchestrationService.user_container_url", false)
 }
