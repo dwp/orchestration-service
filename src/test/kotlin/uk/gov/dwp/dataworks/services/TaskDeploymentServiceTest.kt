@@ -61,7 +61,7 @@ class TaskDeploymentServiceTest{
 
     @Test (expected = Exception::class)
     fun testPriorityNumberFor1000PlusExpectError(){
-        val actual =  taskDeploymentService.getVacantPriorityValue(createDescribeRulesResponse(create1000()))
+        taskDeploymentService.getVacantPriorityValue(createDescribeRulesResponse(create1000()))
     }
 
     fun  createDescribeRulesResponse(array: Collection<Rule>): DescribeRulesResponse {

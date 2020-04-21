@@ -21,13 +21,13 @@ class ConfigurationService {
     private val listConfigs: MutableMap<ConfigKey, List<String>> = mutableMapOf()
     val awsRegion: Region = kotlin.runCatching { Region.of(getStringConfig(AWS_REGION)) }.getOrDefault(Region.EU_WEST_2)
 
-    final fun getStringConfig(configKey: ConfigKey): String {
+    fun getStringConfig(configKey: ConfigKey): String {
         return stringConfigs.computeIfAbsent(configKey) {
             env.getProperty(configKey.key) ?: throw SystemArgumentException("No value found for ${configKey.key}")
         }
     }
 
-    final fun getListConfig(configKey: ConfigKey): List<String> {
+    fun getListConfig(configKey: ConfigKey): List<String> {
         return listConfigs.computeIfAbsent(configKey) {
             val sysConfig = env.getProperty(configKey.key) ?: throw SystemArgumentException("No value found for ${configKey.key}")
             sysConfig.split(",").toList()

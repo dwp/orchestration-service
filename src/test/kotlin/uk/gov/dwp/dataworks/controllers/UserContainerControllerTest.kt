@@ -5,6 +5,7 @@ import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.whenever
+import org.junit.Before
 import org.junit.Test
 import org.junit.jupiter.api.BeforeEach
 import org.junit.runner.RunWith
@@ -20,6 +21,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers
 import uk.gov.dwp.dataworks.model.JWTObject
 import uk.gov.dwp.dataworks.services.*
+import java.lang.Exception
 
 @RunWith(SpringRunner::class)
 @WebMvcTest(UserContainerController::class)
@@ -53,8 +55,21 @@ class UserContainerControllerTest {
     @Test
     fun `200 returned with well formed request`() {
         mvc.perform(MockMvcRequestBuilders.post("/deployusercontainers")
-                .content("{}")
+                .content("{\"userName\" : \"test_user\"}")
                 .header("content-type", "application/json"))
                 .andExpect(MockMvcResultMatchers.status().isOk)
+    }
+
+    @Test (expected = Exception::class)
+    fun `Throws Exception with bad request`() {
+        mvc.perform(MockMvcRequestBuilders.post("/deployusercontainers")
+                .content("{\"missingUserName\" : \"test\"}")
+                .header("content-type", "application/json"))
+    }
+    @Test (expected = Exception::class)
+    fun `Throws Exception with empty request`() {
+        mvc.perform(MockMvcRequestBuilders.post("/deployusercontainers")
+                .content("{}")
+                .header("content-type", "application/json"))
     }
 }
