@@ -32,7 +32,7 @@ data "aws_iam_policy_document" "task_role" {
       "iam:AttachRolePolicy"
     ]
 
-    resources = [
+resources = [
       "*",
     ]
   }
