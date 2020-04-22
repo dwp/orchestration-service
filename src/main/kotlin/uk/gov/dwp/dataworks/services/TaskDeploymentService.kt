@@ -46,7 +46,7 @@ class TaskDeploymentService {
         val ecsLoadBalancer = LoadBalancer.builder()
                 .targetGroupArn(targetGroup.targetGroupArn())
                 .loadBalancerName(loadBalancer.loadBalancerName())
-                .containerName("") //TODO determine which container this will route to
+                .containerName("guacamole")
                 .containerPort(containerPort)
                 .build()
         awsCommunicator.createAlbRoutingRule(listener.listenerArn(),targetGroup.targetGroupArn(),"/$userName/*")
