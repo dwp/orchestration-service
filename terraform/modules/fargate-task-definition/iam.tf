@@ -15,6 +15,21 @@ data "aws_iam_policy_document" "task_role" {
   statement {
     actions = [
       "ec2:DescribeImages",
+      "ecs:CreateService",
+      "ecs:DescribeTaskDefinition",
+      "ecs:DescribeServices",
+      "ecs:RunTask",
+      "elasticloadbalancing:DescribeLoadBalancers",
+      "elasticloadbalancing:DescribeListeners",
+      "elasticloadbalancing:DescribeTargetGroups",
+      "elasticloadbalancing:CreateTargetGroup",
+      "elasticloadbalancing:CreateRule",
+      "elasticloadbalancing:DescribeRules",
+      "iam:CreatePolicy",
+      "iam:CreateRole",
+      "iam:CreateRole",
+      "iam:PutRolePolicy",
+      "iam:AttachRolePolicy"
     ]
 
     resources = [
