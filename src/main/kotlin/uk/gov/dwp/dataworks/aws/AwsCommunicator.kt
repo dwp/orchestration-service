@@ -3,8 +3,6 @@ package uk.gov.dwp.dataworks.aws
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
-import software.amazon.awssdk.regions.Region
-import software.amazon.awssdk.services.ecs.EcsClient
 import software.amazon.awssdk.services.ecs.model.ContainerOverride
 import software.amazon.awssdk.services.ecs.model.CreateServiceRequest
 import software.amazon.awssdk.services.ecs.model.KeyValuePair
@@ -24,7 +22,6 @@ import software.amazon.awssdk.services.elasticloadbalancingv2.model.PathPatternC
 import software.amazon.awssdk.services.elasticloadbalancingv2.model.Rule
 import software.amazon.awssdk.services.elasticloadbalancingv2.model.RuleCondition
 import software.amazon.awssdk.services.elasticloadbalancingv2.model.TargetGroup
-import software.amazon.awssdk.services.iam.IamClient
 import software.amazon.awssdk.services.iam.model.AttachRolePolicyRequest
 import software.amazon.awssdk.services.iam.model.CreatePolicyRequest
 import software.amazon.awssdk.services.iam.model.CreateRoleRequest
@@ -36,7 +33,6 @@ import uk.gov.dwp.dataworks.UpperRuleLimitReachedException
 import uk.gov.dwp.dataworks.logging.DataworksLogger
 import uk.gov.dwp.dataworks.services.ConfigKey
 import uk.gov.dwp.dataworks.services.ConfigurationResolver
-import javax.annotation.PostConstruct
 import software.amazon.awssdk.services.ecs.model.LoadBalancer as EcsLoadBalancer
 
 /**

@@ -1,6 +1,5 @@
 package uk.gov.dwp.dataworks.services
 
-import uk.gov.dwp.dataworks.JWTObject
 import com.auth0.jwk.JwkException
 import com.auth0.jwk.JwkProvider
 import com.auth0.jwk.UrlJwkProvider
@@ -11,6 +10,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import uk.gov.dwp.dataworks.JWTObject
 import uk.gov.dwp.dataworks.logging.DataworksLogger
 import java.net.URL
 import java.security.interfaces.RSAPublicKey

@@ -3,11 +3,9 @@ package uk.gov.dwp.dataworks.services
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.core.env.Environment
 import org.springframework.stereotype.Component
-import org.springframework.stereotype.Service
 import software.amazon.awssdk.regions.Region
 import uk.gov.dwp.dataworks.SystemArgumentException
 import uk.gov.dwp.dataworks.services.ConfigKey.AWS_REGION
-import javax.annotation.PostConstruct
 
 /**
  * Class used to source configuration from Java Environment Variables. This allows us to interpolate

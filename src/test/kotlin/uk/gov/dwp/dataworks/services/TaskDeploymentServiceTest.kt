@@ -17,7 +17,6 @@ import software.amazon.awssdk.services.elasticloadbalancingv2.model.DescribeRule
 import software.amazon.awssdk.services.elasticloadbalancingv2.model.Rule
 import uk.gov.dwp.dataworks.Application
 import uk.gov.dwp.dataworks.JWTObject
-import java.lang.Exception
 
 @RunWith(SpringRunner::class)
 @ContextConfiguration(classes = [Application::class])
@@ -42,8 +41,6 @@ class TaskDeploymentServiceTest {
         whenever(configurationResolver.awsRegion).thenReturn(Region.EU_WEST_2)
     }
 
-    val nonConsecutiveCol: Collection<Rule> = listOf(Rule.builder().priority("0").build(), Rule.builder().priority("1").build(), Rule.builder().priority("3").build())
-
     @Test
     fun `Loads policy documents from classpath correctly`() {
         val taskRolePolicy = taskDeploymentService.taskRolePolicyDocument.inputStream.bufferedReader().use { it.readText() }
@@ -60,11 +57,6 @@ class TaskDeploymentServiceTest {
         assertThat(taskRolePolicyString).doesNotContain("ADDITIONAL_PERMISSIONS")
         assertThat(taskRolePolicyString).contains("\"permissionOne\",\"permissionTwo\"")
     }
-
-//    @Test(expected = Exception::class)
-//    fun testPriorityNumberFor1000PlusExpectError() {
-//        taskDeploymentService.getVacantPriorityValue(createDescribeRulesResponse(create1000()))
-//    }
 
     fun createDescribeRulesResponse(array: Collection<Rule>): DescribeRulesResponse {
         val list: Collection<Rule> = array
