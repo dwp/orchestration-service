@@ -10,6 +10,9 @@ import software.amazon.awssdk.services.iam.IamClient
 import uk.gov.dwp.dataworks.services.ConfigurationResolver
 import javax.annotation.PostConstruct
 
+/**
+ * Class to encapsulate and make available all of the AWS Clients required by the Orchestration Service.
+ */
 @Configuration
 class AwsClients {
     @Autowired
