@@ -16,7 +16,7 @@ import org.springframework.boot.test.mock.mockito.SpyBean
 import org.springframework.test.context.junit4.SpringRunner
 import software.amazon.awssdk.services.ecs.model.DescribeServicesResponse
 import software.amazon.awssdk.services.ecs.model.Service
-import uk.gov.dwp.dataworks.model.JWTObject
+import uk.gov.dwp.dataworks.JWTObject
 
 @RunWith(SpringRunner::class)
 @WebMvcTest(ExistingUserServiceCheck::class)

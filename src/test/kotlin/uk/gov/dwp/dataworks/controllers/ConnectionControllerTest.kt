@@ -16,7 +16,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
-import uk.gov.dwp.dataworks.model.JWTObject
+import uk.gov.dwp.dataworks.JWTObject
 import uk.gov.dwp.dataworks.services.ConfigurationResolver
 import uk.gov.dwp.dataworks.services.ConfigKey
 import uk.gov.dwp.dataworks.services.AuthenticationService

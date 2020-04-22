@@ -1,4 +1,4 @@
-package uk.gov.dwp.dataworks.services
+package uk.gov.dwp.dataworks.aws
 
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -30,8 +30,13 @@ import software.amazon.awssdk.services.iam.model.CreatePolicyRequest
 import software.amazon.awssdk.services.iam.model.CreateRoleRequest
 import software.amazon.awssdk.services.iam.model.Policy
 import software.amazon.awssdk.services.iam.model.Role
+import uk.gov.dwp.dataworks.MultipleListenersMatchedException
+import uk.gov.dwp.dataworks.MultipleLoadBalancersMatchedException
 import uk.gov.dwp.dataworks.UpperRuleLimitReachedException
 import uk.gov.dwp.dataworks.logging.DataworksLogger
+import uk.gov.dwp.dataworks.services.ConfigKey
+import uk.gov.dwp.dataworks.services.ConfigurationResolver
+import javax.annotation.PostConstruct
 import software.amazon.awssdk.services.ecs.model.LoadBalancer as EcsLoadBalancer
 
 /**
@@ -51,30 +56,32 @@ class AwsCommunicator {
 
     @Autowired
     private lateinit var configurationResolver: ConfigurationResolver
-
-    private val albClient = ElasticLoadBalancingV2Client.builder().region(configurationResolver.awsRegion).build()
-    private val ecsClient = EcsClient.builder().region(configurationResolver.awsRegion).build()
-    private val iamClient = IamClient.builder().region(Region.AWS_GLOBAL).build()
+    @Autowired
+    private lateinit var awsClients: AwsClients
 
     /**
      * Retrieve a [LoadBalancer] from AWS given it's name. If multiple LoadBalancers are found with the same
      * name, an exception will be thrown.
-     * @throws //TODO
+     * @throws MultipleLoadBalancersMatchedException when more than one Load balancer is located with name [albName]
      */
     fun getLoadBalancerByName(albName: String): LoadBalancer {
-        val albs = albClient.describeLoadBalancers(DescribeLoadBalancersRequest.builder().names(albName).build())
-        if (albs.loadBalancers().size == 1) return albs.loadBalancers()[0]
-        else throw Exception() //TODO
+        val albs = awsClients.albClient.describeLoadBalancers(DescribeLoadBalancersRequest.builder().names(albName).build())
+                .loadBalancers()
+        if (albs.size == 1) return albs[0]
+        else throw MultipleLoadBalancersMatchedException("Expected to find 1 Load Balancer with name $albName, actually found ${albs.size}")
     }
 
     /**
      * Retrieves a [Listener] from a [LoadBalancer] based on the name of the ALB and the port of the listener.
      * Note that, for simplicity, this method expects only a single binding on the listener and will always
      * return the first one found.
+     * @throws MultipleListenersMatchedException when more than one Listener is located matching port [listenerPort]
      */
     fun getAlbListenerByPort(loadBalancerArn: String, listenerPort: Int): Listener {
-        val albListeners = albClient.describeListenersPaginator(DescribeListenersRequest.builder().loadBalancerArn(loadBalancerArn).build())
-        return albListeners.listeners().filter { it.port() == listenerPort }.elementAtOrElse(0) { throw Exception() } //TODO
+        val albListeners = awsClients.albClient.describeListeners(DescribeListenersRequest.builder().loadBalancerArn(loadBalancerArn).build())
+        val matchedListeners = albListeners.listeners().filter { it.port() == listenerPort }
+        return matchedListeners
+                .elementAtOrElse(0) { throw MultipleListenersMatchedException("Expected to find 1 Listener with port $listenerPort, actually found ${matchedListeners.size}") }
     }
 
     /**
@@ -83,7 +90,7 @@ class AwsCommunicator {
      */
     fun createTargetGroup(vpcId: String, targetGroupName: String, targetPort: Int): TargetGroup {
         // Create HTTPS target group in VPC to port containerPort
-        val targetGroupResponse = albClient.createTargetGroup(
+        val targetGroupResponse = awsClients.albClient.createTargetGroup(
                 CreateTargetGroupRequest.builder()
                         .name(targetGroupName)
                         .protocol("HTTPS")
@@ -119,11 +126,11 @@ class AwsCommunicator {
         val albRuleAction = Action.builder().type("forward").targetGroupArn(targetGroupArn).build()
 
         //Get rules on listener & calculate vacant priority.
-        val albRules = albClient.describeRules(DescribeRulesRequest.builder().listenerArn(listenerArn).build())
+        val albRules = awsClients.albClient.describeRules(DescribeRulesRequest.builder().listenerArn(listenerArn).build())
         val rulePriority = calculateVacantPriorityValue(albRules.rules())
 
         //Create the complete rule
-        val rule = albClient.createRule(CreateRuleRequest.builder()
+        val rule = awsClients.albClient.createRule(CreateRuleRequest.builder()
                 .listenerArn(listenerArn)
                 .priority(rulePriority)
                 .conditions(albRuleCondition)
@@ -179,7 +186,7 @@ class AwsCommunicator {
                 .build()
 
         //Create the service
-        val ecsService = ecsClient.createService(serviceBuilder).service()
+        val ecsService = awsClients.ecsClient.createService(serviceBuilder).service()
         logger.info("Created ECS Service",
                 "cluster_name" to clusterName,
                 "service_name" to serviceName,
@@ -214,7 +221,7 @@ class AwsCommunicator {
      * Runs the specified [RunTaskRequest]
      */
     fun runEcsTask(taskRequest: RunTaskRequest) {
-        val task = ecsClient.runTask(taskRequest).tasks()[0]
+        val task = awsClients.ecsClient.runTask(taskRequest).tasks()[0]
         logger.info("ECS tasks run",
                 "instance_arns" to task.containerInstanceArn(),
                 "task_groups" to task.group(),
@@ -230,7 +237,7 @@ class AwsCommunicator {
      * as per the AWS standards for documents.
      */
     fun createIamPolicy(policyName: String, policyDocument: String): Policy {
-        val policy = iamClient.createPolicy(
+        val policy = awsClients.iamClient.createPolicy(
                 CreatePolicyRequest.builder()
                         .policyDocument(policyDocument)
                         .policyName(policyName).build())
@@ -249,7 +256,7 @@ class AwsCommunicator {
      * in JSON format as per the AWS standards for documents.
      */
     fun createIamRole(roleName: String, assumeRolePolicy: String): Role {
-        val role = iamClient.createRole(
+        val role = awsClients.iamClient.createRole(
                 CreateRoleRequest.builder()
                         .assumeRolePolicyDocument(roleName)
                         .roleName(roleName).build())
@@ -267,7 +274,7 @@ class AwsCommunicator {
      * Attaches [policy] to [role] using the [Policy] ARN and [Role] name.
      */
     fun attachIamPolicyToRole(policy: Policy, role: Role) {
-        iamClient.attachRolePolicy(AttachRolePolicyRequest.builder()
+        awsClients.iamClient.attachRolePolicy(AttachRolePolicyRequest.builder()
                 .policyArn(policy.arn())
                 .roleName(role.roleName()).build())
         logger.info("Attched policy to role", "policy_arn" to policy.arn(), "role_name" to role.roleName())

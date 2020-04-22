@@ -7,6 +7,7 @@ import org.springframework.core.io.Resource
 import org.springframework.stereotype.Service
 import software.amazon.awssdk.services.ecs.model.ContainerOverride
 import software.amazon.awssdk.services.ecs.model.LoadBalancer
+import uk.gov.dwp.dataworks.aws.AwsCommunicator
 import uk.gov.dwp.dataworks.logging.DataworksLogger
 
 @Service

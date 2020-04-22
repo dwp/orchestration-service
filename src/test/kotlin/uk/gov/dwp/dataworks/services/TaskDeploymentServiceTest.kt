@@ -16,9 +16,8 @@ import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.elasticloadbalancingv2.model.DescribeRulesResponse
 import software.amazon.awssdk.services.elasticloadbalancingv2.model.Rule
 import uk.gov.dwp.dataworks.Application
-import uk.gov.dwp.dataworks.model.JWTObject
+import uk.gov.dwp.dataworks.JWTObject
 import java.lang.Exception
-import java.util.*
 
 @RunWith(SpringRunner::class)
 @ContextConfiguration(classes = [Application::class])
@@ -46,23 +45,6 @@ class TaskDeploymentServiceTest {
     val nonConsecutiveCol: Collection<Rule> = listOf(Rule.builder().priority("0").build(), Rule.builder().priority("1").build(), Rule.builder().priority("3").build())
 
     @Test
-    fun `Empty load balancer priorities returns 0`() {
-        val actual = taskDeploymentService.getVacantPriorityValue(createDescribeRulesResponse(ArrayList<Rule>()))
-        assertThat(actual).isEqualTo(0)
-    }
-
-    @Test
-    fun `Non-consecutive load balancer priorities sets lowest available value`() {
-        val actual = taskDeploymentService.getVacantPriorityValue(createDescribeRulesResponse(nonConsecutiveCol))
-        assertThat(actual).isEqualTo(2)
-    }
-
-    @Test(expected = Exception::class)
-    fun `Load balancer priority of 1000 should error`() {
-        taskDeploymentService.getVacantPriorityValue(createDescribeRulesResponse(create1000()))
-    }
-
-    @Test
     fun `Loads policy documents from classpath correctly`() {
         val taskRolePolicy = taskDeploymentService.taskRolePolicyDocument.inputStream.bufferedReader().use { it.readText() }
         assertThat(taskRolePolicy).isNotNull()
@@ -79,10 +61,10 @@ class TaskDeploymentServiceTest {
         assertThat(taskRolePolicyString).contains("\"permissionOne\",\"permissionTwo\"")
     }
 
-    @Test (expected = Exception::class)
-    fun testPriorityNumberFor1000PlusExpectError(){
-        taskDeploymentService.getVacantPriorityValue(createDescribeRulesResponse(create1000()))
-    }
+//    @Test(expected = Exception::class)
+//    fun testPriorityNumberFor1000PlusExpectError() {
+//        taskDeploymentService.getVacantPriorityValue(createDescribeRulesResponse(create1000()))
+//    }
 
     fun createDescribeRulesResponse(array: Collection<Rule>): DescribeRulesResponse {
         val list: Collection<Rule> = array
