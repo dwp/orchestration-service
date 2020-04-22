@@ -26,7 +26,7 @@ import java.util.*
 class TaskDeploymentServiceTest {
 
     @Autowired
-    private lateinit var configService: ConfigurationService
+    private lateinit var configurationResolver: ConfigurationResolver
 
     @Autowired
     private lateinit var authService: AuthenticationService
@@ -40,7 +40,7 @@ class TaskDeploymentServiceTest {
     fun setup() {
         val jwtObject = JWTObject(decodedJWT, "test_user")
         whenever(authService.validate(any())).thenReturn(jwtObject)
-        whenever(configService.awsRegion).thenReturn(Region.EU_WEST_2)
+        whenever(configurationResolver.awsRegion).thenReturn(Region.EU_WEST_2)
     }
 
     val nonConsecutiveCol: Collection<Rule> = listOf(Rule.builder().priority("0").build(), Rule.builder().priority("1").build(), Rule.builder().priority("3").build())

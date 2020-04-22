@@ -28,7 +28,7 @@ class ExistingUserServiceCheckTest {
     private lateinit var authService: AuthenticationService
 
     @MockBean
-    private lateinit var configService: ConfigurationService
+    private lateinit var configurationResolver: ConfigurationResolver
 
     private val decodedJWT = mock<DecodedJWT>()
     private val testUserName = "testUser"

@@ -3,9 +3,14 @@ package uk.gov.dwp.dataworks.services
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
+import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.ecs.EcsClient
+import software.amazon.awssdk.services.ecs.model.ContainerOverride
 import software.amazon.awssdk.services.ecs.model.CreateServiceRequest
+import software.amazon.awssdk.services.ecs.model.KeyValuePair
+import software.amazon.awssdk.services.ecs.model.RunTaskRequest
 import software.amazon.awssdk.services.ecs.model.Service
+import software.amazon.awssdk.services.ecs.model.TaskOverride
 import software.amazon.awssdk.services.elasticloadbalancingv2.ElasticLoadBalancingV2Client
 import software.amazon.awssdk.services.elasticloadbalancingv2.model.Action
 import software.amazon.awssdk.services.elasticloadbalancingv2.model.CreateRuleRequest
@@ -19,6 +24,12 @@ import software.amazon.awssdk.services.elasticloadbalancingv2.model.PathPatternC
 import software.amazon.awssdk.services.elasticloadbalancingv2.model.Rule
 import software.amazon.awssdk.services.elasticloadbalancingv2.model.RuleCondition
 import software.amazon.awssdk.services.elasticloadbalancingv2.model.TargetGroup
+import software.amazon.awssdk.services.iam.IamClient
+import software.amazon.awssdk.services.iam.model.AttachRolePolicyRequest
+import software.amazon.awssdk.services.iam.model.CreatePolicyRequest
+import software.amazon.awssdk.services.iam.model.CreateRoleRequest
+import software.amazon.awssdk.services.iam.model.Policy
+import software.amazon.awssdk.services.iam.model.Role
 import uk.gov.dwp.dataworks.UpperRuleLimitReachedException
 import uk.gov.dwp.dataworks.logging.DataworksLogger
 import software.amazon.awssdk.services.ecs.model.LoadBalancer as EcsLoadBalancer
@@ -39,10 +50,11 @@ class AwsCommunicator {
     }
 
     @Autowired
-    private lateinit var configurationService: ConfigurationService
+    private lateinit var configurationResolver: ConfigurationResolver
 
-    private val albClient = ElasticLoadBalancingV2Client.builder().region(configurationService.awsRegion).build()
-    private val ecsClient = EcsClient.builder().region(configurationService.awsRegion).build()
+    private val albClient = ElasticLoadBalancingV2Client.builder().region(configurationResolver.awsRegion).build()
+    private val ecsClient = EcsClient.builder().region(configurationResolver.awsRegion).build()
+    private val iamClient = IamClient.builder().region(Region.AWS_GLOBAL).build()
 
     /**
      * Retrieve a [LoadBalancer] from AWS given it's name. If multiple LoadBalancers are found with the same
@@ -137,6 +149,20 @@ class AwsCommunicator {
     }
 
     /**
+     * Helper method to wrap a container name and set of overrides into an incomplete [ContainerOverride.Builder] for
+     * later consumption.
+     */
+    fun buildContainerOverride(containerName: String, vararg overrides: Pair<String, String>): ContainerOverride.Builder {
+        val overrideKeyPairs = overrides.map { KeyValuePair.builder().name(it.first).value(it.second).build() }
+        logger.info("Overriding container args",
+                "container_name" to containerName,
+                "overrides" to overrideKeyPairs.joinToString { "${it.name()}:${it.value()}" })
+        return ContainerOverride.builder()
+                .name(containerName)
+                .environment(overrideKeyPairs)
+    }
+
+    /**
      * Creates an ECS service with the name [clusterName], friendly service name of [serviceName] and sits
      * it behind the load balancer [loadBalancer].
      *
@@ -148,7 +174,7 @@ class AwsCommunicator {
                 .cluster(clusterName)
                 .loadBalancers(loadBalancer)
                 .serviceName(serviceName)
-                .taskDefinition(configurationService.getStringConfig(ConfigKey.USER_CONTAINER_TASK_DEFINITION))
+                .taskDefinition(configurationResolver.getStringConfig(ConfigKey.USER_CONTAINER_TASK_DEFINITION))
                 .desiredCount(1)
                 .build()
 
@@ -160,5 +186,90 @@ class AwsCommunicator {
                 "cluster_arn" to ecsService.clusterArn(),
                 "task_definition" to ecsService.taskDefinition())
         return ecsService
+    }
+
+    /**
+     * Constructs a [RunTaskRequest] with Task Overrides using the passed in parameters. [TaskOverrides][TaskOverride]
+     * are constructed from the [overrides] and applied to the ECS task definition [taskDefinition].
+     * ECS tasks will be run on EC2 instances.
+     *
+     * @param taskDefinition  The family and revision (family:revision) or full ARN of the task definition to run.
+     * If a revision is not specified, the latest ACTIVE revision is used.
+     */
+    fun buildEcsTask(ecsClusterName: String, taskDefinition: String, taskRoleArn: String, overrides: Collection<ContainerOverride>): RunTaskRequest {
+        val taskOverride = TaskOverride.builder()
+                .containerOverrides(overrides)
+                .taskRoleArn(taskRoleArn)
+                .build()
+
+        return RunTaskRequest.builder()
+                .cluster(ecsClusterName)
+                .launchType("EC2")
+                .overrides(taskOverride)
+                .taskDefinition(taskDefinition)
+                .build()
+    }
+
+    /**
+     * Runs the specified [RunTaskRequest]
+     */
+    fun runEcsTask(taskRequest: RunTaskRequest) {
+        val task = ecsClient.runTask(taskRequest).tasks()[0]
+        logger.info("ECS tasks run",
+                "instance_arns" to task.containerInstanceArn(),
+                "task_groups" to task.group(),
+                "cluster_arn" to task.clusterArn(),
+                "cpus" to task.cpu(),
+                "memory" to task.memory(),
+                "platform_version" to task.platformVersion(),
+                "started_at" to task.startedAt().toString())
+    }
+
+    /**
+     * Creates an IAM [Policy] from the name and document provided. [policyDocument] should be in JSON format
+     * as per the AWS standards for documents.
+     */
+    fun createIamPolicy(policyName: String, policyDocument: String): Policy {
+        val policy = iamClient.createPolicy(
+                CreatePolicyRequest.builder()
+                        .policyDocument(policyDocument)
+                        .policyName(policyName).build())
+                .policy()
+        logger.info("Created iam policy",
+                "policy_arn" to policy.arn(),
+                "policy_path" to policy.path(),
+                "policy_name" to policy.policyName(),
+                "policy_id" to policy.policyId(),
+                "created_date" to policy.createDate().toString())
+        return policy
+    }
+
+    /**
+     * Creates an IAM [Role] from the name and role assumption document provided. [assumeRolePolicy] should be
+     * in JSON format as per the AWS standards for documents.
+     */
+    fun createIamRole(roleName: String, assumeRolePolicy: String): Role {
+        val role = iamClient.createRole(
+                CreateRoleRequest.builder()
+                        .assumeRolePolicyDocument(roleName)
+                        .roleName(roleName).build())
+                .role()
+        logger.info("Created iam role",
+                "role_arn" to role.arn(),
+                "role_path" to role.path(),
+                "role_name" to role.roleName(),
+                "role_id" to role.roleId(),
+                "created_date" to role.createDate().toString())
+        return role
+    }
+
+    /**
+     * Attaches [policy] to [role] using the [Policy] ARN and [Role] name.
+     */
+    fun attachIamPolicyToRole(policy: Policy, role: Role) {
+        iamClient.attachRolePolicy(AttachRolePolicyRequest.builder()
+                .policyArn(policy.arn())
+                .roleName(role.roleName()).build())
+        logger.info("Attched policy to role", "policy_arn" to policy.arn(), "role_name" to role.roleName())
     }
 }
