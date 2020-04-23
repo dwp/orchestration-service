@@ -254,7 +254,7 @@ class AwsCommunicator {
     fun createIamRole(roleName: String, assumeRolePolicy: String): Role {
         val role = awsClients.iamClient.createRole(
                 CreateRoleRequest.builder()
-                        .assumeRolePolicyDocument(roleName)
+                        .assumeRolePolicyDocument(assumeRolePolicy)
                         .roleName(roleName).build())
                 .role()
         logger.info("Created iam role",
