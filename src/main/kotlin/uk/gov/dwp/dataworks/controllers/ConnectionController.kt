@@ -84,7 +84,7 @@ class ConnectionController {
         if (existingUserServiceCheck.check(userName, configurationResolver.getStringConfig(ConfigKey.ECS_CLUSTER_NAME))){
             logger.info("Redirecting user to running containers, as they exist")
         } else {
-            taskDeploymentService.taskDefinitionWithOverride(
+            taskDeploymentService.runContainers(
                     userName,
                     requestBody.jupyterCpu,
                     requestBody.jupyterMemory,
