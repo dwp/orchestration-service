@@ -1,11 +1,13 @@
 package uk.gov.dwp.dataworks.services
 
 import com.auth0.jwt.JWT
+import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.whenever
 import org.assertj.core.api.Assertions
 import org.junit.Test
 import org.junit.jupiter.api.BeforeEach
 import org.junit.runner.RunWith
+import org.mockito.InjectMocks
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.test.context.junit4.SpringRunner
 import software.amazon.awssdk.regions.Region
@@ -14,6 +16,9 @@ import java.lang.IllegalArgumentException
 
 @RunWith(SpringRunner::class)
 class AuthenticationServiceTest {
+    @InjectMocks
+    private lateinit var authenticationService: AuthenticationService
+
     @MockBean
     private lateinit var taskDeploymentService: TaskDeploymentService
     @MockBean
@@ -29,31 +34,32 @@ class AuthenticationServiceTest {
     @BeforeEach
     fun setup() {
         whenever(configurationResolver.awsRegion).thenReturn(Region.EU_WEST_2)
+        whenever(configurationResolver.getStringConfig(any())).thenReturn("")
     }
 
     @Test
     fun `Returns cognito username when present`() {
         val decodedJWT = JWT.decode(cognitoUserNameOnly)
-        val cognitoUserName = AuthenticationService().cognitoUsernameFromJwt(decodedJWT)
+        val cognitoUserName = authenticationService.cognitoUsernameFromJwt(decodedJWT)
         Assertions.assertThat(cognitoUserName).isEqualTo("cognitoUserName")
     }
     @Test
     fun `Returns cognito username when cognito and none cognito present`() {
         val decodedJWT = JWT.decode(cognitoAndNoneCognito)
-        val cognitoUserName = AuthenticationService().cognitoUsernameFromJwt(decodedJWT)
+        val cognitoUserName = authenticationService.cognitoUsernameFromJwt(decodedJWT)
         Assertions.assertThat(cognitoUserName).isEqualTo("cognitoUserName")
     }
     @Test
     fun `Returns non-cognito username when cognito username isnt present`() {
         val decodedJWT = JWT.decode(noneCognitoOnly)
-        val cognitoUserName = AuthenticationService().cognitoUsernameFromJwt(decodedJWT)
+        val cognitoUserName = authenticationService.cognitoUsernameFromJwt(decodedJWT)
         Assertions.assertThat(cognitoUserName).isEqualTo("userName")
     }
 
     @Test
     fun `Throws correct error, when no user name present`() {
         val decodedJWT = JWT.decode(noUserName)
-        Assertions.assertThatCode { AuthenticationService().cognitoUsernameFromJwt(decodedJWT) }
+        Assertions.assertThatCode { authenticationService.cognitoUsernameFromJwt(decodedJWT) }
                 .isInstanceOf(IllegalArgumentException::class.java)
                 .hasMessage("No username found in JWT token")
     }
