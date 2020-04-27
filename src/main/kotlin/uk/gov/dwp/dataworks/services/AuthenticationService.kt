@@ -15,7 +15,6 @@ import java.lang.IllegalArgumentException
 import java.net.URL
 import java.security.interfaces.RSAPublicKey
 import javax.annotation.PostConstruct
-import kotlin.reflect.jvm.internal.impl.load.kotlin.JvmType
 
 /**
  * Service used to verify and validate JWT tokens included in requests
@@ -62,7 +61,7 @@ class AuthenticationService {
      */
     fun cognitoUsernameFromJwt(jwt: DecodedJWT): String {
         return jwt.getClaim("cognito:username")?.asString()?:
-            jwt.getClaim("userName").asString()?:
-            throw IllegalArgumentException("No username found in JWT token")
+        jwt.getClaim("userName")?.asString()?:
+        throw IllegalArgumentException("No username found in JWT token")
     }
 }
