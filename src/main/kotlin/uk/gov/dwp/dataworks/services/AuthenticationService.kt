@@ -60,8 +60,8 @@ class AuthenticationService {
      * Helper method to extract the Cognito username from a JWT Payload.
      */
     fun cognitoUsernameFromJwt(jwt: DecodedJWT): String {
-        return jwt.getClaim("cognito:username")?.asString()?:
-        jwt.getClaim("userName")?.asString()?:
-        throw IllegalArgumentException("No username found in JWT token")
+        return jwt.getClaim("cognito:username").asString()
+        ?: jwt.getClaim("userName").asString()
+        ?: throw IllegalArgumentException("No username found in JWT token")
     }
 }
