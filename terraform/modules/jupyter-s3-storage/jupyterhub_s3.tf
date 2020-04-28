@@ -3,13 +3,13 @@ resource "random_id" "jupyter_bucket" {
 }
 
 resource "aws_s3_bucket" "jupyter_storage" {
-  bucket = random_id.jupyter_bucket.hex
-  acl    = "private"
+  bucket      = random_id.jupyter_bucket.hex
+  acl         = "private"
 
   tags = var.common_tags
 
   versioning {
-    enabled = true
+    enabled   = true
   }
 
   logging {
@@ -18,10 +18,10 @@ resource "aws_s3_bucket" "jupyter_storage" {
   }
 
   lifecycle_rule {
-    id      = "${var.name_prefix}-lifecycle"
-    enabled = true
+    id        = "${var.name_prefix}-lifecycle"
+    enabled   = true
     noncurrent_version_expiration {
-      days = 30
+      days    = 30
     }
   }
 
