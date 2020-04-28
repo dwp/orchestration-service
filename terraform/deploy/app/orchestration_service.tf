@@ -127,3 +127,16 @@ module "ec2_task_definition" {
 
   cognito_user_pool_id = data.terraform_remote_state.aws_analytical_env_cognito.outputs.cognito.user_pool_id
 }
+
+#
+## ---------------------------------------------------------------------------------------------------------------------
+## JupyterHub S3 Storage
+## ---------------------------------------------------------------------------------------------------------------------
+module "jupyter_s3_storage" {
+  source      = "../../modules/jupyter-s3-storage"
+  name_prefix = "${var.name_prefix}-jupyter-s3-storage"
+
+  common_tags = local.common_tags
+  logging_bucket = data.terraform_remote_state.security-tools.outputs.logstore_bucket.id
+  vpc_id = data.terraform_remote_state.aws_analytical_env_infra.outputs.vpc.aws_vpc
+}
