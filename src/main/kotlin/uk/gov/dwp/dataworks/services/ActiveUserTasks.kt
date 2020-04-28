@@ -19,8 +19,8 @@ class ActiveUserTasks {
     @Autowired
     private lateinit var awsCommunicator: AwsCommunicator
 
-    private val dynamoTableName = "UserTasks"
-    private val dynamoPrimaryKey = "UserName"
+    private val dynamoTableName = "orchestration_service_user_tasks"
+    private val dynamoPrimaryKey = "userName"
 
     @PostConstruct
     fun createDynamoTable() {
