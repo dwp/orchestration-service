@@ -3,6 +3,15 @@ package uk.gov.dwp.dataworks.aws
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
+import software.amazon.awssdk.services.dynamodb.model.AttributeDefinition
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue
+import software.amazon.awssdk.services.dynamodb.model.CreateTableRequest
+import software.amazon.awssdk.services.dynamodb.model.DeleteItemRequest
+import software.amazon.awssdk.services.dynamodb.model.GetItemRequest
+import software.amazon.awssdk.services.dynamodb.model.GetItemResponse
+import software.amazon.awssdk.services.dynamodb.model.KeySchemaElement
+import software.amazon.awssdk.services.dynamodb.model.KeyType
+import software.amazon.awssdk.services.dynamodb.model.PutItemRequest
 import software.amazon.awssdk.services.ecs.model.ContainerOverride
 import software.amazon.awssdk.services.ecs.model.CreateServiceRequest
 import software.amazon.awssdk.services.ecs.model.DeleteServiceRequest
@@ -334,5 +343,39 @@ class AwsCommunicator {
                 .policyArn(policy.arn())
                 .roleName(role.roleName()).build())
         logger.info("Attched policy to role", "correlation_id" to correlationId, "policy_arn" to policy.arn(), "role_name" to role.roleName())
+    }
+
+    fun createDynamoDbTable(tableName: String, attributes: List<AttributeDefinition>, keyName: String) {
+        awsClients.dynamoDbClient.createTable(CreateTableRequest.builder()
+                .tableName(tableName)
+                .attributeDefinitions(attributes)
+                .keySchema(KeySchemaElement.builder().attributeName(keyName).keyType(KeyType.HASH).build())
+                .build())
+    }
+
+    fun putDynamoDbItem(correlationId: String, dynamoTableName: String, attributes: Map<String, AttributeValue>) {
+        awsClients.dynamoDbClient.putItem(PutItemRequest.builder()
+                .tableName(dynamoTableName)
+                .item(attributes).build())
+        logger.info("User tasks registered in dynamodb", "correlation_id" to correlationId)
+    }
+
+    fun getDynamoDbItem(dynamoTableName: String, dynamoPrimaryKey: String, value: String): GetItemResponse {
+        val retrievalKey = mapOf(dynamoPrimaryKey to AttributeValue.builder().s(value).build())
+        return awsClients.dynamoDbClient.getItem(
+                GetItemRequest.builder()
+                        .tableName(dynamoTableName)
+                        .key(retrievalKey)
+                        .build())
+    }
+
+    fun removeDynamoDbItem(correlationId: String, dynamoTableName: String, dynamoPrimaryKey: String, userName: String) {
+        awsClients.dynamoDbClient.deleteItem(DeleteItemRequest.builder()
+                .tableName(dynamoTableName)
+                .key(mapOf(dynamoPrimaryKey to AttributeValue.builder().s(userName).build()))
+                .build())
+        logger.info("User tasks deregistered in dynamodb",
+                "correlation_id" to correlationId,
+                "user_name" to userName)
     }
 }

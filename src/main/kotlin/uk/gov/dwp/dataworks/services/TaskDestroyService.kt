@@ -33,6 +33,6 @@ class TaskDestroyService {
             throw TaskDestroyException("One or more resources failed to be removed", e)
         }
 
-        activeUserTasks.remove(userName)
+        activeUserTasks.remove(userTasks.correlationId, userName)
     }
 }

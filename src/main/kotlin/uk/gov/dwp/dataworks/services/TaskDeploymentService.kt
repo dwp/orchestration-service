@@ -68,7 +68,7 @@ class TaskDeploymentService {
 
         awsCommunicator.runEcsTask(correlationId, ecsTaskRequest)
 
-        return UserTask(correlationId, targetGroup.targetGroupArn(), albRoutingRule.ruleArn(), ecsClusterName, ecsServiceName, iamRole.arn(), iamPolicy.arn())
+        return UserTask(correlationId, userName, targetGroup.targetGroupArn(), albRoutingRule.ruleArn(), ecsClusterName, ecsServiceName, iamRole.arn(), iamPolicy.arn())
     }
 
     private fun buildContainerOverrides(correlationId: String, userName: String, emrHostname: String, jupyterMemory: Int, jupyterCpu: Int): List<ContainerOverride> {

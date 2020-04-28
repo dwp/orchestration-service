@@ -3,6 +3,7 @@ package uk.gov.dwp.dataworks.services
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.doAnswer
 import com.nhaarman.mockitokotlin2.doNothing
+import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.doThrow
 import com.nhaarman.mockitokotlin2.whenever
 import org.assertj.core.api.Assertions.assertThat
@@ -13,6 +14,7 @@ import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
+import org.springframework.boot.test.mock.mockito.SpyBean
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.junit4.SpringRunner
 import uk.gov.dwp.dataworks.Application
@@ -27,10 +29,10 @@ class TaskDestroyServiceTest {
     private lateinit var taskDestroyService: TaskDestroyService
     @MockBean
     private lateinit var awsCommunicator: AwsCommunicator
-    @Autowired
+    @SpyBean
     private lateinit var activeUserTasks: ActiveUserTasks
 
-    private val testUserTask = UserTask("", "", "", "", "", "", "")
+    private val testUserTask = UserTask("","","", "", "", "", "", "")
 
     @Before
     fun setup() {
@@ -39,24 +41,11 @@ class TaskDestroyServiceTest {
         doNothing().whenever(awsCommunicator).deleteEcsService(any(), any(), any())
         doNothing().whenever(awsCommunicator).deleteIamRole(any(), any())
         doNothing().whenever(awsCommunicator).deleteIamPolicy(any(), any())
-    }
-
-    @Test
-    fun `Removes UserTask from active tasks when method completes`() {
-        val username = "testUsername"
-        activeUserTasks.put(username, testUserTask)
-        assertThat(activeUserTasks.contains(username)).isTrue()
-
-        taskDestroyService.destroyServices(username)
-
-        assertThat(activeUserTasks.contains(username)).isFalse()
+        doReturn(testUserTask).whenever(activeUserTasks).get(any())
     }
 
     @Test
     fun `Exception thrown when a resource fails to be removed`() {
-        val username = "testUsername"
-        activeUserTasks.put(username, testUserTask)
-
         val exception = Exception("boom")
         doAnswer { throw exception }.whenever(awsCommunicator).deleteTargetGroup(any(), any())
 
