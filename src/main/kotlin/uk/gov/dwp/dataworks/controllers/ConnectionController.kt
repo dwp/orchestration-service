@@ -94,8 +94,7 @@ class ConnectionController {
                     userName,
                     requestBody.jupyterCpu,
                     requestBody.jupyterMemory,
-                    requestBody.additionalPermissions
-            )
+                    requestBody.additionalPermissions)
             activeUserTasks.put(userTask)
             logger.info("Completed request", "cluster_name" to configurationResolver.getStringConfig(ConfigKey.ECS_CLUSTER_NAME), "user_name" to userName)
         }

@@ -7,10 +7,12 @@ import software.amazon.awssdk.services.dynamodb.model.AttributeDefinition
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue
 import software.amazon.awssdk.services.dynamodb.model.CreateTableRequest
 import software.amazon.awssdk.services.dynamodb.model.DeleteItemRequest
+import software.amazon.awssdk.services.dynamodb.model.DescribeTableRequest
 import software.amazon.awssdk.services.dynamodb.model.GetItemRequest
 import software.amazon.awssdk.services.dynamodb.model.GetItemResponse
 import software.amazon.awssdk.services.dynamodb.model.KeySchemaElement
 import software.amazon.awssdk.services.dynamodb.model.KeyType
+import software.amazon.awssdk.services.dynamodb.model.ListTablesRequest
 import software.amazon.awssdk.services.dynamodb.model.PutItemRequest
 import software.amazon.awssdk.services.ecs.model.ContainerOverride
 import software.amazon.awssdk.services.ecs.model.CreateServiceRequest
@@ -346,11 +348,15 @@ class AwsCommunicator {
     }
 
     fun createDynamoDbTable(tableName: String, attributes: List<AttributeDefinition>, keyName: String) {
-        awsClients.dynamoDbClient.createTable(CreateTableRequest.builder()
-                .tableName(tableName)
-                .attributeDefinitions(attributes)
-                .keySchema(KeySchemaElement.builder().attributeName(keyName).keyType(KeyType.HASH).build())
-                .build())
+        val tables = awsClients.dynamoDbClient.listTables(ListTablesRequest.builder().build())
+        if(!tables.tableNames().contains(tableName)) {
+            awsClients.dynamoDbClient.createTable(CreateTableRequest.builder()
+                    .tableName(tableName)
+                    .attributeDefinitions(attributes)
+                    .keySchema(KeySchemaElement.builder().attributeName(keyName).keyType(KeyType.HASH).build())
+                    .build())
+            logger.info("Created dynamodb table", "table_name" to tableName)
+        }
     }
 
     fun putDynamoDbItem(correlationId: String, dynamoTableName: String, attributes: Map<String, AttributeValue>) {
