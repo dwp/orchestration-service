@@ -1,14 +1,14 @@
 data "aws_iam_policy_document" "jupyter_bucket_restrict_to_vpc" {
   statement {
-    sid    = "${var.name_prefix}-RestrictToVPC"
-    effect = "Deny"
-    actions = [
+    sid         = "${var.name_prefix}-RestrictToVPC"
+    effect      = "Deny"
+    actions     = [
       "s3:*",
     ]
 
     principals {
       identifiers = ["*"]
-      type = "*"
+      type        = "*"
     }
 
     resources = [
@@ -16,11 +16,11 @@ data "aws_iam_policy_document" "jupyter_bucket_restrict_to_vpc" {
     ]
 
     condition {
-      test = "StringNotEquals"
-      values = [
+      test        = "StringNotEquals"
+      values      = [
         var.vpc_id
       ]
-      variable = "aws:sourceVpc"
+      variable    = "aws:sourceVpc"
     }
   }
 }
