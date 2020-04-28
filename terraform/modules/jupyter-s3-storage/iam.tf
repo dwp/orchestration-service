@@ -5,6 +5,16 @@ data "aws_iam_policy_document" "jupyter_bucket_restrict_to_vpc" {
     actions = [
       "s3:*",
     ]
+
+    principals {
+      identifiers = ["*"]
+      type = "*"
+    }
+
+    resources = [
+      "${aws_s3_bucket.jupyter_storage.arn}/*"
+    ]
+
     condition {
       test = "StringNotEquals"
       values = [

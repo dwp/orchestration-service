@@ -50,6 +50,10 @@ module "ecs-fargate-task-definition" {
     {
       name  = "orchestrationService.user_container_port"
       value = 8443
+    },
+    {
+      name  = "orchestrationService.jupyterhub_bucket"
+      value = module.jupyter_s3_storage.jupyterhub_bucket.id
     }
   ]
 }
