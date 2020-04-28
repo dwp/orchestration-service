@@ -1,6 +1,6 @@
 data "aws_iam_policy_document" "jupyter_bucket_restrict_to_vpc" {
   statement {
-    sid = "${var.name_prefix}-RestrictToVPC"
+    sid    = "${var.name_prefix}-RestrictToVPC"
     effect = "Deny"
     actions = [
       "s3:*",

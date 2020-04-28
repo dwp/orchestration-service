@@ -18,7 +18,7 @@ resource "aws_s3_bucket" "jupyter_storage" {
   }
 
   lifecycle_rule {
-    id = "${var.name_prefix}-lifecycle"
+    id      = "${var.name_prefix}-lifecycle"
     enabled = true
     noncurrent_version_expiration {
       days = 30
@@ -29,7 +29,7 @@ resource "aws_s3_bucket" "jupyter_storage" {
     rule {
       apply_server_side_encryption_by_default {
         kms_master_key_id = aws_kms_key.jupyter_bucket_master_key.arn
-        sse_algorithm = "aws:kms"
+        sse_algorithm     = "aws:kms"
       }
     }
   }
@@ -38,8 +38,8 @@ resource "aws_s3_bucket" "jupyter_storage" {
 resource "aws_s3_bucket_public_access_block" "jupyter_bucket" {
   bucket = aws_s3_bucket.jupyter_storage.id
 
-  block_public_acls = true
-  block_public_policy = true
+  block_public_acls       = true
+  block_public_policy     = true
   restrict_public_buckets = true
-  ignore_public_acls = true
+  ignore_public_acls      = true
 }
