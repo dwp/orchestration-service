@@ -1,8 +1,8 @@
 data "aws_iam_policy_document" "jupyter_bucket_restrict_to_vpc" {
   statement {
-      sid    = "${var.name_prefix}-RestrictToVPC"
-      effect = "Deny"
-      actions = [
+    sid    = "${var.name_prefix}-RestrictToVPC"
+    effect = "Deny"
+    actions = [
       "s3:*",
     ]
 
@@ -26,6 +26,6 @@ data "aws_iam_policy_document" "jupyter_bucket_restrict_to_vpc" {
 }
 
 resource "aws_s3_bucket_policy" "jupyter_bucket" {
-  bucket      = aws_s3_bucket.jupyter_storage.id
-  policy      = data.aws_iam_policy_document.jupyter_bucket_restrict_to_vpc.json
+    bucket = aws_s3_bucket.jupyter_storage.id
+    policy = data.aws_iam_policy_document.jupyter_bucket_restrict_to_vpc.json
 }
