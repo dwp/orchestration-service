@@ -114,6 +114,7 @@ module "ecs-fargate-service" {
   }
   interface_vpce_sg_id      = data.terraform_remote_state.emr_cluster_broker_infra.outputs.interface_vpce_sg_id
   s3_prefixlist_id          = data.terraform_remote_state.emr_cluster_broker_infra.outputs.s3_prefix_list_id
+  dynamodb_prefixlist_id    = data.terraform_remote_state.emr_cluster_broker_infra.outputs.dynamodb_prefix_list_id
   common_tags               = local.common_tags
   parent_domain_name        = local.parent_domain_name[local.environment]
   root_dns_prefix           = local.root_dns_prefix[local.environment]
