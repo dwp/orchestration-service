@@ -5,12 +5,12 @@ variable "common_tags" {
 
 variable "logging_bucket" {
   type        = string
-  description = "(Required) The bucket for access logging"
+  description = "(Required) The bucket ID for access logging"
 }
 
 variable "vpc_id" {
   type        = string
-  description = "(Required) The VPC from which bucket access is allowed"
+  description = "(Required) The VPC ID from which bucket access is allowed"
 }
 
 variable "name_prefix" {
