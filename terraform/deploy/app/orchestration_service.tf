@@ -65,7 +65,7 @@ module "ecs-fargate-task-definition" {
     },
     {
       name  = "PROXY_HOST"
-      value = data.terraform_remote_state.internet_egress.outputs.internet_proxy.dns_name
+      value = data.terraform_remote_state.emr_cluster_broker_infra.outputs.vpc.internet_proxy_vpce.dns_name
     },
     {
       name = "NON_PROXY_HOSTS"
@@ -118,7 +118,7 @@ module "ecs-fargate-service" {
   parent_domain_name        = local.parent_domain_name[local.environment]
   root_dns_prefix           = local.root_dns_prefix[local.environment]
   cert_authority_arn        = data.terraform_remote_state.aws_certificate_authority.outputs.root_ca.arn
-  internet_proxy_vpce_sg_id = data.terraform_remote_state.emr_cluster_broker_infra.outputs.vpc.internet_proxy_vpce_sg_id
+  internet_proxy_vpce_sg_id = data.terraform_remote_state.emr_cluster_broker_infra.outputs.vpc.internet_proxy_vpce.sg_id
 }
 
 data "aws_ami" "hardened" {
