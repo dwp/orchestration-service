@@ -50,7 +50,7 @@ class TaskDeploymentServiceTest {
 
     @BeforeEach
     fun setup() {
-        val jwtObject = JWTObject(decodedJWT, "test_user")
+        val jwtObject = JWTObject(decodedJWT, "test_user", "testKmsArn")
         whenever(authService.validate(any())).thenReturn(jwtObject)
         whenever(configurationResolver.awsRegion).thenReturn(Region.EU_WEST_2)
     }

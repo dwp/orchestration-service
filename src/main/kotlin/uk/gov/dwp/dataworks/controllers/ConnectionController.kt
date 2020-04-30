@@ -56,6 +56,7 @@ class ConnectionController {
     @ResponseStatus(HttpStatus.OK)
     fun connect(@RequestHeader("Authorisation") token: String, @RequestBody requestBody: DeployRequest): String {
         val jwtObject = authService.validate(token)
+        return handleRequest(jwtObject.userName, jwtObject.kmsArn, requestBody)
         return handleConnectRequest(jwtObject.userName, requestBody)
     }
 
