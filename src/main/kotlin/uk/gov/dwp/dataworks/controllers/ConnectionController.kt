@@ -52,7 +52,7 @@ class ConnectionController {
     @ResponseStatus(HttpStatus.OK)
     fun connect(@RequestHeader("Authorisation") token: String, @RequestBody requestBody: DeployRequest): String {
         val jwtObject = authService.validate(token)
-        return handleRequest(jwtObject.userName, requestBody)
+        return handleRequest(jwtObject.userName, jwtObject.kmsArn, requestBody)
     }
 
     @Operation(summary = "Requests the user containers",
@@ -63,8 +63,8 @@ class ConnectionController {
     ])
 
     @PostMapping("/deployusercontainers")
-    fun launchTask(@RequestHeader("Authorisation") userName: String, @RequestBody requestBody: DeployRequest): String {
-        return handleRequest(userName, requestBody)
+    fun launchTask(@RequestHeader("Authorisation") userName: String, @RequestHeader("KmsArn") kmsArn: String, @RequestBody requestBody: DeployRequest): String {
+        return handleRequest(userName, kmsArn, requestBody)
     }
 
     @Operation(summary = "Disconnect from Analytical Environment",
@@ -86,12 +86,13 @@ class ConnectionController {
         // Do nothing - annotations handle response
     }
 
-    fun handleRequest(userName: String, requestBody: DeployRequest):String {
+    fun handleRequest(userName: String, kmsArn: String, requestBody: DeployRequest):String {
         if (activeUserTasks.contains(userName)) {
             logger.info("Redirecting user to running containers, as they exist")
         } else {
             val userTask = taskDeploymentService.runContainers(
                     userName,
+                    kmsArn,
                     requestBody.jupyterCpu,
                     requestBody.jupyterMemory,
                     requestBody.additionalPermissions)

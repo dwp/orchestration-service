@@ -8,6 +8,7 @@ The service orchestrator for providing remote access into the analytical environ
  
  Header of request must contain the following:
   - `Authorisation`*
+  - `KmsArn` (for personal S3 folder)
      
   Optional inputs for body of request are:
   - `jupyterCpu`            - default : 512

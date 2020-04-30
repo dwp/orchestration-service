@@ -22,14 +22,6 @@
       "Effect": "Allow",
       "Action": "s3:ListBucket",
       "Resource": [LIST_RESOURCE]
-    },
-    {
-    "Sid": "jupyter_assume_role_policy_document",
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "ecs-tasks.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole"
     }
   ]
 }

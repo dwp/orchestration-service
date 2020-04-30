@@ -45,7 +45,7 @@ class ConnectionControllerTest {
         System.setProperty(ConfigKey.COGNITO_USER_POOL_ID.key, "test_id")
         System.setProperty(ConfigKey.ECS_CLUSTER_NAME.key, "test_ecs")
         System.setProperty(ConfigKey.USER_CONTAINER_URL.key, "test_url")
-        val jwtObject = JWTObject(mock<DecodedJWT>(), "test_user")
+        val jwtObject = JWTObject(mock<DecodedJWT>(), "test_user", "testKmsArn")
         whenever(authService.validate(any())).thenReturn(jwtObject)
     }
 

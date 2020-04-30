@@ -20,6 +20,10 @@ class TaskDeploymentService {
     @Autowired
     private lateinit var configurationResolver: ConfigurationResolver
 
+    @Value("classpath:policyDocuments/jupyterBucketAccesssPolicy.json")
+    lateinit var jupyterBucketAccessDocument: Resource
+    private lateinit var jupyterBucketAccessRolePolicyString: String
+
     @Value("classpath:policyDocuments/taskAssumeRolePolicy.json")
     lateinit var taskAssumeRoleDocument: Resource
     private lateinit var taskAssumeRoleString: String
@@ -32,7 +36,7 @@ class TaskDeploymentService {
         val logger: DataworksLogger = DataworksLogger(LoggerFactory.getLogger(TaskDeploymentService::class.java))
     }
 
-    fun runContainers(userName: String, jupyterCpu: Int, jupyterMemory: Int, additionalPermissions: List<String>): UserTask {
+    fun runContainers(userName: String, kmsArn: String, jupyterCpu: Int, jupyterMemory: Int, additionalPermissions: List<String>): UserTask {
         val correlationId = "$userName-${UUID.randomUUID()}"
         // Retrieve required params from environment
         val containerPort = Integer.parseInt(configurationResolver.getStringConfig(ConfigKey.USER_CONTAINER_PORT))
@@ -55,11 +59,17 @@ class TaskDeploymentService {
         val albRoutingRule = awsCommunicator.createAlbRoutingRule(correlationId, listener.listenerArn(), targetGroup.targetGroupArn(), "/$userName/*")
 
         // IAM permissions
+        val accessPair = Pair("ACCESS_RESOURCES", listOf("${configurationResolver.getStringConfig(ConfigKey.JUPYTER_S3_ARN)}/*", kmsArn))
+        val listPair = Pair("LIST_RESOURCE", listOf(configurationResolver.getStringConfig(ConfigKey.JUPYTER_S3_ARN)))
+        val jupyterMap = mapOf(accessPair, listPair)
+        jupyterBucketAccessRolePolicyString = parsePolicyDocument(jupyterBucketAccessDocument, jupyterMap)
         taskRolePolicyString = parsePolicyDocument(taskRolePolicyDocument, mapOf("ADDITIONAL_PERMISSIONS" to additionalPermissions))
         taskAssumeRoleString = parsePolicyDocument(taskAssumeRoleDocument, emptyMap())
+        val jupyterIamPolicy = awsCommunicator.createIamPolicy(correlationId, "$userName-jupyter-s3-document", jupyterBucketAccessRolePolicyString)
         val iamPolicy = awsCommunicator.createIamPolicy(correlationId, "$userName-task-role-document", taskRolePolicyString)
         val iamRole = awsCommunicator.createIamRole(correlationId, "$userName-iam-role", taskAssumeRoleString)
         awsCommunicator.attachIamPolicyToRole(correlationId, iamPolicy, iamRole)
+        awsCommunicator.attachIamPolicyToRole(correlationId, jupyterIamPolicy, iamRole)
 
         // ECS
         val ecsServiceName = "${userName}-analytical-workspace"
@@ -110,18 +120,8 @@ class TaskDeploymentService {
      * converting the associated `@Value` parameters to Strings and replacing `ADDITIONAL_PERMISSIONS` in
      * [taskRolePolicyString] with the provided [listOfParameters]
      *
-     * @return [Pair] of [taskRolePolicyString] to [taskAssumeRoleString] for ease of access.
+     * @return [taskRolePolicyString] and [taskAssumeRoleString].
      */
-//    fun parsePolicyDocuments(additionalPermissions: List<String>): Pair<String, String> {
-//        logger.info("Adding permissions to containers", "permissions" to additionalPermissions.joinToString())
-//        val permissionsJson = additionalPermissions.joinToString(prefix = "\"", separator = "\",\"", postfix = "\"")
-//
-//        taskAssumeRoleString = taskAssumeRoleDocument.inputStream.bufferedReader().use { it.readText() }
-//        taskRolePolicyString = taskRolePolicyDocument.inputStream.bufferedReader().use { it.readText() }
-//                .replace("ADDITIONAL_PERMISSIONS", permissionsJson)
-//        return taskRolePolicyString to taskAssumeRoleString
-//    }
-
     fun parsePolicyDocument(resource: Resource, placeholderAndReplacements: Map<String, List<String>>): String {
         var resourceToString = resource.inputStream.bufferedReader().use { it.readText() }
         if (placeholderAndReplacements.isNotEmpty()) {
@@ -133,11 +133,4 @@ class TaskDeploymentService {
         }
         return resourceToString
     }
-
-/*  TODO:   Create IAM Role and attach policy document(s)
-            Inputs for IAM policy parsing:
-            grab KMS personal folder key from jwt
-            grab KSM shared from Env. Vars.
-            Grab bucket info. from Env. Vars.
- */
 }

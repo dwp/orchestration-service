@@ -53,15 +53,19 @@ class AuthenticationService {
                 .build()
                 .verify(userJwt)
 
-        return JWTObject(jwt, cognitoUsernameFromJwt(userJwt))
+        return JWTObject(jwt, valuesFromJwt(userJwt).getValue("userName"), valuesFromJwt(userJwt).getValue("kmsArn"))
     }
 
     /**
      * Helper method to extract the Cognito username from a JWT Payload.
      */
-    fun cognitoUsernameFromJwt(jwt: DecodedJWT): String {
-        return jwt.getClaim("cognito:username").asString()
-        ?: jwt.getClaim("username").asString()
-        ?: throw IllegalArgumentException("No username found in JWT token")
+    fun valuesFromJwt(jwt: DecodedJWT): Map<String, String> {
+        val username = jwt.getClaim("cognito:username").asString()
+                ?: jwt.getClaim("username").asString()
+                ?: throw IllegalArgumentException("No username found in JWT token")
+        val kmsArn = jwt.getClaim("kmsArn").asString()
+                ?: throw IllegalArgumentException("No KMS arn found in JWT token")
+        val jwtParameters = mapOf<String, String>("userName" to username, "kmsArn" to kmsArn)
+        return jwtParameters
     }
 }
