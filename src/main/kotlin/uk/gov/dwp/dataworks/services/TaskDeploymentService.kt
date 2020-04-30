@@ -128,9 +128,16 @@ class TaskDeploymentService {
             placeholderAndReplacements.forEach {
                 logger.info("Adding ${it.key} to ${resource.filename}", "parameters" to it.value.joinToString())
                 var permissionsJson = it.value.joinToString(prefix = "\"", separator = "\",\"", postfix = "\"")
-                resourceToString.replace(it.key, permissionsJson)
+                resourceToString = resourceToString.replace(it.key, permissionsJson)
             }
         }
         return resourceToString
     }
+
+/*  TODO:   Create IAM Role and attach policy document(s)
+            Inputs for IAM policy parsing:
+            grab KMS personal folder key from jwt
+            grab KSM shared from Env. Vars.
+            Grab bucket info. from Env. Vars.
+ */
 }

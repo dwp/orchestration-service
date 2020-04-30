@@ -9,8 +9,10 @@ import org.junit.Test
 import org.junit.jupiter.api.BeforeEach
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
+import org.springframework.core.io.Resource
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.junit4.SpringRunner
 import software.amazon.awssdk.regions.Region
@@ -34,6 +36,13 @@ class TaskDeploymentServiceTest {
     @Autowired
     private lateinit var taskDeploymentService: TaskDeploymentService
 
+    @Value("classpath:policyDocuments/taskRolePolicy.json")
+    lateinit var taskRoleDocument: Resource
+    @Value("classpath:policyDocuments/taskAssumeRolePolicy.json")
+    lateinit var taskAssumeRoleDocument: Resource
+    @Value("classpath:policyDocuments/jupyterBucketAccessPolicy.json")
+    lateinit var bucketAccessPolicyDocument: Resource
+
     @MockBean
     private lateinit var awsCommunicator: AwsCommunicator
 
@@ -56,11 +65,25 @@ class TaskDeploymentServiceTest {
     }
 
     @Test
-    fun `Additional permissions are replaced appropriately`() {
-        val parsedDocs = taskDeploymentService.parsePolicyDocuments(listOf("permissionOne", "permissionTwo"))
-        val taskRolePolicyString = parsedDocs.first
+    fun `Single set of additional attributes are replaced appropriately`() {
+        val taskRolePolicyString = taskDeploymentService.parsePolicyDocument(taskRoleDocument, mapOf("ADDITIONAL_PERMISSIONS" to listOf("permissionOne", "permissionTwo")))
         assertThat(taskRolePolicyString).doesNotContain("ADDITIONAL_PERMISSIONS")
         assertThat(taskRolePolicyString).contains("\"permissionOne\",\"permissionTwo\"")
+    }
+
+    @Test
+    fun `Multiple additional attributes are replaced appropriately`() {
+        val taskRolePolicyString = taskDeploymentService.parsePolicyDocument(bucketAccessPolicyDocument, mapOf("ACCESS_RESOURCES" to listOf("permissionOne", "permissionTwo"), "LIST_RESOURCE" to listOf("permissionThree", "permissionFour")))
+        assertThat(taskRolePolicyString).doesNotContain("ACCESS_RESOURCES")
+        assertThat(taskRolePolicyString).contains("\"permissionOne\",\"permissionTwo\"")
+        assertThat(taskRolePolicyString).doesNotContain("LIST_RESOURCE")
+        assertThat(taskRolePolicyString).contains("\"permissionThree\",\"permissionFour\"")
+    }
+
+    @Test
+    fun `No additional attributes returns resource to string`() {
+        val taskRolePolicyString = taskDeploymentService.parsePolicyDocument(taskAssumeRoleDocument, emptyMap())
+        assertThat(taskRolePolicyString).isEqualTo(taskAssumeRoleDocument.inputStream.bufferedReader().use { it.readText() })
     }
 
     fun createDescribeRulesResponse(array: Collection<Rule>): DescribeRulesResponse {
