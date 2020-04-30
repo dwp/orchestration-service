@@ -65,7 +65,7 @@ class TaskDeploymentService {
         activeUserTasks.initialiseDeploymentEntry(correlationId, userName)
 
         // IAM permissions
-        val accessPair = Pair("ACCESS_RESOURCES", listOf("${configurationResolver.getStringConfig(ConfigKey.JUPYTER_S3_ARN)}/*", kmsArn))
+        val accessPair = Pair("ACCESS_RESOURCES", listOf("${configurationResolver.getStringConfig(ConfigKey.JUPYTER_S3_ARN)}/*", configurationResolver.getStringConfig(ConfigKey.JUPYTER_KMS_ARN), kmsArn))
         val listPair = Pair("LIST_RESOURCE", listOf(configurationResolver.getStringConfig(ConfigKey.JUPYTER_S3_ARN)))
         val jupyterMap = mapOf(accessPair, listPair)
         jupyterBucketAccessRolePolicyString = parsePolicyDocument(jupyterBucketAccessDocument, jupyterMap)
