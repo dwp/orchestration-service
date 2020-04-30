@@ -68,8 +68,8 @@ class AuthenticationService {
         val username = jwt.getClaim("cognito:username").asString()
                 ?: jwt.getClaim("username").asString()
                 ?: throw IllegalArgumentException("No username found in JWT token")
-        val kmsArn = jwt.getClaim("kmsArn").asString()
-                ?: throw IllegalArgumentException("No KMS arn found in JWT token")
+        val kmsArn = jwt.getClaim("kmsarn").asString()
+                ?: throw IllegalArgumentException("No kmsarn found in JWT token")
         val jwtParameters = mapOf<String, String>("userName" to username, "kmsArn" to kmsArn)
         return jwtParameters
     }
