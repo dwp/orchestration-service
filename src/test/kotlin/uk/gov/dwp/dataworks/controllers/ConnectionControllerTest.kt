@@ -102,6 +102,7 @@ class ConnectionControllerTest {
     fun `200 returned from deployusercontainers with well formed request`() {
         mvc.perform(post("/deployusercontainers")
                 .header("Authorisation", "test_user")
+                .header("kmsarn", "test_kms_arn")
                 .header("content-type", "application/json")
                 .content("{}"))
                 .andExpect(status().isOk)
@@ -111,8 +112,20 @@ class ConnectionControllerTest {
     fun `400 with missing Authorisation from header deployusercontainers`() {
         mvc.perform(post("/deployusercontainers")
                 .content("{}")
+                .header("kmsarn", "test_kms_arn")
                 .header("content-type", "application/json"))
                 .andExpect(status().isBadRequest)
                 .andExpect(status().reason("Missing request header 'Authorisation' for method parameter of type String"))
     }
+
+    @Test
+    fun `400 with missing kmsarn from header deployusercontainers`() {
+        mvc.perform(post("/deployusercontainers")
+                .content("{}")
+                .header("Authorisation", "test_user")
+                .header("content-type", "application/json"))
+                .andExpect(status().isBadRequest)
+                .andExpect(status().reason("Missing request header 'KmsArn' for method parameter of type String"))
+    }
+
 }
