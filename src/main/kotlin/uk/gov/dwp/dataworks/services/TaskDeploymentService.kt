@@ -52,11 +52,11 @@ class TaskDeploymentService {
                 .containerName("guacamole")
                 .containerPort(containerPort)
                 .build()
-        val albRoutingRule = awsCommunicator.createAlbRoutingRule(correlationId, listener.listenerArn(),targetGroup.targetGroupArn(),"/$userName/*")
+        val albRoutingRule = awsCommunicator.createAlbRoutingRule(correlationId, listener.listenerArn(), targetGroup.targetGroupArn(), "/$userName/*")
 
         // IAM permissions
-        taskRolePolicyString = parsePolicyDocument(taskRolePolicyDocument, "ADDITIONAL_PERMISSIONS", additionalPermissions)
-        taskAssumeRoleString = parsePolicyDocument(taskAssumeRoleDocument)
+        taskRolePolicyString = parsePolicyDocument(taskRolePolicyDocument, mapOf("ADDITIONAL_PERMISSIONS" to additionalPermissions))
+        taskAssumeRoleString = parsePolicyDocument(taskAssumeRoleDocument, emptyMap())
         val iamPolicy = awsCommunicator.createIamPolicy(correlationId, "$userName-task-role-document", taskRolePolicyString)
         val iamRole = awsCommunicator.createIamRole(correlationId, "$userName-iam-role", taskAssumeRoleString)
         awsCommunicator.attachIamPolicyToRole(correlationId, iamPolicy, iamRole)
@@ -121,13 +121,16 @@ class TaskDeploymentService {
 //                .replace("ADDITIONAL_PERMISSIONS", permissionsJson)
 //        return taskRolePolicyString to taskAssumeRoleString
 //    }
-    fun parsePolicyDocument(resource: Resource, replacementPlaceholder: String = "", listOfParameters: List<String> = emptyList()): String {
-        if(listOfParameters.isNotEmpty()) {
-            logger.info("Adding $replacementPlaceholder to ${resource.filename}", "parameters" to listOfParameters.joinToString())
-            var permissionsJson = listOfParameters.joinToString(prefix = "\"", separator = "\",\"", postfix = "\"")
-            return resource.inputStream.bufferedReader().use { it.readText() }
-                        .replace(replacementPlaceholder, permissionsJson)
+
+    fun parsePolicyDocument(resource: Resource, placeholderAndReplacements: Map<String, List<String>>): String {
+        var resourceToString = resource.inputStream.bufferedReader().use { it.readText() }
+        if (placeholderAndReplacements.isNotEmpty()) {
+            placeholderAndReplacements.forEach {
+                logger.info("Adding ${it.key} to ${resource.filename}", "parameters" to it.value.joinToString())
+                var permissionsJson = it.value.joinToString(prefix = "\"", separator = "\",\"", postfix = "\"")
+                resourceToString.replace(it.key, permissionsJson)
+            }
         }
-        return resource.inputStream.bufferedReader().use { it.readText() }
+        return resourceToString
     }
 }
