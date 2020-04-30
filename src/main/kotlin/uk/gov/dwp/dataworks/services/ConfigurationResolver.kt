@@ -62,5 +62,8 @@ enum class ConfigKey(val key: String, val isList: Boolean) {
     USER_CONTAINER_TASK_DEFINITION("orchestrationService.user_container_task_definition",false),
     ECS_CLUSTER_NAME("orchestrationService.ecs_cluster_name", false),
     USER_CONTAINER_URL("orchestrationService.user_container_url", false),
-    USER_CONTAINER_PORT("orchestrationService.user_container_port", false)
+    USER_CONTAINER_PORT("orchestrationService.user_container_port", false),
+    JUPYTER_S3_NAME("orchestrationService.jupyterhub_bucket", false),
+    JUPYTER_S3_ARN("orchestrationService.jupyterhub_bucket_arn", false),
+    JUPYTER_KMS_ARN("orchestrationService.jupyterhub_kms_arn", false)
 }

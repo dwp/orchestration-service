@@ -55,7 +55,8 @@ class TaskDeploymentService {
         val albRoutingRule = awsCommunicator.createAlbRoutingRule(correlationId, listener.listenerArn(),targetGroup.targetGroupArn(),"/$userName/*")
 
         // IAM permissions
-        parsePolicyDocuments(additionalPermissions)
+        taskRolePolicyString = parsePolicyDocument(taskRolePolicyDocument, "ADDITIONAL_PERMISSIONS", additionalPermissions)
+        taskAssumeRoleString = parsePolicyDocument(taskAssumeRoleDocument)
         val iamPolicy = awsCommunicator.createIamPolicy(correlationId, "$userName-task-role-document", taskRolePolicyString)
         val iamRole = awsCommunicator.createIamRole(correlationId, "$userName-iam-role", taskAssumeRoleString)
         awsCommunicator.attachIamPolicyToRole(correlationId, iamPolicy, iamRole)
@@ -107,17 +108,26 @@ class TaskDeploymentService {
     /**
      * Helper method to initialise the lateinit vars [taskAssumeRoleString] and [taskRolePolicyString] by
      * converting the associated `@Value` parameters to Strings and replacing `ADDITIONAL_PERMISSIONS` in
-     * [taskRolePolicyString] with the provided [additionalPermissions]
+     * [taskRolePolicyString] with the provided [listOfParameters]
      *
      * @return [Pair] of [taskRolePolicyString] to [taskAssumeRoleString] for ease of access.
      */
-    fun parsePolicyDocuments(additionalPermissions: List<String>): Pair<String, String> {
-        logger.info("Adding permissions to containers", "permissions" to additionalPermissions.joinToString())
-        val permissionsJson = additionalPermissions.joinToString(prefix = "\"", separator = "\",\"", postfix = "\"")
-
-        taskAssumeRoleString = taskAssumeRoleDocument.inputStream.bufferedReader().use { it.readText() }
-        taskRolePolicyString = taskRolePolicyDocument.inputStream.bufferedReader().use { it.readText() }
-                .replace("ADDITIONAL_PERMISSIONS", permissionsJson)
-        return taskRolePolicyString to taskAssumeRoleString
+//    fun parsePolicyDocuments(additionalPermissions: List<String>): Pair<String, String> {
+//        logger.info("Adding permissions to containers", "permissions" to additionalPermissions.joinToString())
+//        val permissionsJson = additionalPermissions.joinToString(prefix = "\"", separator = "\",\"", postfix = "\"")
+//
+//        taskAssumeRoleString = taskAssumeRoleDocument.inputStream.bufferedReader().use { it.readText() }
+//        taskRolePolicyString = taskRolePolicyDocument.inputStream.bufferedReader().use { it.readText() }
+//                .replace("ADDITIONAL_PERMISSIONS", permissionsJson)
+//        return taskRolePolicyString to taskAssumeRoleString
+//    }
+    fun parsePolicyDocument(resource: Resource, replacementPlaceholder: String = "", listOfParameters: List<String> = emptyList()): String {
+        if(listOfParameters.isNotEmpty()) {
+            logger.info("Adding $replacementPlaceholder to ${resource.filename}", "parameters" to listOfParameters.joinToString())
+            var permissionsJson = listOfParameters.joinToString(prefix = "\"", separator = "\",\"", postfix = "\"")
+            return resource.inputStream.bufferedReader().use { it.readText() }
+                        .replace(replacementPlaceholder, permissionsJson)
+        }
+        return resource.inputStream.bufferedReader().use { it.readText() }
     }
 }
