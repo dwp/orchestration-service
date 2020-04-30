@@ -173,7 +173,7 @@ class TaskDeploymentService {
     /**
      * Helper method to initialise the lateinit vars [taskAssumeRoleString] and [taskRolePolicyString] by
      * converting the associated `@Value` parameters to Strings and replacing `ADDITIONAL_PERMISSIONS` in
-     * [taskRolePolicyString] with the provided [additionalPermissions]
+     * [taskRolePolicyString] with the provided [listOfParameters]
      *
      * @return [Pair] of [taskRolePolicyString] to [taskAssumeRoleString] for ease of access.
      */
