@@ -177,16 +177,35 @@ class TaskDeploymentService {
      *
      * @return [Pair] of [taskRolePolicyString] to [taskAssumeRoleString] for ease of access.
      */
-    fun parsePolicyDocuments(additionalPermissions: List<String>): Pair<String, String> {
-        var replaceString = ""
-        if (additionalPermissions.isNotEmpty()) {
-            logger.info("Adding permissions to containers", "permissions" to additionalPermissions.joinToString())
-            val permissionsJson = additionalPermissions.joinToString(prefix = "\"", separator = "\",\"", postfix = "\"")
-            replaceString = "$permissionsJson,"
+//    fun parsePolicyDocuments(additionalPermissions: List<String>): Pair<String, String> {
+//        logger.info("Adding permissions to containers", "permissions" to additionalPermissions.joinToString())
+//        val permissionsJson = additionalPermissions.joinToString(prefix = "\"", separator = "\",\"", postfix = "\"")
+//
+//        taskAssumeRoleString = taskAssumeRoleDocument.inputStream.bufferedReader().use { it.readText() }
+//        taskRolePolicyString = taskRolePolicyDocument.inputStream.bufferedReader().use { it.readText() }
+//                .replace("ADDITIONAL_PERMISSIONS", permissionsJson)
+//        return taskRolePolicyString to taskAssumeRoleString
+//    }
+
+    fun parsePolicyDocument(resource: Resource, placeholderAndReplacements: Map<String, List<String>>): String {
+        var resourceToString = resource.inputStream.bufferedReader().use { it.readText() }
+        if (placeholderAndReplacements.isNotEmpty()) {
+            placeholderAndReplacements.forEach {
+                logger.info("Adding ${it.key} to ${resource.filename}", "parameters" to it.value.joinToString())
+                var permissionsJson = it.value.joinToString(prefix = "\"", separator = "\",\"", postfix = "\"")
+                resourceToString = resourceToString.replace(it.key, permissionsJson)
+            }
         }
         taskAssumeRoleString = taskAssumeRoleDocument.inputStream.bufferedReader().use { it.readText() }
         taskRolePolicyString = taskRolePolicyDocument.inputStream.bufferedReader().use { it.readText() }
                 .replace("ADDITIONAL_PERMISSIONS", replaceString)
         return taskRolePolicyString to taskAssumeRoleString
     }
+
+/*  TODO:   Create IAM Role and attach policy document(s)
+            Inputs for IAM policy parsing:
+            grab KMS personal folder key from jwt
+            grab KSM shared from Env. Vars.
+            Grab bucket info. from Env. Vars.
+ */
 }
