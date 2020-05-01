@@ -2,11 +2,14 @@ package uk.gov.dwp.dataworks.aws
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Configuration
+import software.amazon.awssdk.core.SdkClient
+import software.amazon.awssdk.core.client.config.SdkAdvancedAsyncClientOption
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient
 import software.amazon.awssdk.services.ecs.EcsClient
 import software.amazon.awssdk.services.elasticloadbalancingv2.ElasticLoadBalancingV2Client
 import software.amazon.awssdk.services.iam.IamClient
+import software.amazon.awssdk.services.sts.StsClient
 import uk.gov.dwp.dataworks.services.ConfigurationResolver
 import javax.annotation.PostConstruct
 
@@ -22,6 +25,7 @@ class AwsClients {
     lateinit var ecsClient: EcsClient
     lateinit var iamClient: IamClient
     lateinit var dynamoDbClient: DynamoDbClient
+    lateinit var stsClients: StsClient
 
     @PostConstruct
     fun initialiseClients() {
@@ -29,5 +33,6 @@ class AwsClients {
         ecsClient = EcsClient.builder().region(configurationResolver.awsRegion).build()
         iamClient = IamClient.builder().region(Region.AWS_GLOBAL).build()
         dynamoDbClient = DynamoDbClient.builder().region(configurationResolver.awsRegion).build()
+        stsClients = StsClient.builder().region(configurationResolver.awsRegion).build()
     }
 }

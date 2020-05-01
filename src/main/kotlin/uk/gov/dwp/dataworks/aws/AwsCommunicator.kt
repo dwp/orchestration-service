@@ -59,6 +59,7 @@ import software.amazon.awssdk.services.iam.model.DetachRolePolicyRequest
 import software.amazon.awssdk.services.iam.model.NoSuchEntityException
 import software.amazon.awssdk.services.iam.model.Policy
 import software.amazon.awssdk.services.iam.model.Role
+import software.amazon.awssdk.services.sts.model.GetCallerIdentityRequest
 import uk.gov.dwp.dataworks.MultipleListenersMatchedException
 import uk.gov.dwp.dataworks.MultipleLoadBalancersMatchedException
 import uk.gov.dwp.dataworks.NetworkConfigurationMissingException
@@ -526,5 +527,9 @@ class AwsCommunicator {
         logger.info("User tasks deregistered in dynamodb",
                 "correlation_id" to correlationId,
                 "user_name" to primaryKeyValue)
+    }
+
+    fun getAccNumber(): String? {
+        return awsClients.stsClients.callerIdentity.account()
     }
 }

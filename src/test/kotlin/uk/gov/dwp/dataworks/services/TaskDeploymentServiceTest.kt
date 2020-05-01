@@ -50,9 +50,10 @@ class TaskDeploymentServiceTest {
 
     @BeforeEach
     fun setup() {
-        val jwtObject = JWTObject(decodedJWT, "test_user", "testKmsArn")
+        val jwtObject = JWTObject(decodedJWT, "test_user", listOf("testGroup"))
         whenever(authService.validate(any())).thenReturn(jwtObject)
         whenever(configurationResolver.awsRegion).thenReturn(Region.EU_WEST_2)
+        whenever(awsCommunicator.getAccNumber()).thenReturn("123456")
     }
 
     @Test
@@ -84,6 +85,19 @@ class TaskDeploymentServiceTest {
     fun `No additional attributes returns resource to string`() {
         val taskRolePolicyString = taskDeploymentService.parsePolicyDocument(taskAssumeRoleDocument, emptyMap())
         assertThat(taskRolePolicyString).isEqualTo(taskAssumeRoleDocument.inputStream.bufferedReader().use { it.readText() })
+    }
+
+    @Test
+    fun `List of arns is returned from setArn function with list passed in`() {
+        val arnList = taskDeploymentService.setArns(listOf("group1", "group2"))
+        assertThat(arnList[0]).isEqualTo("arn:aws:kms:${configurationResolver.awsRegion}:${awsCommunicator.getAccNumber()}:alias/group1-Shared")
+        assertThat(arnList[1]).isEqualTo("arn:aws:kms:${configurationResolver.awsRegion}:${awsCommunicator.getAccNumber()}:alias/group2-Shared")
+    }
+
+    @Test
+    fun `Empty list is returned from setArn function with no list`() {
+        val arnList = taskDeploymentService.setArns(emptyList())
+        assertThat(arnList).isEmpty()
     }
 
     fun createDescribeRulesResponse(array: Collection<Rule>): DescribeRulesResponse {

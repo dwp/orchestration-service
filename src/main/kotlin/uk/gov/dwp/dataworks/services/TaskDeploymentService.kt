@@ -65,7 +65,13 @@ class TaskDeploymentService {
         activeUserTasks.initialiseDeploymentEntry(correlationId, userName)
 
         // IAM permissions
-        val accessPair = Pair("ACCESS_RESOURCES", listOf("${configurationResolver.getStringConfig(ConfigKey.JUPYTER_S3_ARN)}/*", configurationResolver.getStringConfig(ConfigKey.JUPYTER_KMS_ARN), kmsArn))
+        val accessPair = Pair("ACCESS_RESOURCES",
+                listOf(
+                    "${configurationResolver.getStringConfig(ConfigKey.JUPYTER_S3_ARN)}/*",
+                    "arn:aws:kms:${configurationResolver.awsRegion}:${awsCommunicator.getAccNumber()}:alias/${userName}-Home")
+                    .plus(setArns(cognitoGroups)
+                )
+        )
         val listPair = Pair("LIST_RESOURCE", listOf(configurationResolver.getStringConfig(ConfigKey.JUPYTER_S3_ARN)))
         val jupyterMap = mapOf(accessPair, listPair)
         jupyterBucketAccessRolePolicyString = parsePolicyDocument(jupyterBucketAccessDocument, jupyterMap)
@@ -206,5 +212,13 @@ class TaskDeploymentService {
         taskRolePolicyString = taskRolePolicyDocument.inputStream.bufferedReader().use { it.readText() }
                 .replace("ADDITIONAL_PERMISSIONS", replaceString)
         return taskRolePolicyString to taskAssumeRoleString
+    }
+
+    fun setArns(groups: List<String>): List<String>{
+        var list: List<String> = emptyList()
+        groups.forEach{
+            list = list.plus("arn:aws:kms:${configurationResolver.awsRegion}:${awsCommunicator.getAccNumber()}:alias/${it}-Shared")
+        }
+        return list
     }
 }

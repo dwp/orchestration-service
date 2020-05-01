@@ -6,13 +6,13 @@ The service orchestrator for providing remote access into the analytical environ
  - The JWT should be sent as a string in the header under the key `Authorisation` 
  - The JWT should contain:
     * `cognito:username` or `username` (provided by AWS Cognito)
-    * `kmsarn` - the arn number (as a String) that authenticates against their personal S3 storage folder
+    * `cognito:groups` - an array of the groups that the user has access to
  
  Test requests that omit JWT to be submitted as a post request to `/deployusercontainers` 
  
  Header of request must contain the following:
   - `Authorisation`*
-  - `KmsArn` (for personal S3 folder)
+  - `cognito:groups` (a list of cognito user groups as strings that the user should be able to access the shared buckets for)
      
   Optional inputs for body of request are:
   - `jupyterCpu`            - default : 512

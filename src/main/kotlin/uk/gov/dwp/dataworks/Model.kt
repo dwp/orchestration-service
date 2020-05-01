@@ -12,7 +12,7 @@ data class DeployRequest @JsonCreator constructor(
         val additionalPermissions: List<String> = emptyList()
 )
 
-data class JWTObject(val verifiedJWT: DecodedJWT, val userName: String, val kmsArn: String)
+data class JWTObject(val verifiedJWT: DecodedJWT, val userName: String, val primaryGroup: List<String>)
 
 data class UserTask(val correlationId: String,
                     val userName: String,

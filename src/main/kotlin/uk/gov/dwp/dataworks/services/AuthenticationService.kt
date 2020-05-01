@@ -58,20 +58,23 @@ class AuthenticationService {
                 .build()
                 .verify(userJwt)
 
-        return JWTObject(jwt, valuesFromJwt(userJwt).getValue("userName"), valuesFromJwt(userJwt).getValue("kmsArn"))
+        return JWTObject(
+                jwt,
+                valuesFromJwt(userJwt).getValue("userName") as String,
+                valuesFromJwt(userJwt).getValue("cognito:groups") as List<String>
+        )
     }
 
     /**
      * Helper method to extract the Cognito username from a JWT Payload.
      */
-    fun valuesFromJwt(jwt: DecodedJWT): Map<String, String> {
+    fun valuesFromJwt(jwt: DecodedJWT): Map<String, Any> {
         val username = jwt.getClaim("cognito:username").asString()
                 ?: jwt.getClaim("username").asString()
                 ?: throw IllegalArgumentException("No username found in JWT token")
-        val kmsArn = jwt.getClaim("kmsarn").asString()
-                ?: throw IllegalArgumentException("No kmsarn found in JWT token")
-        val jwtParameters = mapOf<String, String>("userName" to username, "kmsArn" to kmsArn)
-        return jwtParameters
+        val groups = jwt.getClaim("cognito:groups").asList(String::class.java)
+                ?: throw IllegalArgumentException("No cognito groups found in JWT token")
+        return mapOf("userName" to username, "groups" to groups)
     }
 
     fun getB64KeyStoreData(): String {
