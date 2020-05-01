@@ -3,6 +3,10 @@ The service orchestrator for providing remote access into the analytical environ
 
 ###Endpoint ot submit request for user containers 
  Requests using JWT to be submitted as a post request to `/connect`  
+ - The JWT should be sent as a string in the header under the key `Authorisation` 
+ - The JWT should contain:
+    * `cognito:username` or `username` (provided by AWS Cognito)
+    * `kmsarn` - the arn number (as a String) that authenticates against their personal S3 storage folder
  
  Test requests that omit JWT to be submitted as a post request to `/deployusercontainers` 
  
