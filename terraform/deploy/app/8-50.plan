@@ -1,0 +1,427 @@
+[0m[1mRefreshing Terraform state in-memory prior to plan...[0m
+The refreshed state will be used to calculate this plan, but will not be
+persisted to local or remote state storage.
+[0m
+[0m[1mmodule.ecs-user-host.random_id.capacity_provider_suffix: Refreshing state... [id=NB4][0m
+[0m[1mmodule.jupyter_s3_storage.random_id.jupyter_bucket: Refreshing state... [id=Tjj8kkxc_H6nTIjeaJ11lw][0m
+[0m[1mmodule.ecs-user-host.data.template_cloudinit_config.ecs_config: Refreshing state...[0m
+[0m[1mdata.terraform_remote_state.emr_cluster_broker_infra: Refreshing state...[0m
+[0m[1mdata.terraform_remote_state.security-tools: Refreshing state...[0m
+[0m[1mdata.terraform_remote_state.aws_analytical_env_cognito: Refreshing state...[0m
+[0m[1mdata.terraform_remote_state.ingestion: Refreshing state...[0m
+[0m[1mdata.terraform_remote_state.aws_certificate_authority: Refreshing state...[0m
+[0m[1mdata.terraform_remote_state.aws_analytical_env_infra: Refreshing state...[0m
+[0m[1mmodule.ecs-fargate-service.data.aws_route53_zone.main: Refreshing state...[0m
+[0m[1mmodule.ecs-fargate-task-definition.data.aws_region.current: Refreshing state...[0m
+[0m[1mmodule.ecs-fargate-service.aws_security_group_rule.egress_to_dynamodb_pl: Refreshing state... [id=sgrule-2768740914][0m
+[0m[1mmodule.ecs-user-host.data.aws_iam_policy_document.ecr: Refreshing state...[0m
+[0m[1mmodule.ecs-fargate-service.aws_kms_key.encryption_key: Refreshing state... [id=c7ef7441-e857-4fc7-aa2c-3cdad4bd18cc][0m
+[0m[1mmodule.ec2_task_definition.data.aws_iam_policy_document.ecs_tasks: Refreshing state...[0m
+[0m[1mmodule.ecs-fargate-task-definition.data.aws_iam_policy_document.task_role: Refreshing state...[0m
+[0m[1mdata.aws_ecs_cluster.ecs_main_cluster: Refreshing state...[0m
+[0m[1mmodule.ec2_task_definition.data.aws_availability_zones.current: Refreshing state...[0m
+[0m[1mdata.aws_availability_zones.available: Refreshing state...[0m
+[0m[1mmodule.ecs-fargate-task-definition.data.aws_iam_policy_document.ecs-tasks: Refreshing state...[0m
+[0m[1mmodule.ecs-user-host.data.aws_iam_policy_document.assume_role_ec2: Refreshing state...[0m
+[0m[1mmodule.ec2_task_definition.data.aws_region.current: Refreshing state...[0m
+[0m[1mmodule.ecs-fargate-task-definition.data.aws_availability_zones.current: Refreshing state...[0m
+[0m[1mmodule.ec2_task_definition.data.aws_iam_policy_document.task_role: Refreshing state...[0m
+[0m[1mdata.aws_ami.hardened: Refreshing state...[0m
+[0m[1mmodule.jupyter_s3_storage.aws_kms_key.jupyter_bucket_master_key: Refreshing state... [id=300dcc6f-ec4f-4fb1-828c-c83e73c11715][0m
+[0m[1mmodule.ec2_task_definition.aws_iam_role.ecs_task_role: Refreshing state... [id=orchestration-service-task-definition-ecs-task-role][0m
+[0m[1mmodule.ec2_task_definition.aws_iam_role.ecs_task_execution_role: Refreshing state... [id=orchestration-service-task-definition-ecs-task-execution-role][0m
+[0m[1mmodule.ecs-fargate-task-definition.aws_iam_policy.ecs_task_role: Refreshing state... [id=arn:aws:iam::475593055014:policy/orchestration-service-task_role][0m
+[0m[1mmodule.ecs-fargate-task-definition.aws_iam_role.ecs_task_role: Refreshing state... [id=orchestration-service-ecs-task-role][0m
+[0m[1mmodule.ecs-fargate-task-definition.aws_iam_role.ecs_task_execution_role: Refreshing state... [id=orchestration-service-ecs-task-execution-role][0m
+[0m[1mmodule.ecs-user-host.aws_iam_role.user_host: Refreshing state... [id=orchestration-service-user-hostRole][0m
+[0m[1mmodule.ecs-fargate-task-definition.aws_cloudwatch_log_group.lamda_logs: Refreshing state... [id=/aws/ecs/main/orchestration-service][0m
+[0m[1mmodule.ecs-fargate-service.aws_security_group.lb_sg: Refreshing state... [id=sg-06560b2788ea08339][0m
+[0m[1mmodule.ecs-fargate-service.data.aws_vpc.vpc: Refreshing state...[0m
+[0m[1mmodule.ecs-fargate-service.aws_security_group.ecs_tasks_sg: Refreshing state... [id=sg-02f96af882c4ce2a0][0m
+[0m[1mmodule.ecs-user-host.aws_security_group.user_host: Refreshing state... [id=sg-039c031e24186f5da][0m
+[0m[1mmodule.jupyter_s3_storage.aws_kms_alias.jupyter_bucket_master_key_alias: Refreshing state... [id=alias/jupyter_bucket_master_key][0m
+[0m[1mmodule.jupyter_s3_storage.aws_s3_bucket.jupyter_storage: Refreshing state... [id=4e38fc924c5cfc7ea74c88de689d7597][0m
+[0m[1mmodule.ec2_task_definition.aws_iam_role_policy_attachment.ecs_task_execution: Refreshing state... [id=orchestration-service-task-definition-ecs-task-execution-role-20200416143109679600000002][0m
+[0m[1mmodule.ec2_task_definition.aws_iam_role_policy.ecs_task_role: Refreshing state... [id=orchestration-service-task-definition-ecs-task-role:terraform-20200416143109194100000001][0m
+[0m[1mmodule.ecs-fargate-service.aws_security_group_rule.internet_proxy_endpoint_from_ecs_task: Refreshing state... [id=sgrule-918404937][0m
+[0m[1mmodule.ecs-fargate-service.aws_lb.lb: Refreshing state... [id=arn:aws:elasticloadbalancing:eu-west-2:475593055014:loadbalancer/app/orchestration-service-lb/e91834066eb33b7a][0m
+[0m[1mmodule.ecs-fargate-service.aws_security_group_rule.egress_to_ecs_tasks: Refreshing state... [id=sgrule-3443201576][0m
+[0m[1mmodule.ecs-fargate-service.aws_security_group_rule.egress_to_s3_pl: Refreshing state... [id=sgrule-2609203270][0m
+[0m[1mmodule.ecs-fargate-service.aws_security_group_rule.ingress_https_to_vpc_endpoints: Refreshing state... [id=sgrule-1806020024][0m
+[0m[1mmodule.ecs-fargate-service.aws_security_group_rule.egress_to_vpce: Refreshing state... [id=sgrule-4241679223][0m
+[0m[1mmodule.ecs-fargate-service.aws_security_group_rule.ecs_tasks_to_internet_proxy_endpoint: Refreshing state... [id=sgrule-2974339470][0m
+[0m[1mmodule.ecs-fargate-service.aws_security_group_rule.ingress_from_alb: Refreshing state... [id=sgrule-1235280446][0m
+[0m[1mmodule.ecs-user-host.aws_security_group_rule.to_vpce: Refreshing state... [id=sgrule-247598687][0m
+[0m[1mmodule.ecs-user-host.aws_security_group_rule.https_to_s3: Refreshing state... [id=sgrule-3953599164][0m
+[0m[1mmodule.ec2_task_definition.data.http.well_known_jwks: Refreshing state...[0m
+[0m[1mmodule.ecs-user-host.aws_security_group_rule.vpce_from_host: Refreshing state... [id=sgrule-1270654277][0m
+[0m[1mmodule.ecs-user-host.aws_security_group_rule.http_to_s3: Refreshing state... [id=sgrule-3723703153][0m
+[0m[1mmodule.ecs-fargate-task-definition.aws_iam_role_policy_attachment.ecs_task_execution_role_policy_attach: Refreshing state... [id=orchestration-service-ecs-task-execution-role-20200416141738907900000006][0m
+[0m[1mmodule.ecs-user-host.aws_iam_instance_profile.user_host: Refreshing state... [id=orchestration-service-user-hostRole][0m
+[0m[1mmodule.ecs-user-host.aws_iam_role_policy_attachment.cloudwatch_loggin: Refreshing state... [id=orchestration-service-user-hostRole-20200416141737564200000004][0m
+[0m[1mmodule.ecs-user-host.aws_iam_role_policy_attachment.ssm: Refreshing state... [id=orchestration-service-user-hostRole-20200416141737558800000003][0m
+[0m[1mmodule.ecs-user-host.aws_iam_role_policy_attachment.ecs: Refreshing state... [id=orchestration-service-user-hostRole-20200416141737549000000002][0m
+[0m[1mmodule.ecs-user-host.aws_iam_role_policy.ecr: Refreshing state... [id=orchestration-service-user-hostRole:terraform-20200416141737126500000001][0m
+[0m[1mmodule.ecs-fargate-task-definition.aws_iam_role_policy_attachment.ecs_task_role_policy_attach: Refreshing state... [id=orchestration-service-ecs-task-role-20200416141739288600000007][0m
+[0m[1mmodule.ecs-fargate-service.aws_lb_target_group.lb_tg: Refreshing state... [id=arn:aws:elasticloadbalancing:eu-west-2:475593055014:targetgroup/orchestration-service-lb-tg/0c2a8c35e6a6d8e6][0m
+[0m[1mmodule.ecs-fargate-service.aws_security_group_rule.ingress_to_alb: Refreshing state... [id=sgrule-363972826][0m
+[0m[1mmodule.ecs-fargate-service.aws_route53_record.record: Refreshing state... [id=Z2SQITY115NIJK_orchestration-service.dev.wip.dataworks.dwp.gov.uk_A][0m
+[0m[1mmodule.ecs-fargate-service.aws_acm_certificate.cert: Refreshing state... [id=arn:aws:acm:eu-west-2:475593055014:certificate/5ac16299-94f9-4321-bd8c-106f40e61f33][0m
+[0m[1mmodule.ec2_task_definition.aws_ecs_task_definition.service: Refreshing state... [id=orchestration-service-task-definition-ui-service][0m
+[0m[1mmodule.ecs-user-host.aws_launch_template.user_host: Refreshing state... [id=lt-03e44ea4c1f80e67e][0m
+[0m[1mmodule.ecs-user-host.aws_autoscaling_group.user_host: Refreshing state... [id=orchestration-service-user-host-asg][0m
+[0m[1mmodule.jupyter_s3_storage.aws_s3_bucket_public_access_block.jupyter_bucket: Refreshing state... [id=4e38fc924c5cfc7ea74c88de689d7597][0m
+[0m[1mmodule.jupyter_s3_storage.data.aws_iam_policy_document.jupyter_bucket_restrict_to_vpc: Refreshing state...[0m
+[0m[1mmodule.jupyter_s3_storage.aws_s3_bucket_policy.jupyter_bucket: Refreshing state... [id=4e38fc924c5cfc7ea74c88de689d7597][0m
+[0m[1mmodule.ecs-fargate-task-definition.aws_ecs_task_definition.td: Refreshing state... [id=orchestration-service-td][0m
+[0m[1mmodule.ecs-fargate-service.aws_lb_listener.listener: Refreshing state... [id=arn:aws:elasticloadbalancing:eu-west-2:475593055014:listener/app/orchestration-service-lb/e91834066eb33b7a/4b12f0a73357ffb4][0m
+[0m[1mmodule.ecs-user-host.aws_ecs_capacity_provider.user_host: Refreshing state... [id=arn:aws:ecs:eu-west-2:475593055014:capacity-provider/orchestration-service-user-host-341e][0m
+[0m[1mmodule.ecs-fargate-service.aws_ecs_service.service: Refreshing state... [id=arn:aws:ecs:eu-west-2:475593055014:service/orchestration-service-service][0m
+[0m[1mmodule.ecs-user-host.aws_ecs_cluster.user_host: Refreshing state... [id=arn:aws:ecs:eu-west-2:475593055014:cluster/orchestration-service-user-host][0m
+[0m[1mmodule.ecs-fargate-service.aws_appautoscaling_target.scale_target: Refreshing state... [id=service/main/orchestration-service-service][0m
+[0m[1mmodule.ecs-fargate-service.aws_appautoscaling_policy.scale_up_policy: Refreshing state... [id=orchestration-service-scale-up-policy][0m
+[0m[1mmodule.ecs-fargate-service.aws_appautoscaling_policy.scale_down_policy: Refreshing state... [id=orchestration-service-scale-down-policy][0m
+[0m[1mmodule.ecs-fargate-service.aws_cloudwatch_metric_alarm.cpu_low: Refreshing state... [id=orchestration-service-cpu-low][0m
+[0m[1mmodule.ecs-fargate-service.aws_cloudwatch_metric_alarm.cpu_high: Refreshing state... [id=orchestration-service-cpu-high][0m
+
+------------------------------------------------------------------------
+
+An execution plan has been generated and is shown below.
+Resource actions are indicated with the following symbols:
+  [33m~[0m update in-place
+  [31m-[0m destroy
+[31m-[0m/[32m+[0m destroy and then create replacement
+[0m
+Terraform will perform the following actions:
+
+[1m  # module.ecs-fargate-service.aws_ecs_service.service[0m will be updated in-place[0m[0m
+[0m  [33m~[0m[0m resource "aws_ecs_service" "service" {
+        [1m[0mcluster[0m[0m                            = "arn:aws:ecs:eu-west-2:475593055014:cluster/main"
+        [1m[0mdeployment_maximum_percent[0m[0m         = 200
+        [1m[0mdeployment_minimum_healthy_percent[0m[0m = 100
+      [33m~[0m [0m[1m[0mdesired_count[0m[0m                      = 4 [33m->[0m [0m2
+        [1m[0menable_ecs_managed_tags[0m[0m            = false
+        [1m[0mhealth_check_grace_period_seconds[0m[0m  = 0
+        [1m[0miam_role[0m[0m                           = "aws-service-role"
+        [1m[0mid[0m[0m                                 = "arn:aws:ecs:eu-west-2:475593055014:service/orchestration-service-service"
+        [1m[0mlaunch_type[0m[0m                        = "FARGATE"
+        [1m[0mname[0m[0m                               = "orchestration-service-service"
+        [1m[0mplatform_version[0m[0m                   = "LATEST"
+        [1m[0mpropagate_tags[0m[0m                     = "NONE"
+        [1m[0mscheduling_strategy[0m[0m                = "REPLICA"
+        [1m[0mtags[0m[0m                               = {}
+      [33m~[0m [0m[1m[0mtask_definition[0m[0m                    = "arn:aws:ecs:eu-west-2:475593055014:task-definition/orchestration-service-td:14" [33m->[0m [0m(known after apply)
+
+        deployment_controller {
+            [1m[0mtype[0m[0m = "ECS"
+        }
+
+        load_balancer {
+            [1m[0mcontainer_name[0m[0m   = "orchestration-service"
+            [1m[0mcontainer_port[0m[0m   = 8443
+            [1m[0mtarget_group_arn[0m[0m = "arn:aws:elasticloadbalancing:eu-west-2:475593055014:targetgroup/orchestration-service-lb-tg/0c2a8c35e6a6d8e6"
+        }
+
+        network_configuration {
+            [1m[0massign_public_ip[0m[0m = false
+            [1m[0msecurity_groups[0m[0m  = [
+                "sg-02f96af882c4ce2a0",
+            ]
+            [1m[0msubnets[0m[0m          = [
+                "subnet-00f967aff304bb9ff",
+                "subnet-03b5c69a4ba6b2190",
+                "subnet-0c68bdd78ace1a1b8",
+            ]
+        }
+    }
+
+[1m  # module.ecs-fargate-service.aws_security_group_rule.egress_to_dynamodb_pl[0m will be [1m[31mdestroyed[0m[0m
+[0m  [31m-[0m[0m resource "aws_security_group_rule" "egress_to_dynamodb_pl" {
+      [31m-[0m [0m[1m[0mcidr_blocks[0m[0m       = [] [90m->[0m [0m[90mnull[0m[0m
+      [31m-[0m [0m[1m[0mdescription[0m[0m       = "egress_to_dynamodb_pl" [90m->[0m [0m[90mnull[0m[0m
+      [31m-[0m [0m[1m[0mfrom_port[0m[0m         = 443 [90m->[0m [0m[90mnull[0m[0m
+      [31m-[0m [0m[1m[0mid[0m[0m                = "sgrule-2768740914" [90m->[0m [0m[90mnull[0m[0m
+      [31m-[0m [0m[1m[0mipv6_cidr_blocks[0m[0m  = [] [90m->[0m [0m[90mnull[0m[0m
+      [31m-[0m [0m[1m[0mprefix_list_ids[0m[0m   = [
+          [31m-[0m [0m"pl-b3a742da",
+        ] [90m->[0m [0m[90mnull[0m[0m
+      [31m-[0m [0m[1m[0mprotocol[0m[0m          = "tcp" [90m->[0m [0m[90mnull[0m[0m
+      [31m-[0m [0m[1m[0msecurity_group_id[0m[0m = "sg-02f96af882c4ce2a0" [90m->[0m [0m[90mnull[0m[0m
+      [31m-[0m [0m[1m[0mself[0m[0m              = false [90m->[0m [0m[90mnull[0m[0m
+      [31m-[0m [0m[1m[0mto_port[0m[0m           = 443 [90m->[0m [0m[90mnull[0m[0m
+      [31m-[0m [0m[1m[0mtype[0m[0m              = "egress" [90m->[0m [0m[90mnull[0m[0m
+    }
+
+[1m  # module.ecs-fargate-task-definition.aws_ecs_task_definition.td[0m must be [1m[31mreplaced[0m[0m
+[0m[31m-[0m/[32m+[0m[0m resource "aws_ecs_task_definition" "td" {
+      [33m~[0m [0m[1m[0marn[0m[0m                      = "arn:aws:ecs:eu-west-2:475593055014:task-definition/orchestration-service-td:14" [33m->[0m [0m(known after apply)
+      [33m~[0m [0m[1m[0mcontainer_definitions[0m[0m    = jsonencode(
+          [33m~[0m [0m[ [31m# forces replacement[0m[0m
+              [33m~[0m [0m{
+                  [32m+[0m [0mcommand                = [90mnull[0m[0m
+                    cpu                    = 512
+                  [32m+[0m [0mdependsOn              = [90mnull[0m[0m
+                  [32m+[0m [0mdnsServers             = [90mnull[0m[0m
+                  [32m+[0m [0mdockerLabels           = [90mnull[0m[0m
+                  [32m+[0m [0mentryPoint             = [90mnull[0m[0m
+                  [33m~[0m [0menvironment            = [
+                      [31m-[0m [0m{
+                          [31m-[0m [0mname  = "orchestrationService.jupyterhub_bucket"
+                          [31m-[0m [0mvalue = "4e38fc924c5cfc7ea74c88de689d7597"
+                        },
+                      [31m-[0m [0m{
+                          [31m-[0m [0mname  = "NON_PROXY_HOSTS"
+                          [31m-[0m [0mvalue = "*.s3.eu-west-2.amazonaws.com|s3.eu-west-2.amazonaws.com|ecr.eu-west-2.amazonaws.com|*.dkr.ecr.eu-west-2.amazonaws.com|dkr.ecr.eu-west-2.amazonaws.com|logs.eu-west-2.amazonaws.com|kms.eu-west-2.amazonaws.com|kms-fips.eu-west-2.amazonaws.com|ec2.eu-west-2.amazonaws.com|monitoring.eu-west-2.amazonaws.com|eu-west-2.queue.amazonaws.com|glue.eu-west-2.amazonaws.com|sts.eu-west-2.amazonaws.com|*.eu-west-2.compute.internal|dynamodb.eu-west-2.amazonaws.com"
+                        },
+                      [31m-[0m [0m{
+                          [31m-[0m [0mname  = "orchestrationService.user_container_url"
+                          [31m-[0m [0mvalue = "aws-analytical-env.dev.wip.dataworks.dwp.gov.uk"
+                        },
+                        {
+                            name  = "orchestrationService.aws_region"
+                            value = "eu-west-2"
+                        },
+                      [31m-[0m [0m{
+                          [31m-[0m [0mname  = "PROXY_HOST"
+                          [31m-[0m [0mvalue = "vpce-0b86649176b58422c-9qesmulw.vpce-svc-058f600e34e03e238.eu-west-2.vpce.amazonaws.com"
+                        },
+                      [31m-[0m [0m{
+                          [31m-[0m [0mname  = "orchestrationService.load_balancer_name"
+                          [31m-[0m [0mvalue = "aws-analytical-env-lb"
+                        },
+                        {
+                            name  = "orchestrationService.cognito_user_pool_id"
+                            value = "eu-west-2_Q0bHwhFqA"
+                        },
+                      [31m-[0m [0m{
+                          [31m-[0m [0mname  = "orchestrationService.user_container_task_definition"
+                          [31m-[0m [0mvalue = "orchestration-service-analytical-workspace"
+                        },
+                      [31m-[0m [0m{
+                          [31m-[0m [0mname  = "orchestrationService.user_container_port"
+                          [31m-[0m [0mvalue = "8443"
+                        },
+                        {
+                            name  = "orchestrationService.ecs_cluster_name"
+                            value = "orchestration-service-user-host"
+                        },
+                      [32m+[0m [0m{
+                          [32m+[0m [0mname  = "orchestrationService.jupyterhub_bucket"
+                          [32m+[0m [0mvalue = "4e38fc924c5cfc7ea74c88de689d7597"
+                        },
+                      [32m+[0m [0m{
+                          [32m+[0m [0mname  = "orchestrationService.jupyterhub_bucket_arn"
+                          [32m+[0m [0mvalue = "arn:aws:s3:::4e38fc924c5cfc7ea74c88de689d7597"
+                        },
+                      [32m+[0m [0m{
+                          [32m+[0m [0mname  = "orchestrationService.jupyterhub_kms_arn"
+                          [32m+[0m [0mvalue = "arn:aws:kms:eu-west-2:475593055014:key/300dcc6f-ec4f-4fb1-828c-c83e73c11715"
+                        },
+                      [32m+[0m [0m{
+                          [32m+[0m [0mname  = "orchestrationService.load_balancer_name"
+                          [32m+[0m [0mvalue = "aws-analytical-env-lb"
+                        },
+                      [32m+[0m [0m{
+                          [32m+[0m [0mname  = "orchestrationService.user_container_port"
+                          [32m+[0m [0mvalue = "8443"
+                        },
+                      [32m+[0m [0m{
+                          [32m+[0m [0mname  = "orchestrationService.user_container_task_definition"
+                          [32m+[0m [0mvalue = "orchestration-service-analytical-workspace"
+                        },
+                      [32m+[0m [0m{
+                          [32m+[0m [0mname  = "orchestrationService.user_container_url"
+                          [32m+[0m [0mvalue = "aws-analytical-env.dev.wip.dataworks.dwp.gov.uk"
+                        },
+                    ]
+                    essential              = true
+                  [32m+[0m [0mfirelensConfiguration  = [90mnull[0m[0m
+                  [32m+[0m [0mhealthCheck            = [90mnull[0m[0m
+                    image                  = "483867336682.dkr.ecr.eu-west-2.amazonaws.com/orchestration-service:latest"
+                  [32m+[0m [0mlinks                  = [90mnull[0m[0m
+                    logConfiguration       = {
+                        logDriver     = "awslogs"
+                        options       = {
+                            awslogs-group         = "/aws/ecs/main/orchestration-service"
+                            awslogs-region        = "eu-west-2"
+                            awslogs-stream-prefix = "ecs"
+                        }
+                        secretOptions = []
+                    }
+                    memory                 = 2048
+                  [32m+[0m [0mmemoryReservation      = [90mnull[0m[0m
+                  [33m~[0m [0mmountPoints            = [] [90m->[0m [0m[90mnull[0m[0m
+                    name                   = "orchestration-service"
+                    portMappings           = [
+                        {
+                            containerPort = 8443
+                            hostPort      = 8443
+                            protocol      = "tcp"
+                        },
+                    ]
+                  [32m+[0m [0mprivileged             = [90mnull[0m[0m
+                    readonlyRootFilesystem = false
+                  [32m+[0m [0mrepositoryCredentials  = [90mnull[0m[0m
+                  [32m+[0m [0msecrets                = [90mnull[0m[0m
+                    startTimeout           = 30
+                    stopTimeout            = 30
+                  [32m+[0m [0msystemControls         = [90mnull[0m[0m
+                  [32m+[0m [0mulimits                = [90mnull[0m[0m
+                  [32m+[0m [0muser                   = [90mnull[0m[0m
+                  [33m~[0m [0mvolumesFrom            = [] [90m->[0m [0m[90mnull[0m[0m
+                  [32m+[0m [0mworkingDirectory       = [90mnull[0m[0m
+                } [31m# forces replacement[0m[0m,
+            ]
+        )
+        [1m[0mcpu[0m[0m                      = "512"
+        [1m[0mexecution_role_arn[0m[0m       = "arn:aws:iam::475593055014:role/orchestration-service-ecs-task-execution-role"
+        [1m[0mfamily[0m[0m                   = "orchestration-service-td"
+      [33m~[0m [0m[1m[0mid[0m[0m                       = "orchestration-service-td" [33m->[0m [0m(known after apply)
+        [1m[0mmemory[0m[0m                   = "2048"
+        [1m[0mnetwork_mode[0m[0m             = "awsvpc"
+        [1m[0mrequires_compatibilities[0m[0m = [
+            "FARGATE",
+        ]
+      [33m~[0m [0m[1m[0mrevision[0m[0m                 = 14 [33m->[0m [0m(known after apply)
+        [1m[0mtags[0m[0m                     = {
+            "Application"  = "orchestration-service"
+            "AutoShutdown" = "False"
+            "CreatedBy"    = "terraform"
+            "Environment"  = "development"
+            "Name"         = "orchestration-service-td"
+            "Owner"        = "dataworks platform"
+            "Persistence"  = "True"
+        }
+        [1m[0mtask_role_arn[0m[0m            = "arn:aws:iam::475593055014:role/orchestration-service-ecs-task-role"
+    }
+
+[1m  # module.ecs-fargate-task-definition.aws_iam_policy.ecs_task_role[0m will be updated in-place[0m[0m
+[0m  [33m~[0m[0m resource "aws_iam_policy" "ecs_task_role" {
+        [1m[0marn[0m[0m    = "arn:aws:iam::475593055014:policy/orchestration-service-task_role"
+        [1m[0mid[0m[0m     = "arn:aws:iam::475593055014:policy/orchestration-service-task_role"
+        [1m[0mname[0m[0m   = "orchestration-service-task_role"
+        [1m[0mpath[0m[0m   = "/"
+      [33m~[0m [0m[1m[0mpolicy[0m[0m = jsonencode(
+          [33m~[0m [0m{
+              [33m~[0m [0mStatement = [
+                  [33m~[0m [0m{
+                      [33m~[0m [0mAction   = [
+                          [31m-[0m [0m"iam:PutRolePolicy",
+                          [31m-[0m [0m"iam:CreateRole",
+                          [31m-[0m [0m"iam:CreatePolicy",
+                          [31m-[0m [0m"iam:AttachRolePolicy",
+                          [31m-[0m [0m"elasticloadbalancing:DescribeTargetGroups",
+                          [31m-[0m [0m"elasticloadbalancing:DescribeRules",
+                          [31m-[0m [0m"elasticloadbalancing:DescribeLoadBalancers",
+                          [31m-[0m [0m"elasticloadbalancing:DescribeListeners",
+                          [31m-[0m [0m"elasticloadbalancing:CreateTargetGroup",
+                          [31m-[0m [0m"elasticloadbalancing:CreateRule",
+                          [31m-[0m [0m"ecs:RunTask",
+                          [31m-[0m [0m"ecs:DescribeTaskDefinition",
+                          [31m-[0m [0m"ecs:DescribeServices",
+                          [31m-[0m [0m"ecs:CreateService",
+                          [31m-[0m [0m"ec2:DescribeImages",
+                          [31m-[0m [0m"dynamodb:*",
+                        ] [33m->[0m [0m"ec2:DescribeImages"
+                        Effect   = "Allow"
+                        Resource = "*"
+                        Sid      = ""
+                    },
+                ]
+                Version   = "2012-10-17"
+            }
+        )
+    }
+
+[1m  # module.ecs-user-host.aws_launch_template.user_host[0m will be updated in-place[0m[0m
+[0m  [33m~[0m[0m resource "aws_launch_template" "user_host" {
+        [1m[0marn[0m[0m                                  = "arn:aws:ec2:eu-west-2:475593055014:launch-template/lt-03e44ea4c1f80e67e"
+        [1m[0mdefault_version[0m[0m                      = 1
+        [1m[0mdisable_api_termination[0m[0m              = false
+        [1m[0mid[0m[0m                                   = "lt-03e44ea4c1f80e67e"
+      [33m~[0m [0m[1m[0mimage_id[0m[0m                             = "ami-00b17459398e629e1" [33m->[0m [0m"ami-04c120561ae718c4e"
+        [1m[0minstance_initiated_shutdown_behavior[0m[0m = "terminate"
+        [1m[0minstance_type[0m[0m                        = "t3.2xlarge"
+      [33m~[0m [0m[1m[0mlatest_version[0m[0m                       = 13 [33m->[0m [0m(known after apply)
+        [1m[0mname[0m[0m                                 = "orchestration-service-user-host-20200324111224082700000004"
+        [1m[0mname_prefix[0m[0m                          = "orchestration-service-user-host-"
+        [1m[0msecurity_group_names[0m[0m                 = []
+        [1m[0mtags[0m[0m                                 = {
+            "Application"  = "orchestration-service"
+            "AutoShutdown" = "False"
+            "CreatedBy"    = "terraform"
+            "Environment"  = "development"
+            "Name"         = "orchestration-service-user-host-lt"
+            "Owner"        = "dataworks platform"
+            "Persistence"  = "True"
+        }
+        [1m[0muser_data[0m[0m                            = "H4sIAAAAAAAA/8SPzUorQRCF9wPzDnVzIbvK6EqIJKBxFoJRyI/gSno6lUxBd3XoqpGMTy/JQgLzAC5qceCjzncWSYzEcNMfaQqxC8ZHl62KfKLdPTSpk53L/Wy0fF7Wj2/b16eH1ceoOCd8p6ycZAq3k5uyKAvEa6gsfn9nJ7qnjLX4tGM5TOGuYbsCLuVGJ6tOqC2FoD7z0cpiyZEGPQAA//9VDUvVOG0vue8isKi5EAB7cNF9J0HViO5AYjAeAwubtwBqLtuA+GN/8m2CerH+XLxs15t6NUvZt6SWnfFZk/IXe8JOKWOb1GA+h4rMV+T1fBOfZM+HwQrEsvgJAAD//9KpalLkAQAA"
+        [1m[0mvpc_security_group_ids[0m[0m               = []
+
+        block_device_mappings {
+            [1m[0mdevice_name[0m[0m = "/dev/xvda"
+
+            ebs {
+                [1m[0mdelete_on_termination[0m[0m = "true"
+                [1m[0mencrypted[0m[0m             = "true"
+                [1m[0miops[0m[0m                  = 0
+                [1m[0mvolume_size[0m[0m           = 32
+            }
+        }
+        block_device_mappings {
+            [1m[0mdevice_name[0m[0m = "/dev/sda1"
+            [1m[0mno_device[0m[0m   = "true"
+        }
+
+        iam_instance_profile {
+            [1m[0marn[0m[0m = "arn:aws:iam::475593055014:instance-profile/orchestration-service-user-hostRole"
+        }
+
+        network_interfaces {
+            [1m[0massociate_public_ip_address[0m[0m = "false"
+            [1m[0mdelete_on_termination[0m[0m       = true
+            [1m[0mdevice_index[0m[0m                = 0
+            [1m[0mipv4_address_count[0m[0m          = 0
+            [1m[0mipv4_addresses[0m[0m              = []
+            [1m[0mipv6_address_count[0m[0m          = 0
+            [1m[0mipv6_addresses[0m[0m              = []
+            [1m[0msecurity_groups[0m[0m             = [
+                "sg-039c031e24186f5da",
+            ]
+        }
+
+        tag_specifications {
+            [1m[0mresource_type[0m[0m = "instance"
+            [1m[0mtags[0m[0m          = {
+                "Application"  = "orchestration-service"
+                "AutoShutdown" = "False"
+                "CreatedBy"    = "terraform"
+                "Environment"  = "development"
+                "Name"         = "orchestration-service-user-host"
+                "Owner"        = "dataworks platform"
+                "Persistence"  = "True"
+                "SSMEnabled"   = "True"
+            }
+        }
+        tag_specifications {
+            [1m[0mresource_type[0m[0m = "volume"
+            [1m[0mtags[0m[0m          = {
+                "Application"  = "orchestration-service"
+                "AutoShutdown" = "False"
+                "CreatedBy"    = "terraform"
+                "Environment"  = "development"
+                "Name"         = "orchestration-service-user-host"
+                "Owner"        = "dataworks platform"
+                "Persistence"  = "True"
+            }
+        }
+    }
+
+[0m[1mPlan:[0m 1 to add, 3 to change, 2 to destroy.[0m
+
+------------------------------------------------------------------------
+
+Note: You didn't specify an "-out" parameter to save this plan, so Terraform
+can't guarantee that exactly these actions will be performed if
+"terraform apply" is subsequently run.
+

@@ -208,13 +208,13 @@ class AwsCommunicator {
      *
      * For ease of use, the task definition is retrieved from the [task definition env var][ConfigKey.USER_CONTAINER_TASK_DEFINITION]
      */
-    fun createEcsService(correlationId: String, clusterName: String, serviceName: String, loadBalancer: EcsLoadBalancer): Service {
+    fun createEcsService(correlationId: String, clusterName: String, serviceName: String, taskDefinition: String, loadBalancer: EcsLoadBalancer): Service {
         // Create ECS service request
         val serviceBuilder = CreateServiceRequest.builder()
                 .cluster(clusterName)
                 .loadBalancers(loadBalancer)
                 .serviceName(serviceName)
-                .taskDefinition(configurationResolver.getStringConfig(ConfigKey.USER_CONTAINER_TASK_DEFINITION))
+                .taskDefinition(taskDefinition)
                 .desiredCount(1)
                 .build()
 

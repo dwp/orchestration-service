@@ -32,23 +32,22 @@ class TaskDeploymentService {
         val logger: DataworksLogger = DataworksLogger(LoggerFactory.getLogger(TaskDeploymentService::class.java))
     }
 
-    fun runContainers(userName: String, jupyterCpu: Int, jupyterMemory: Int, additionalPermissions: List<String>): UserTask {
+    fun runContainers(userName: String, emrClusterHostName: String, jupyterCpu: Int, jupyterMemory: Int, additionalPermissions: List<String>): UserTask {
         val correlationId = "$userName-${UUID.randomUUID()}"
         // Retrieve required params from environment
-        val containerPort = Integer.parseInt(configurationResolver.getStringConfig(ConfigKey.USER_CONTAINER_PORT))
-        val emrClusterHostName = configurationResolver.getStringConfig(ConfigKey.EMR_CLUSTER_HOST_NAME)
+        val taskDefinition = configurationResolver.getStringConfig(ConfigKey.USER_CONTAINER_TASK_DEFINITION)
+        val containerPort = Integer.parseInt(configurationResolver.getStringConfig(ConfigKey.LOAD_BALANCER_PORT))
         val albName = configurationResolver.getStringConfig(ConfigKey.LOAD_BALANCER_NAME)
         val ecsClusterName = configurationResolver.getStringConfig(ConfigKey.ECS_CLUSTER_NAME)
 
         // Load balancer & Routing
         val loadBalancer = awsCommunicator.getLoadBalancerByName(albName)
         val listener = awsCommunicator.getAlbListenerByPort(loadBalancer.loadBalancerArn(), containerPort)
-        val targetGroup = awsCommunicator.createTargetGroup(correlationId, loadBalancer.vpcId(), "$userName-target-group", containerPort)
+        val targetGroup = awsCommunicator.createTargetGroup(correlationId, loadBalancer.vpcId(), "os-user-$userName-tg", containerPort)
         // There are 2 distinct LoadBalancer classes in the AWS SDK - ELBV2 and ECS. They represent the same LB but in different ways.
         // The following is the load balancer needed to create an ECS service.
         val ecsLoadBalancer = LoadBalancer.builder()
                 .targetGroupArn(targetGroup.targetGroupArn())
-                .loadBalancerName(loadBalancer.loadBalancerName())
                 .containerName("guacamole")
                 .containerPort(containerPort)
                 .build()
@@ -56,15 +55,15 @@ class TaskDeploymentService {
 
         // IAM permissions
         parsePolicyDocuments(additionalPermissions)
-        val iamPolicy = awsCommunicator.createIamPolicy(correlationId, "$userName-task-role-document", taskRolePolicyString)
-        val iamRole = awsCommunicator.createIamRole(correlationId, "$userName-iam-role", taskAssumeRoleString)
+        val iamPolicy = awsCommunicator.createIamPolicy(correlationId, "orchestration-service-user-$userName-policy", taskRolePolicyString)
+        val iamRole = awsCommunicator.createIamRole(correlationId, "orchestration-service-user-$userName-role", taskAssumeRoleString)
         awsCommunicator.attachIamPolicyToRole(correlationId, iamPolicy, iamRole)
 
         // ECS
-        val ecsServiceName = "${userName}-analytical-workspace"
-        awsCommunicator.createEcsService(correlationId, ecsClusterName, ecsServiceName, ecsLoadBalancer)
+        val ecsServiceName = "$userName-analytical-workspace"
+        awsCommunicator.createEcsService(correlationId, ecsClusterName, ecsServiceName, taskDefinition, ecsLoadBalancer)
         val containerOverrides = buildContainerOverrides(correlationId, userName, emrClusterHostName, jupyterMemory, jupyterCpu)
-        val ecsTaskRequest = awsCommunicator.buildEcsTask(ecsClusterName, "orchestration-service-analytical-workspace", iamRole.arn(), containerOverrides)
+        val ecsTaskRequest = awsCommunicator.buildEcsTask(ecsClusterName, taskDefinition, iamRole.arn(), containerOverrides)
 
         awsCommunicator.runEcsTask(correlationId, ecsTaskRequest)
 
@@ -112,12 +111,15 @@ class TaskDeploymentService {
      * @return [Pair] of [taskRolePolicyString] to [taskAssumeRoleString] for ease of access.
      */
     fun parsePolicyDocuments(additionalPermissions: List<String>): Pair<String, String> {
-        logger.info("Adding permissions to containers", "permissions" to additionalPermissions.joinToString())
-        val permissionsJson = additionalPermissions.joinToString(prefix = "\"", separator = "\",\"", postfix = "\"")
-
+        var replaceString = ""
+        if (additionalPermissions.isNotEmpty()) {
+            logger.info("Adding permissions to containers", "permissions" to additionalPermissions.joinToString())
+            val permissionsJson = additionalPermissions.joinToString(prefix = "\"", separator = "\",\"", postfix = "\"")
+            replaceString = "$permissionsJson,"
+        }
         taskAssumeRoleString = taskAssumeRoleDocument.inputStream.bufferedReader().use { it.readText() }
         taskRolePolicyString = taskRolePolicyDocument.inputStream.bufferedReader().use { it.readText() }
-                .replace("ADDITIONAL_PERMISSIONS", permissionsJson)
+                .replace("ADDITIONAL_PERMISSIONS", replaceString)
         return taskRolePolicyString to taskAssumeRoleString
     }
 }

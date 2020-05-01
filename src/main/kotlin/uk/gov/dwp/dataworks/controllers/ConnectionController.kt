@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.CrossOrigin
 import org.springframework.web.bind.annotation.ExceptionHandler
+import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestHeader
@@ -92,6 +93,7 @@ class ConnectionController {
         } else {
             val userTask = taskDeploymentService.runContainers(
                     userName,
+                    requestBody.emrClusterHostName,
                     requestBody.jupyterCpu,
                     requestBody.jupyterMemory,
                     requestBody.additionalPermissions)
@@ -99,5 +101,14 @@ class ConnectionController {
             logger.info("Completed request", "cluster_name" to configurationResolver.getStringConfig(ConfigKey.ECS_CLUSTER_NAME), "user_name" to userName)
         }
         return "${configurationResolver.getStringConfig(ConfigKey.USER_CONTAINER_URL)}/${userName}"
+    }
+
+
+
+
+    @GetMapping("/app/environment")
+    @ResponseStatus(HttpStatus.OK)
+    fun listEnvironmentVars(): String {
+        return configurationResolver.getAllConfig().map { "\"${it.key}\":\"${it.value}\"" }.joinToString(separator = ",", prefix = "{", postfix = "}")
     }
 }

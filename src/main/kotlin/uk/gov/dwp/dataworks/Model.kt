@@ -3,11 +3,11 @@ package uk.gov.dwp.dataworks
 import com.auth0.jwt.interfaces.DecodedJWT
 import com.fasterxml.jackson.annotation.JsonCreator
 import software.amazon.awssdk.services.dynamodb.model.AttributeDefinition
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue
 import software.amazon.awssdk.services.dynamodb.model.ScalarAttributeType
 import kotlin.reflect.full.declaredMemberProperties
 
 data class DeployRequest @JsonCreator constructor(
+        val emrClusterHostName: String,
         val jupyterCpu: Int = 512,
         val jupyterMemory: Int = 512,
         val additionalPermissions: List<String> = emptyList()

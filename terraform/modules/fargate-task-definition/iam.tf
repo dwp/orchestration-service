@@ -1,7 +1,25 @@
 data "aws_iam_policy_document" "ecs-tasks" {
   statement {
     actions = [
-      "sts:AssumeRole",
+      "dynamodb:CreateTable",
+      "dynamodb:DeleteItem",
+      "dynamodb:GetItem",
+      "dynamodb:ListTables",
+      "dynamodb:PutItem",
+      "ec2:DescribeImages",
+      "ecs:CreateService",
+      "ecs:DescribeServices",
+      "ecs:DescribeTaskDefinition",
+      "ecs:RunTask",
+      "elasticloadbalancing:DescribeListeners",
+      "elasticloadbalancing:DescribeLoadBalancers",
+      "elasticloadbalancing:DescribeRules",
+      "iam:AttachRolePolicy",
+      "iam:CreatePolicy",
+      "iam:CreateRole",
+      "iam:DeletePolicy",
+      "iam:DeleteRole",
+      "iam:PassRole",
     ]
 
     principals {
