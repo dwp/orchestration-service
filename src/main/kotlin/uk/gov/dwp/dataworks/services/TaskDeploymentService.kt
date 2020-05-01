@@ -65,6 +65,7 @@ class TaskDeploymentService {
         val containerOverrides = buildContainerOverrides(correlationId, userName, emrClusterHostName, jupyterMemory, jupyterCpu)
         val ecsTaskRequest = awsCommunicator.buildEcsTask(ecsClusterName, taskDefinition, iamRole.arn(), containerOverrides)
 
+        Thread.sleep(5000)
         awsCommunicator.runEcsTask(correlationId, ecsTaskRequest)
 
         return UserTask(correlationId, userName, targetGroup.targetGroupArn(), albRoutingRule.ruleArn(), ecsClusterName, ecsServiceName, iamRole.arn(), iamPolicy.arn())
