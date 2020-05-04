@@ -32,6 +32,7 @@ data "aws_iam_policy_document" "task_role" {
       "iam:AttachRolePolicy",
       "iam:CreatePolicy",
       "iam:CreateRole",
+      "iam:DetachRolePolicy",
       "iam:DeletePolicy",
       "iam:DeleteRole",
       "iam:PassRole",

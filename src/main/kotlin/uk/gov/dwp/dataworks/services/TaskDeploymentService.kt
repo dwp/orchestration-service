@@ -36,13 +36,14 @@ class TaskDeploymentService {
         val correlationId = "$userName-${UUID.randomUUID()}"
         // Retrieve required params from environment
         val taskDefinition = configurationResolver.getStringConfig(ConfigKey.USER_CONTAINER_TASK_DEFINITION)
-        val containerPort = Integer.parseInt(configurationResolver.getStringConfig(ConfigKey.LOAD_BALANCER_PORT))
+        val containerPort = Integer.parseInt(configurationResolver.getStringConfig(ConfigKey.USER_CONTAINER_PORT))
+        val albPort = Integer.parseInt(configurationResolver.getStringConfig(ConfigKey.LOAD_BALANCER_PORT))
         val albName = configurationResolver.getStringConfig(ConfigKey.LOAD_BALANCER_NAME)
         val ecsClusterName = configurationResolver.getStringConfig(ConfigKey.ECS_CLUSTER_NAME)
 
         // Load balancer & Routing
         val loadBalancer = awsCommunicator.getLoadBalancerByName(albName)
-        val listener = awsCommunicator.getAlbListenerByPort(loadBalancer.loadBalancerArn(), containerPort)
+        val listener = awsCommunicator.getAlbListenerByPort(loadBalancer.loadBalancerArn(), albPort)
         val targetGroup = awsCommunicator.createTargetGroup(correlationId, loadBalancer.vpcId(), "os-user-$userName-tg", containerPort)
         // There are 2 distinct LoadBalancer classes in the AWS SDK - ELBV2 and ECS. They represent the same LB but in different ways.
         // The following is the load balancer needed to create an ECS service.
@@ -61,14 +62,14 @@ class TaskDeploymentService {
 
         // ECS
         val ecsServiceName = "$userName-analytical-workspace"
-        awsCommunicator.createEcsService(correlationId, ecsClusterName, ecsServiceName, taskDefinition, ecsLoadBalancer)
+//        awsCommunicator.createEcsService(correlationId, ecsClusterName, ecsServiceName, taskDefinition, ecsLoadBalancer)
         val containerOverrides = buildContainerOverrides(correlationId, userName, emrClusterHostName, jupyterMemory, jupyterCpu)
         val ecsTaskRequest = awsCommunicator.buildEcsTask(ecsClusterName, taskDefinition, iamRole.arn(), containerOverrides)
 
-        Thread.sleep(5000)
+        Thread.sleep(30000)
         awsCommunicator.runEcsTask(correlationId, ecsTaskRequest)
 
-        return UserTask(correlationId, userName, targetGroup.targetGroupArn(), albRoutingRule.ruleArn(), ecsClusterName, ecsServiceName, iamRole.arn(), iamPolicy.arn())
+        return UserTask(correlationId, userName, targetGroup.targetGroupArn(), albRoutingRule.ruleArn(), ecsClusterName, ecsServiceName, iamRole.roleName(), iamPolicy.arn())
     }
 
     private fun buildContainerOverrides(correlationId: String, userName: String, emrHostname: String, jupyterMemory: Int, jupyterCpu: Int): List<ContainerOverride> {
@@ -89,7 +90,7 @@ class TaskDeploymentService {
                 "--disable-infobars",
                 "--disable-features=TranslateUI",
                 "--disk-cache-dir=/dev/null",
-                "--test-type https://jupyterHub:8443",
+                "--test-type https://jupyterHub:8000",
                 "--kiosk",
                 "--window-size=${screenSize.toList().joinToString(",")}"
         ).joinToString(" ")

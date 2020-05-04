@@ -21,7 +21,7 @@ data class UserTask(val correlationId: String,
                     val albRoutingRuleArn: String,
                     val ecsClusterName: String,
                     val ecsServiceName: String,
-                    val iamRoleArn: String,
+                    val iamRoleName: String,
                     val iamPolicyArn: String) {
     companion object {
         fun from(map: Map<String, String>) = object {
@@ -31,10 +31,10 @@ data class UserTask(val correlationId: String,
             val albRoutingRuleArn: String by map
             val ecsClusterName: String by map
             val ecsServiceName: String by map
-            val iamRoleArn: String by map
+            val iamRoleName: String by map
             val iamPolicyArn: String by map
             val data = UserTask(correlationId, userName, targetGroupArn, albRoutingRuleArn, ecsClusterName,
-                    ecsServiceName, iamRoleArn, iamPolicyArn)
+                    ecsServiceName, iamRoleName, iamPolicyArn)
         }.data
 
         fun attributes(): List<AttributeDefinition> {
@@ -51,7 +51,7 @@ data class UserTask(val correlationId: String,
                 "albRoutingRuleArn" to albRoutingRuleArn,
                 "ecsClusterName" to ecsClusterName,
                 "ecsServiceName" to ecsServiceName,
-                "iamRoleArn" to iamRoleArn,
+                "iamRoleName" to iamRoleName,
                 "iamPolicyArn" to iamPolicyArn)
     }
 }
