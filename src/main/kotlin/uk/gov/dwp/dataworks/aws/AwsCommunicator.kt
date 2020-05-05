@@ -335,6 +335,10 @@ class AwsCommunicator {
         logger.info("Detached policy from role", "correlation_id" to correlationId, "role_name" to roleName, "policy_arn" to policyArn)
     }
 
+    /**
+     * Creates a DynamoDB table named [tableName] with the attributes in [attributes] and primary key
+     * of [keyName]
+     */
     fun createDynamoDbTable(tableName: String, attributes: List<AttributeDefinition>, keyName: String) {
         val tables = awsClients.dynamoDbClient.listTables(ListTablesRequest.builder().build())
         if(!tables.tableNames().contains(tableName)) {
@@ -347,6 +351,9 @@ class AwsCommunicator {
         }
     }
 
+    /**
+     * Writes a new object to the dynamoDB table [dynamoTableName] with attributes [attributes]
+     */
     fun putDynamoDbItem(correlationId: String, dynamoTableName: String, attributes: Map<String, AttributeValue>) {
         awsClients.dynamoDbClient.putItem(PutItemRequest.builder()
                 .tableName(dynamoTableName)
@@ -354,22 +361,29 @@ class AwsCommunicator {
         logger.info("User tasks registered in dynamodb", "correlation_id" to correlationId)
     }
 
-    fun getDynamoDbItem(dynamoTableName: String, dynamoPrimaryKey: String, value: String): GetItemResponse {
-        val retrievalKey = mapOf(dynamoPrimaryKey to AttributeValue.builder().s(value).build())
+    /**
+     * Retrieves an item from DynamoDB table [tableName] with key [primaryKeyField]:[primaryKeyValue]. This is
+     * returned as a [GetItemResponse] to allow for deserialisation into an object class later
+     */
+    fun getDynamoDbItem(tableName: String, primaryKeyField: String, primaryKeyValue: String): GetItemResponse {
+        val retrievalKey = mapOf(primaryKeyField to AttributeValue.builder().s(primaryKeyValue).build())
         return awsClients.dynamoDbClient.getItem(
                 GetItemRequest.builder()
-                        .tableName(dynamoTableName)
+                        .tableName(tableName)
                         .key(retrievalKey)
                         .build())
     }
 
-    fun removeDynamoDbItem(correlationId: String, dynamoTableName: String, dynamoPrimaryKey: String, userName: String) {
+    /**
+     * Removes an item from DynamoDB table [tableName] with key [primaryKeyField]:[primaryKeyValue]
+     */
+    fun removeDynamoDbItem(correlationId: String, tableName: String, primaryKeyField: String, primaryKeyValue: String) {
         awsClients.dynamoDbClient.deleteItem(DeleteItemRequest.builder()
-                .tableName(dynamoTableName)
-                .key(mapOf(dynamoPrimaryKey to AttributeValue.builder().s(userName).build()))
+                .tableName(tableName)
+                .key(mapOf(primaryKeyField to AttributeValue.builder().s(primaryKeyValue).build()))
                 .build())
         logger.info("User tasks deregistered in dynamodb",
                 "correlation_id" to correlationId,
-                "user_name" to userName)
+                "user_name" to primaryKeyValue)
     }
 }
