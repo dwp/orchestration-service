@@ -64,7 +64,6 @@ enum class ConfigKey(val key: String, val isList: Boolean) {
     EMR_CLUSTER_HOSTNAME("orchestrationService.emr_cluster_hostname", false),
     USER_CONTAINER_URL("orchestrationService.user_container_url", false),
     USER_CONTAINER_PORT("orchestrationService.user_container_port", false),
-    JUPYTER_S3_NAME("orchestrationService.jupyterhub_bucket", false),
     JUPYTER_S3_ARN("orchestrationService.jupyterhub_bucket_arn", false)
     USER_TASK_EXECUTION_ROLE_ARN("orchestrationService.user_task_execution_role_arn", false),
     USER_TASK_ROLE_ARN("orchestrationService.user_task_role_arn", false),
