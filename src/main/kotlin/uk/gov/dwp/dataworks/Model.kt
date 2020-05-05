@@ -17,12 +17,12 @@ data class JWTObject(val verifiedJWT: DecodedJWT, val userName: String)
 
 data class UserTask(val correlationId: String,
                     val userName: String,
-                    val targetGroupArn: String,
-                    val albRoutingRuleArn: String,
-                    val ecsClusterName: String,
-                    val ecsServiceName: String,
-                    val iamRoleName: String,
-                    val iamPolicyArn: String) {
+                    val targetGroupArn: String?,
+                    val albRoutingRuleArn: String?,
+                    val ecsClusterName: String?,
+                    val ecsServiceName: String?,
+                    val iamRoleName: String?,
+                    val iamPolicyArn: String?) {
     companion object {
         fun from(map: Map<String, String>) = object {
             val correlationId: String by map

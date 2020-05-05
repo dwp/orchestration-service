@@ -20,6 +20,7 @@ import software.amazon.awssdk.services.ecs.model.DeleteServiceRequest
 import software.amazon.awssdk.services.ecs.model.KeyValuePair
 import software.amazon.awssdk.services.ecs.model.RunTaskRequest
 import software.amazon.awssdk.services.ecs.model.Service
+import software.amazon.awssdk.services.ecs.model.ServiceNotFoundException
 import software.amazon.awssdk.services.ecs.model.TaskOverride
 import software.amazon.awssdk.services.ecs.model.TaskDefinition
 import software.amazon.awssdk.services.ecs.model.ContainerDefinition
@@ -34,18 +35,22 @@ import software.amazon.awssdk.services.elasticloadbalancingv2.model.DeleteTarget
 import software.amazon.awssdk.services.elasticloadbalancingv2.model.DescribeListenersRequest
 import software.amazon.awssdk.services.elasticloadbalancingv2.model.DescribeLoadBalancersRequest
 import software.amazon.awssdk.services.elasticloadbalancingv2.model.DescribeRulesRequest
+import software.amazon.awssdk.services.elasticloadbalancingv2.model.DescribeTargetGroupAttributesRequest
 import software.amazon.awssdk.services.elasticloadbalancingv2.model.Listener
 import software.amazon.awssdk.services.elasticloadbalancingv2.model.LoadBalancer
 import software.amazon.awssdk.services.elasticloadbalancingv2.model.PathPatternConditionConfig
 import software.amazon.awssdk.services.elasticloadbalancingv2.model.Rule
 import software.amazon.awssdk.services.elasticloadbalancingv2.model.RuleCondition
+import software.amazon.awssdk.services.elasticloadbalancingv2.model.RuleNotFoundException
 import software.amazon.awssdk.services.elasticloadbalancingv2.model.TargetGroup
+import software.amazon.awssdk.services.elasticloadbalancingv2.model.TargetGroupNotFoundException
 import software.amazon.awssdk.services.iam.model.AttachRolePolicyRequest
 import software.amazon.awssdk.services.iam.model.CreatePolicyRequest
 import software.amazon.awssdk.services.iam.model.CreateRoleRequest
 import software.amazon.awssdk.services.iam.model.DeletePolicyRequest
 import software.amazon.awssdk.services.iam.model.DeleteRoleRequest
 import software.amazon.awssdk.services.iam.model.DetachRolePolicyRequest
+import software.amazon.awssdk.services.iam.model.NoSuchEntityException
 import software.amazon.awssdk.services.iam.model.Policy
 import software.amazon.awssdk.services.iam.model.Role
 import uk.gov.dwp.dataworks.MultipleListenersMatchedException
@@ -130,9 +135,21 @@ class AwsCommunicator {
     }
 
     /**
-     * Deletes the [TargetGroup] with the specified [targetGroupArn]
+     * Deletes the [TargetGroup] with the specified [targetGroupArn]. Before deleting, a
+     * [DescribeTargetGroupAttributesRequest] is sent to establish whether the target group
+     * exists. If it does not exist then the deletion is not attempted
      */
     fun deleteTargetGroup(correlationId: String, targetGroupArn: String) {
+        try {
+            awsClients.albClient.describeTargetGroupAttributes(
+                    DescribeTargetGroupAttributesRequest.builder().targetGroupArn(targetGroupArn).build())
+        } catch (e: TargetGroupNotFoundException) {
+            logger.debug ("Not deleting target group as it does not exist",
+                    "correlation_id" to correlationId,
+                    "target_group_arn" to targetGroupArn)
+            return
+        }
+
         val deleteRequest = DeleteTargetGroupRequest.builder().targetGroupArn(targetGroupArn).build()
         awsClients.albClient.deleteTargetGroup(deleteRequest)
         logger.info("Deleted target group","correlation_id" to correlationId, "target_group_arn" to targetGroupArn)
@@ -178,11 +195,18 @@ class AwsCommunicator {
     }
 
     /**
-     * Deleted the [Rule] with the specified [ruleArn]
+     * Deleted the [Rule] with the specified [ruleArn]. If the rule does not exist, this function
+     * will take no action other than logging this fact.
      */
     fun deleteAlbRoutingRule(correlationId: String, ruleArn: String) {
-        awsClients.albClient.deleteRule(DeleteRuleRequest.builder().ruleArn(ruleArn).build())
-        logger.info("Deleted alb routing rule", "correlation_id" to correlationId, "rule_arn" to ruleArn )
+        try {
+            awsClients.albClient.deleteRule(DeleteRuleRequest.builder().ruleArn(ruleArn).build())
+            logger.info("Deleted alb routing rule", "correlation_id" to correlationId, "rule_arn" to ruleArn)
+        } catch (e: RuleNotFoundException) {
+            logger.info("Not deleting alb rule as it does not exist",
+                    "correlation_id" to correlationId,
+                    "rule_arn" to ruleArn)
+        }
     }
 
     /**
@@ -229,17 +253,25 @@ class AwsCommunicator {
     }
 
     /**
-     * Deletes the [Service] from the cluster [clusterName] with the name [serviceName]
+     * Deletes the [Service] from the cluster [clusterName] with the name [serviceName]. If
+     * the ECS service does not exist, this function will take no action other than logging this fact.
      */
     fun deleteEcsService(correlationId: String, clusterName: String, serviceName: String) {
-        awsClients.ecsClient.deleteService(
-                DeleteServiceRequest.builder()
-                        .cluster(clusterName)
-                        .service(serviceName).build())
-        logger.info("Deleted ECS Service",
-                "correlation_id" to correlationId,
-                "cluster_name" to clusterName,
-                "service_name" to serviceName)
+        try {
+            awsClients.ecsClient.deleteService(
+                    DeleteServiceRequest.builder()
+                            .cluster(clusterName)
+                            .service(serviceName).build())
+            logger.info("Deleted ECS Service",
+                    "correlation_id" to correlationId,
+                    "cluster_name" to clusterName,
+                    "service_name" to serviceName)
+        } catch(e: ServiceNotFoundException) {
+            logger.info("Not deleting service as it does not exist",
+                    "correlation_id" to correlationId,
+                    "clusterName" to clusterName,
+                    "serviceName" to serviceName)
+        }
     }
 
     /**
@@ -293,11 +325,18 @@ class AwsCommunicator {
     }
 
     /**
-     * Deletes the [Policy] with the specified [policyArn]
+     * Deletes the [Policy] with the specified [policyArn]. If the IAM Policy does not exist,
+     * this function will take no action other than logging this fact.
      */
     fun deleteIamPolicy(correlationId: String, policyArn: String) {
-        awsClients.iamClient.deletePolicy(DeletePolicyRequest.builder().policyArn(policyArn).build())
-        logger.info("Deleted iam policy", "correlation_id" to correlationId, "policy_arn" to policyArn)
+        try {
+            awsClients.iamClient.deletePolicy(DeletePolicyRequest.builder().policyArn(policyArn).build())
+            logger.info("Deleted iam policy", "correlation_id" to correlationId, "policy_arn" to policyArn)
+        } catch (e: NoSuchEntityException) {
+            logger.info("Not deleting iam policy as it does not exist",
+                    "correlation_id" to correlationId,
+                    "role_arn" to policyArn)
+        }
     }
 
     /**
@@ -323,11 +362,18 @@ class AwsCommunicator {
     }
 
     /**
-     * Deletes the [Role] with the specified [roleName]
+     * Deletes the [Role] with the specified [roleName]. If the IAM Role does not exist,
+     * this function will take no action other than logging this fact.
      */
     fun deleteIamRole(correlationId: String, roleName: String) {
-        awsClients.iamClient.deleteRole(DeleteRoleRequest.builder().roleName(roleName).build())
-        logger.info("Deleted iam role", "correlation_id" to correlationId, "role_name" to roleName)
+        try {
+            awsClients.iamClient.deleteRole(DeleteRoleRequest.builder().roleName(roleName).build())
+            logger.info("Deleted iam role", "correlation_id" to correlationId, "role_name" to roleName)
+        } catch (e: NoSuchEntityException) {
+            logger.info("Not deleting iam role as it does not exist",
+            "correlation_id" to correlationId,
+            "role_name" to roleName)
+        }
     }
 
     /**
@@ -340,11 +386,22 @@ class AwsCommunicator {
         logger.info("Attached policy to role", "correlation_id" to correlationId, "policy_arn" to policy.arn(), "role_name" to role.roleName())
     }
 
+    /**
+     * Detaches the Policy [policyArn] from the role [roleName]. If the either the role or policy
+     * cannot be found, this method takes no action other than logging this fact.
+     */
     fun detachIamPolicyFromRole(correlationId: String, roleName: String, policyArn: String) {
-        awsClients.iamClient.detachRolePolicy(DetachRolePolicyRequest.builder()
-                .roleName(roleName)
-                .policyArn(policyArn).build())
-        logger.info("Detached policy from role", "correlation_id" to correlationId, "role_name" to roleName, "policy_arn" to policyArn)
+        try {
+            awsClients.iamClient.detachRolePolicy(DetachRolePolicyRequest.builder()
+                    .roleName(roleName)
+                    .policyArn(policyArn).build())
+            logger.info("Detached policy from role", "correlation_id" to correlationId, "role_name" to roleName, "policy_arn" to policyArn)
+        } catch (e: NoSuchEntityException) {
+            logger.info("Not detaching iam policy at least one entitity does not exist",
+            "correlation_id" to correlationId,
+            "role_name" to roleName,
+            "policy_arn" to policyArn)
+        }
     }
 
     /**

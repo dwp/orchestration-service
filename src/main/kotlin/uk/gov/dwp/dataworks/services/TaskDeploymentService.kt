@@ -22,6 +22,8 @@ class TaskDeploymentService {
     private lateinit var awsCommunicator: AwsCommunicator
     @Autowired
     private lateinit var activeUserTasks: ActiveUserTasks
+    @Autowired
+    private lateinit var taskDestroyService: TaskDestroyService
 
     @Autowired
     private lateinit var configurationResolver: ConfigurationResolver
@@ -54,24 +56,25 @@ class TaskDeploymentService {
         //Create an entry in DynamoDB for current deployment
         activeUserTasks.initialiseDeploymentEntry(correlationId, userName)
 
-        // Load balancer & Routing
-        val loadBalancer = awsCommunicator.getLoadBalancerByName(albName)
-        val listener = awsCommunicator.getAlbListenerByPort(loadBalancer.loadBalancerArn(), albPort)
-        val targetGroup = awsCommunicator.createTargetGroup(correlationId, userName, loadBalancer.vpcId(), containerPort)
-        // There are 2 distinct LoadBalancer classes in the AWS SDK - ELBV2 and ECS. They represent the same LB but in different ways.
-        // The following is the load balancer needed to create an ECS service.
-        val ecsLoadBalancer = LoadBalancer.builder()
-                .targetGroupArn(targetGroup.targetGroupArn())
-                .containerName("guacamole")
-                .containerPort(containerPort)
-                .build()
-        awsCommunicator.createAlbRoutingRule(correlationId, userName, listener.listenerArn(),targetGroup.targetGroupArn())
+        try {
+            // Load balancer & Routing
+            val loadBalancer = awsCommunicator.getLoadBalancerByName(albName)
+            val listener = awsCommunicator.getAlbListenerByPort(loadBalancer.loadBalancerArn(), albPort)
+            val targetGroup = awsCommunicator.createTargetGroup(correlationId, userName, loadBalancer.vpcId(), containerPort)
+            // There are 2 distinct LoadBalancer classes in the AWS SDK - ELBV2 and ECS. They represent the same LB but in different ways.
+            // The following is the load balancer needed to create an ECS service.
+            val ecsLoadBalancer = LoadBalancer.builder()
+                    .targetGroupArn(targetGroup.targetGroupArn())
+                    .containerName("guacamole")
+                    .containerPort(containerPort)
+                    .build()
+            awsCommunicator.createAlbRoutingRule(correlationId, userName, listener.listenerArn(), targetGroup.targetGroupArn())
 
-        // IAM permissions
-        parsePolicyDocuments(additionalPermissions)
-        val iamPolicy = awsCommunicator.createIamPolicy(correlationId, userName, taskRolePolicyString)
-        val iamRole = awsCommunicator.createIamRole(correlationId, userName, taskAssumeRoleString)
-        awsCommunicator.attachIamPolicyToRole(correlationId, iamPolicy, iamRole)
+            // IAM permissions
+            parsePolicyDocuments(additionalPermissions)
+            val iamPolicy = awsCommunicator.createIamPolicy(correlationId, userName, taskRolePolicyString)
+            val iamRole = awsCommunicator.createIamRole(correlationId, userName, taskAssumeRoleString)
+            awsCommunicator.attachIamPolicyToRole(correlationId, iamPolicy, iamRole)
 
         val containerDefinitions = buildContainerDefinitions(userName, emrClusterHostName, jupyterMemory, jupyterCpu, containerPort)
         val taskDefinition = awsCommunicator.registerTaskDefinition(correlationId,"orchestration-service-user-$userName-td", taskExecutionRoleArn , taskRoleArn, NetworkMode.BRIDGE, containerDefinitions)
@@ -80,6 +83,10 @@ class TaskDeploymentService {
         awsCommunicator.createEcsService(correlationId, userName, ecsClusterName, taskDefinition.taskDefinitionArn(), ecsLoadBalancer)
 
         return UserTask(correlationId, userName, targetGroup.targetGroupArn(), albRoutingRule.ruleArn(), ecsClusterName, ecsServiceName, iamRole.arn(), iamPolicy.arn())
+        } catch (e: Exception) {
+            taskDestroyService.destroyServices(userName)
+            throw e
+        }
     }
 
     private fun buildContainerDefinitions(userName: String, emrHostname: String, jupyterMemory: Int, jupyterCpu: Int, guacamolePort: Int): Collection<ContainerDefinition> {
