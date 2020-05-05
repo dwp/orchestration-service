@@ -102,13 +102,4 @@ class ConnectionController {
         }
         return "${configurationResolver.getStringConfig(ConfigKey.USER_CONTAINER_URL)}/${userName}/"
     }
-
-
-
-
-    @GetMapping("/app/environment")
-    @ResponseStatus(HttpStatus.OK)
-    fun listEnvironmentVars(): String {
-        return configurationResolver.getAllConfig().map { "\"${it.key}\":\"${it.value}\"" }.joinToString(separator = ",", prefix = "{", postfix = "}")
-    }
 }
