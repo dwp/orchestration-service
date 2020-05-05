@@ -13,6 +13,7 @@ import software.amazon.awssdk.services.dynamodb.model.KeySchemaElement
 import software.amazon.awssdk.services.dynamodb.model.KeyType
 import software.amazon.awssdk.services.dynamodb.model.ListTablesRequest
 import software.amazon.awssdk.services.dynamodb.model.PutItemRequest
+import software.amazon.awssdk.services.dynamodb.model.UpdateItemRequest
 import software.amazon.awssdk.services.ecs.model.ContainerOverride
 import software.amazon.awssdk.services.ecs.model.CreateServiceRequest
 import software.amazon.awssdk.services.ecs.model.DeleteServiceRequest
@@ -51,8 +52,8 @@ import uk.gov.dwp.dataworks.MultipleListenersMatchedException
 import uk.gov.dwp.dataworks.MultipleLoadBalancersMatchedException
 import uk.gov.dwp.dataworks.UpperRuleLimitReachedException
 import uk.gov.dwp.dataworks.logging.DataworksLogger
+import uk.gov.dwp.dataworks.services.ActiveUserTasks
 import uk.gov.dwp.dataworks.services.ConfigKey
-import uk.gov.dwp.dataworks.services.ConfigurationResolver
 import software.amazon.awssdk.services.ecs.model.LoadBalancer as EcsLoadBalancer
 
 /**
@@ -105,7 +106,8 @@ class AwsCommunicator {
      * Creates and returns a [TargetGroup] in the given VPC. This target group can later be assigned to
      * a [LoadBalancer] using it's ARN or [ElasticLoadBalancingV2Client.registerTargets].
      */
-    fun createTargetGroup(correlationId: String, vpcId: String, targetGroupName: String, targetPort: Int): TargetGroup {
+    fun createTargetGroup(correlationId: String, userName: String, vpcId: String, targetPort: Int): TargetGroup {
+        val targetGroupName = "os-user-$userName-tg"
         // Create HTTPS target group in VPC to port containerPort
         val targetGroupResponse = awsClients.albClient.createTargetGroup(
                 CreateTargetGroupRequest.builder()
@@ -123,6 +125,7 @@ class AwsCommunicator {
                 "load_balancer_arns" to targetGroup.loadBalancerArns().joinToString(),
                 "target_group_name" to targetGroupName,
                 "target_port" to targetPort.toString())
+        updateDynamoDeploymentEntry(userName, "targetGroupArn" to targetGroup.targetGroupArn())
         return targetGroup
     }
 
@@ -138,12 +141,13 @@ class AwsCommunicator {
     /**
      * Creates a [LoadBalancer] routing rule for the [Listener] with given [listenerArn] and [TargetGroup]
      * of given [targetGroupArn].
-     * The rule created will be a path-pattern forwarder based on [pathPattern].
+     * The rule created will be a path-pattern forwarder for all traffic with path prefix /[userName]/.
      *
      * **See Also:** [AWS docs](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-listeners.html)
      */
-    fun createAlbRoutingRule(correlationId: String, listenerArn: String, targetGroupArn: String, pathPattern: String): Rule {
+    fun createAlbRoutingRule(correlationId: String, userName: String, listenerArn: String, targetGroupArn: String): Rule {
         // Build path pattern condition
+        val pathPattern = "/$userName/*"
         val albRuleCondition = RuleCondition.builder()
                 .field("path-pattern")
                 .pathPatternConfig(PathPatternConditionConfig.builder().values(pathPattern).build())
@@ -169,6 +173,7 @@ class AwsCommunicator {
                 "priority" to rule.priority(),
                 "rule_arn" to rule.ruleArn(),
                 "conditions" to rule.conditions().joinToString())
+        updateDynamoDeploymentEntry(userName, "albRoutingRuleArn" to rule.ruleArn())
         return rule
     }
 
@@ -194,12 +199,13 @@ class AwsCommunicator {
 
 
     /**
-     * Creates an ECS service with the name [clusterName], friendly service name of [serviceName] and sits
+     * Creates an ECS service with the name [clusterName], friendly service name of "[userName]-analytical-workspace" and sits
      * it behind the load balancer [loadBalancer].
      *
      * For ease of use, the task definition is retrieved from the [task definition env var][ConfigKey.USER_CONTAINER_TASK_DEFINITION]
      */
-    fun createEcsService(correlationId: String, clusterName: String, serviceName: String, taskDefinitionArn: String, loadBalancer: EcsLoadBalancer): Service {
+    fun createEcsService(correlationId: String, userName: String, clusterName: String, taskDefinitionArn: String, loadBalancer: EcsLoadBalancer): Service {
+        val serviceName = "$userName-analytical-workspace"
         // Create ECS service request
         val serviceBuilder = CreateServiceRequest.builder()
                 .cluster(clusterName)
@@ -217,6 +223,8 @@ class AwsCommunicator {
                 "service_name" to serviceName,
                 "cluster_arn" to ecsService.clusterArn(),
                 "task_definition" to ecsService.taskDefinition())
+        updateDynamoDeploymentEntry(userName, "ecsClusterName" to clusterName)
+        updateDynamoDeploymentEntry(userName, "ecsServiceName" to serviceName)
         return ecsService
     }
 
@@ -266,7 +274,8 @@ class AwsCommunicator {
      * Creates an IAM [Policy] from the name and document provided. [policyDocument] should be in JSON format
      * as per the AWS standards for documents.
      */
-    fun createIamPolicy(correlationId: String, policyName: String, policyDocument: String): Policy {
+    fun createIamPolicy(correlationId: String, userName: String, policyDocument: String): Policy {
+        val policyName = "orchestration-service-user-$userName-policy"
         val policy = awsClients.iamClient.createPolicy(
                 CreatePolicyRequest.builder()
                         .policyDocument(policyDocument)
@@ -279,6 +288,7 @@ class AwsCommunicator {
                 "policy_name" to policy.policyName(),
                 "policy_id" to policy.policyId(),
                 "created_date" to policy.createDate().toString())
+        updateDynamoDeploymentEntry(userName, "iamPolicyArn" to policy.arn())
         return policy
     }
 
@@ -294,7 +304,8 @@ class AwsCommunicator {
      * Creates an IAM [Role] from the name and role assumption document provided. [assumeRolePolicy] should be
      * in JSON format as per the AWS standards for documents.
      */
-    fun createIamRole(correlationId: String, roleName: String, assumeRolePolicy: String): Role {
+    fun createIamRole(correlationId: String, userName: String, assumeRolePolicy: String): Role {
+        val roleName = "orchestration-service-user-$userName-role"
         val role = awsClients.iamClient.createRole(
                 CreateRoleRequest.builder()
                         .assumeRolePolicyDocument(assumeRolePolicy)
@@ -307,6 +318,7 @@ class AwsCommunicator {
                 "role_name" to role.roleName(),
                 "role_id" to role.roleId(),
                 "created_date" to role.createDate().toString())
+        updateDynamoDeploymentEntry(userName, "iamRoleName" to role.roleName())
         return role
     }
 
@@ -352,35 +364,54 @@ class AwsCommunicator {
     }
 
     /**
-     * Writes a new object to the dynamoDB table [dynamoTableName] with attributes [attributes]
+     * Creates an entry in the DynamoDB table that holds the deployment information for each user. The entry
+     * only contains [correlationId] and [userName] at this point and is updated as resources are deployed for
+     * the user.
      */
-    fun putDynamoDbItem(correlationId: String, dynamoTableName: String, attributes: Map<String, AttributeValue>) {
-        awsClients.dynamoDbClient.putItem(PutItemRequest.builder()
-                .tableName(dynamoTableName)
-                .item(attributes).build())
-        logger.info("User tasks registered in dynamodb", "correlation_id" to correlationId)
+    fun createDynamoDeploymentEntry(correlationId: String, userName: String) {
+        val items = mapOf(
+                ActiveUserTasks.dynamoPrimaryKey to AttributeValue.builder().s(userName).build(),
+                "correlation_id" to AttributeValue.builder().s(correlationId).build())
+        awsClients.dynamoDbClient.putItem(PutItemRequest.builder().item(items).build())
+        logger.info("Created dynamodb entry", "correlation_id" to correlationId, "items" to items.toString())
     }
 
     /**
-     * Retrieves an item from DynamoDB table [tableName] with key [primaryKeyField]:[primaryKeyValue]. This is
-     * returned as a [GetItemResponse] to allow for deserialisation into an object class later
+     * Updates the DynamoDB deployment table's entry for [userName]. This should be called many times
+     * in a deployment to allow for changes to be incrementally added to the table as resources are
+     * created for the user.
      */
-    fun getDynamoDbItem(tableName: String, primaryKeyField: String, primaryKeyValue: String): GetItemResponse {
-        val retrievalKey = mapOf(primaryKeyField to AttributeValue.builder().s(primaryKeyValue).build())
+    fun updateDynamoDeploymentEntry(userName: String, attribute: Pair<String, String>) {
+        val updateExpression = "SET ${attribute.first} = ${attribute.second}"
+        awsClients.dynamoDbClient.updateItem(UpdateItemRequest.builder()
+                .tableName(ActiveUserTasks.dynamoTableName)
+                .key(mapOf(ActiveUserTasks.dynamoPrimaryKey to AttributeValue.builder().s(userName).build()))
+                .updateExpression(updateExpression).build())
+        logger.debug("Updated dynamodb item", "primary_key" to userName,
+                "attribute_name" to attribute.first,
+                "attribute_value" to attribute.second)
+    }
+
+    /**
+     * Retrieves an entry from the DynamoDB table that holds the deployment information for each user.
+     */
+    fun getDynamoDeploymentEntry(primaryKeyValue: String): GetItemResponse {
+        val retrievalKey = mapOf(ActiveUserTasks.dynamoPrimaryKey to AttributeValue.builder().s(primaryKeyValue).build())
         return awsClients.dynamoDbClient.getItem(
                 GetItemRequest.builder()
-                        .tableName(tableName)
+                        .tableName(ActiveUserTasks.dynamoTableName)
                         .key(retrievalKey)
                         .build())
     }
 
     /**
-     * Removes an item from DynamoDB table [tableName] with key [primaryKeyField]:[primaryKeyValue]
+     * Removes an entry from the deployment DynamoDB table. This should only be done after all resources
+     * in the entry have been destroyed.
      */
-    fun removeDynamoDbItem(correlationId: String, tableName: String, primaryKeyField: String, primaryKeyValue: String) {
+    fun removeDynamoDeploymentEntry(correlationId: String, primaryKeyValue: String) {
         awsClients.dynamoDbClient.deleteItem(DeleteItemRequest.builder()
-                .tableName(tableName)
-                .key(mapOf(primaryKeyField to AttributeValue.builder().s(primaryKeyValue).build()))
+                .tableName(ActiveUserTasks.dynamoTableName)
+                .key(mapOf(ActiveUserTasks.dynamoPrimaryKey to AttributeValue.builder().s(primaryKeyValue).build()))
                 .build())
         logger.info("User tasks deregistered in dynamodb",
                 "correlation_id" to correlationId,

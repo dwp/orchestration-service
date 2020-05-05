@@ -42,16 +42,4 @@ data class UserTask(val correlationId: String,
                     .map { AttributeDefinition.builder().attributeName(it.name).attributeType(ScalarAttributeType.S).build() }
         }
     }
-
-    fun toMap(): Map<String, String> {
-        return mapOf(
-                "correlationId" to correlationId,
-                "userName" to userName,
-                "targetGroupArn" to targetGroupArn,
-                "albRoutingRuleArn" to albRoutingRuleArn,
-                "ecsClusterName" to ecsClusterName,
-                "ecsServiceName" to ecsServiceName,
-                "iamRoleName" to iamRoleName,
-                "iamPolicyArn" to iamPolicyArn)
-    }
 }
