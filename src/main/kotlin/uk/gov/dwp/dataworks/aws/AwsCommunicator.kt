@@ -20,6 +20,10 @@ import software.amazon.awssdk.services.ecs.model.KeyValuePair
 import software.amazon.awssdk.services.ecs.model.RunTaskRequest
 import software.amazon.awssdk.services.ecs.model.Service
 import software.amazon.awssdk.services.ecs.model.TaskOverride
+import software.amazon.awssdk.services.ecs.model.TaskDefinition
+import software.amazon.awssdk.services.ecs.model.ContainerDefinition
+import software.amazon.awssdk.services.ecs.model.NetworkMode
+import software.amazon.awssdk.services.ecs.model.RegisterTaskDefinitionRequest
 import software.amazon.awssdk.services.elasticloadbalancingv2.ElasticLoadBalancingV2Client
 import software.amazon.awssdk.services.elasticloadbalancingv2.model.Action
 import software.amazon.awssdk.services.elasticloadbalancingv2.model.CreateRuleRequest
@@ -68,6 +72,7 @@ class AwsCommunicator {
 
     @Autowired
     private lateinit var configurationResolver: ConfigurationResolver
+
     @Autowired
     private lateinit var awsClients: AwsClients
 
@@ -208,13 +213,13 @@ class AwsCommunicator {
      *
      * For ease of use, the task definition is retrieved from the [task definition env var][ConfigKey.USER_CONTAINER_TASK_DEFINITION]
      */
-    fun createEcsService(correlationId: String, clusterName: String, serviceName: String, taskDefinition: String, loadBalancer: EcsLoadBalancer): Service {
+    fun createEcsService(correlationId: String, clusterName: String, serviceName: String, taskDefinitionArn: String, loadBalancer: EcsLoadBalancer): Service {
         // Create ECS service request
         val serviceBuilder = CreateServiceRequest.builder()
                 .cluster(clusterName)
                 .loadBalancers(loadBalancer)
                 .serviceName(serviceName)
-                .taskDefinition(taskDefinition)
+                .taskDefinition(taskDefinitionArn)
                 .desiredCount(1)
                 .build()
 
@@ -241,6 +246,34 @@ class AwsCommunicator {
                 "correlation_id" to correlationId,
                 "cluster_name" to clusterName,
                 "service_name" to serviceName)
+    }
+
+    /**
+     * Registers a new [TaskDefinition] with family name [family], execution role [executionRoleArn],
+     * task role [taskRoleArn], networking mode [networkMode] (see [NetworkMode]) and container
+     * definitions [containerDefinitions] (see [ContainerDefinition])
+     */
+    fun registerTaskDefinition(correlationId: String, family: String, executionRoleArn: String, taskRoleArn: String, networkMode: NetworkMode, containerDefinitions: Collection<ContainerDefinition>): TaskDefinition {
+        val registerTaskDefinitionRequest = RegisterTaskDefinitionRequest.builder()
+                .family(family)
+                .executionRoleArn(executionRoleArn)
+                .taskRoleArn(taskRoleArn)
+                .networkMode(networkMode)
+                .containerDefinitions(containerDefinitions)
+                .build()
+
+        logger.info("Registering task definition",
+                "correlation_id" to correlationId,
+                "family" to family,
+                "execution_role_arn" to executionRoleArn,
+                "task_role_arn" to taskRoleArn,
+                "network_mode" to networkMode.toString(),
+                "container_definitions" to containerDefinitions.joinToString("; ", transform = { def ->
+                    val env = def.environment().joinToString { "${it.name()}:${it.value()}" }
+                    "${def.name()}, image=${def.image()}, cpu = ${def.cpu()}, memory= ${def.memory()} env = [${env}]"
+                }))
+
+        return awsClients.ecsClient.registerTaskDefinition(registerTaskDefinitionRequest).taskDefinition()
     }
 
     /**
