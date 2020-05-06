@@ -63,11 +63,11 @@ class TaskDeploymentService {
             val targetGroup = awsCommunicator.createTargetGroup(correlationId, userName, loadBalancer.vpcId(), containerPort)
             // There are 2 distinct LoadBalancer classes in the AWS SDK - ELBV2 and ECS. They represent the same LB but in different ways.
             // The following is the load balancer needed to create an ECS service.
-//            val ecsLoadBalancer = LoadBalancer.builder()
-//                    .targetGroupArn(targetGroup.targetGroupArn())
-//                    .containerName("guacamole")
-//                    .containerPort(containerPort)
-//                    .build()
+            val ecsLoadBalancer = LoadBalancer.builder()
+                    .targetGroupArn(targetGroup.targetGroupArn())
+                    .containerName("guacamole")
+                    .containerPort(containerPort)
+                    .build()
             awsCommunicator.createAlbRoutingRule(correlationId, userName, listener.listenerArn(), targetGroup.targetGroupArn())
 
             // IAM permissions
@@ -76,13 +76,11 @@ class TaskDeploymentService {
             val iamRole = awsCommunicator.createIamRole(correlationId, userName, taskAssumeRoleString)
             awsCommunicator.attachIamPolicyToRole(correlationId, iamPolicy, iamRole)
 
-        val containerDefinitions = buildContainerDefinitions(userName, emrClusterHostName, jupyterMemory, jupyterCpu, containerPort)
-        val taskDefinition = awsCommunicator.registerTaskDefinition(correlationId,"orchestration-service-user-$userName-td", taskExecutionRoleArn , taskRoleArn, NetworkMode.BRIDGE, containerDefinitions)
+            val containerDefinitions = buildContainerDefinitions(userName, emrClusterHostName, jupyterMemory, jupyterCpu, containerPort)
+            val taskDefinition = awsCommunicator.registerTaskDefinition(correlationId,"orchestration-service-user-$userName-td", taskExecutionRoleArn , taskRoleArn, NetworkMode.BRIDGE, containerDefinitions)
 
-        // ECS
-        awsCommunicator.createEcsService(correlationId, userName, ecsClusterName, taskDefinition.taskDefinitionArn(), ecsLoadBalancer)
-
-        return UserTask(correlationId, userName, targetGroup.targetGroupArn(), albRoutingRule.ruleArn(), ecsClusterName, ecsServiceName, iamRole.arn(), iamPolicy.arn())
+            // ECS
+            awsCommunicator.createEcsService(correlationId, userName, ecsClusterName, taskDefinition.taskDefinitionArn(), ecsLoadBalancer)
         } catch (e: Exception) {
             taskDestroyService.destroyServices(userName)
             throw e

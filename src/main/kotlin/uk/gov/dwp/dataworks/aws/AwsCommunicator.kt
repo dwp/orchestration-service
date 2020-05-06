@@ -14,18 +14,14 @@ import software.amazon.awssdk.services.dynamodb.model.KeyType
 import software.amazon.awssdk.services.dynamodb.model.ListTablesRequest
 import software.amazon.awssdk.services.dynamodb.model.PutItemRequest
 import software.amazon.awssdk.services.dynamodb.model.UpdateItemRequest
-import software.amazon.awssdk.services.ecs.model.ContainerOverride
+import software.amazon.awssdk.services.ecs.model.ContainerDefinition
 import software.amazon.awssdk.services.ecs.model.CreateServiceRequest
 import software.amazon.awssdk.services.ecs.model.DeleteServiceRequest
-import software.amazon.awssdk.services.ecs.model.KeyValuePair
-import software.amazon.awssdk.services.ecs.model.RunTaskRequest
-import software.amazon.awssdk.services.ecs.model.Service
-import software.amazon.awssdk.services.ecs.model.ServiceNotFoundException
-import software.amazon.awssdk.services.ecs.model.TaskOverride
-import software.amazon.awssdk.services.ecs.model.TaskDefinition
-import software.amazon.awssdk.services.ecs.model.ContainerDefinition
 import software.amazon.awssdk.services.ecs.model.NetworkMode
 import software.amazon.awssdk.services.ecs.model.RegisterTaskDefinitionRequest
+import software.amazon.awssdk.services.ecs.model.Service
+import software.amazon.awssdk.services.ecs.model.ServiceNotFoundException
+import software.amazon.awssdk.services.ecs.model.TaskDefinition
 import software.amazon.awssdk.services.elasticloadbalancingv2.ElasticLoadBalancingV2Client
 import software.amazon.awssdk.services.elasticloadbalancingv2.model.Action
 import software.amazon.awssdk.services.elasticloadbalancingv2.model.CreateRuleRequest
@@ -75,9 +71,6 @@ class AwsCommunicator {
     companion object {
         val logger: DataworksLogger = DataworksLogger(LoggerFactory.getLogger(AwsCommunicator::class.java))
     }
-
-    @Autowired
-    private lateinit var configurationResolver: ConfigurationResolver
 
     @Autowired
     private lateinit var awsClients: AwsClients
