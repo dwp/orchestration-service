@@ -50,18 +50,16 @@ class TaskDestroyService {
     }
 
     /**
-     * Helper function to attempt to run a deletion request, capturing any errors thrown as an
-     * [Exception]? type and logging it. If the method completes successfully, null will
-     * be returned.
+     * Helper function to attempt to run a deletion request, capturing any errors and logging them.
      *
-     * If any of the values in [prerequisiteFields] are null, then deletion will not be attempted.
+     * If any of the values in [prerequisiteValues] are null, then deletion will not be attempted.
      * This represents the case where a creation request has not completed successfully and
      * so we need to destroy only the services which succeeded creation.
      *
      * @return true when deletion successful or not applicable. False when deletion fails
      */
-    fun tryDeleteResource(resourceName: String, vararg prerequisiteFields: String?, function: () -> Unit): Boolean {
-        if (prerequisiteFields.any { it == null }) {
+    fun tryDeleteResource(resourceName: String, vararg prerequisiteValues: String?, function: () -> Unit): Boolean {
+        if (prerequisiteValues.isNotEmpty() && prerequisiteValues.any { it == null || it.isBlank() }) {
             return true
         }
 

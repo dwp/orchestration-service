@@ -63,11 +63,11 @@ class TaskDeploymentService {
             val targetGroup = awsCommunicator.createTargetGroup(correlationId, userName, loadBalancer.vpcId(), containerPort)
             // There are 2 distinct LoadBalancer classes in the AWS SDK - ELBV2 and ECS. They represent the same LB but in different ways.
             // The following is the load balancer needed to create an ECS service.
-            val ecsLoadBalancer = LoadBalancer.builder()
-                    .targetGroupArn(targetGroup.targetGroupArn())
-                    .containerName("guacamole")
-                    .containerPort(containerPort)
-                    .build()
+//            val ecsLoadBalancer = LoadBalancer.builder()
+//                    .targetGroupArn(targetGroup.targetGroupArn())
+//                    .containerName("guacamole")
+//                    .containerPort(containerPort)
+//                    .build()
             awsCommunicator.createAlbRoutingRule(correlationId, userName, listener.listenerArn(), targetGroup.targetGroupArn())
 
             // IAM permissions
