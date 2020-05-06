@@ -90,6 +90,12 @@ class TaskDeploymentServiceTest {
     }
 
     @Test
+    fun `Returns proper case for JSON keys, as required by AWS`(){
+        val taskRolePolicyString = taskDeploymentService.parsePolicyDocument(taskRoleDocument, mapOf("ecs-task-role-policy" to listOf("permissionOne", "permissionTwo")), "Action")
+        assertThat(taskRolePolicyString).contains("Statement").contains("Resource").contains("Effect").contains("Version").contains("Action")
+    }
+
+    @Test
     fun `Attributes are assigned to the correct key`(){
         val taskRolePolicyString = taskDeploymentService.parsePolicyDocument(bucketAccessPolicyDocument, mapOf("jupyter-s3-list" to listOf("permissionOne")), "Action")
         assertThat(taskRolePolicyString).contains("\"Action\":[\"s3:ListBucket\",\"permissionOne\"]")
