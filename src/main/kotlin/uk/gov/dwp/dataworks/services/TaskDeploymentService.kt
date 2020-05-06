@@ -201,11 +201,10 @@ class TaskDeploymentService {
     }
 
     /**
-     * Helper method to initialise the lateinit vars [taskAssumeRoleString] and [taskRolePolicyString] by
-     * converting the associated `@Value` parameters to Strings and replacing `ADDITIONAL_PERMISSIONS` in
-     * [taskRolePolicyString] with the provided [listOfParameters]
+     * Helper method to initialise the lateinit vars [taskRolePolicyString] and [jupyterBucketAccessRolePolicyString] by
+     * converting the JSON to an instance of `JsonObject` data class and adding any requirements before serialising back to JSON
      *
-     * @return [taskRolePolicyString] and [jupyterBucketAccessRolePolicyString].
+     * @return [taskRolePolicyString] and [jupyterBucketAccessRolePolicyString] respectively.
      */
     fun parsePolicyDocument(resource: Resource, sidAndAdditions: Map<String, List<String>>, key: String): String{
         val mapper = ObjectMapper()
@@ -220,6 +219,7 @@ class TaskDeploymentService {
                 }
             }
         }
+        return mapper.writeValueAsString(obj)
         return mapper .writeValueAsString(obj)
         taskAssumeRoleString = taskAssumeRoleDocument.inputStream.bufferedReader().use { it.readText() }
         taskRolePolicyString = taskRolePolicyDocument.inputStream.bufferedReader().use { it.readText() }
@@ -236,7 +236,9 @@ class TaskDeploymentService {
     }
 }
 
-
+/**
+ * Class to override Jackson methods and ensure Proper Case is respected in serialisation of JSON keys - as required by AWS
+ */
 class CustomPropertyNamingStrategy : PropertyNamingStrategy() {
     override fun nameForField(config: MapperConfig<*>?, field: AnnotatedField, defaultName: String): String {
         return convertForField(defaultName)

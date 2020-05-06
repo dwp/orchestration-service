@@ -21,7 +21,6 @@ import software.amazon.awssdk.services.elasticloadbalancingv2.model.DescribeRule
 import software.amazon.awssdk.services.elasticloadbalancingv2.model.Rule
 import uk.gov.dwp.dataworks.Application
 import uk.gov.dwp.dataworks.JWTObject
-import uk.gov.dwp.dataworks.MultipleLoadBalancersMatchedException
 import uk.gov.dwp.dataworks.aws.AwsCommunicator
 
 @RunWith(SpringRunner::class)

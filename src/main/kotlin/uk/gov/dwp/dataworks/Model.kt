@@ -110,4 +110,3 @@ data class JsonObject( var Version: String, var Statement: List<StatementObject>
         }
     }
 }
-
