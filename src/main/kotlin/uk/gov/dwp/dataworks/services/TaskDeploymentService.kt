@@ -77,10 +77,10 @@ class TaskDeploymentService {
             awsCommunicator.attachIamPolicyToRole(correlationId, iamPolicy, iamRole)
 
             val containerDefinitions = buildContainerDefinitions(userName, emrClusterHostName, jupyterMemory, jupyterCpu, containerPort)
-            val taskDefinition = awsCommunicator.registerTaskDefinition(correlationId,"orchestration-service-user-$userName-td", taskExecutionRoleArn , taskRoleArn, NetworkMode.BRIDGE, containerDefinitions)
+            val taskDefinition = awsCommunicator.registerTaskDefinition(correlationId,"orchestration-service-user-$userName-td", taskExecutionRoleArn , taskRoleArn, NetworkMode.AWSVPC, containerDefinitions)
 
             // ECS
-            awsCommunicator.createEcsService(correlationId, userName, ecsClusterName, taskDefinition.taskDefinitionArn(), ecsLoadBalancer)
+            awsCommunicator.createEcsService(correlationId, userName, ecsClusterName, taskDefinition, ecsLoadBalancer, listOf(), listOf())
         } catch (e: Exception) {
             taskDestroyService.destroyServices(userName)
             throw e
@@ -97,6 +97,7 @@ class TaskDeploymentService {
                 .cpu(jupyterCpu)
                 .memory(jupyterMemory)
                 .essential(true)
+                .portMappings(PortMapping.builder().containerPort(8000).hostPort(8000).build())
                 .environment(pairsToKeyValuePairs("USER" to userName, "EMR_HOST_NAME" to emrHostname))
                 .build()
 
@@ -106,7 +107,7 @@ class TaskDeploymentService {
                 .cpu(256)
                 .memory(256)
                 .essential(true)
-                .links(jupyterHub.name())
+                .portMappings(PortMapping.builder().containerPort(5900).hostPort(5900).build())
                 .environment(pairsToKeyValuePairs(
                         "VNC_OPTS" to "-rfbport 5900 -xkb -noxrecord -noxfixes -noxdamage -display :1 -nopw -wait 5 -shared -permitfiletransfer -tightfilexfer -noclipboard -nosetclipboard",
                         "CHROME_OPTS" to arrayOf(
@@ -122,7 +123,7 @@ class TaskDeploymentService {
                                 "--disable-infobars",
                                 "--disable-features=TranslateUI",
                                 "--disk-cache-dir=/dev/null",
-                                "--test-type https://jupyterHub:8443",
+                                "--test-type https://localhost:8000",
                                 "--kiosk",
                                 "--window-size=${screenSize.toList().joinToString(",")}").joinToString(" "),
                         "VNC_SCREEN_SIZE" to screenSize.toList().joinToString("x")))
@@ -134,7 +135,7 @@ class TaskDeploymentService {
                 .cpu(128)
                 .memory(128)
                 .essential(true)
-                .links(headlessChrome.name())
+                .portMappings(PortMapping.builder().hostPort(4822).containerPort(4822).build())
                 .build()
 
         val guacamole = ContainerDefinition.builder()
@@ -143,15 +144,14 @@ class TaskDeploymentService {
                 .cpu(256)
                 .memory(256)
                 .essential(true)
-                .links(guacd.name(), headlessChrome.name())
                 .environment(pairsToKeyValuePairs(
-                        "GUACD_HOSTNAME" to guacd.hostname(),
+                        "GUACD_HOSTNAME" to "localhost",
                         "GUACD_PORT" to "4822",
                         "KEYSTORE_DATA" to authService.getB64KeyStoreData(),
                         "VALIDATE_ISSUER" to "true",
                         "ISSUER" to authService.issuerUrl,
-                        "CLIENT_PARAMS" to "hostname=${headlessChrome.hostname()},port=5900,disable-copy=true"))
-                .portMappings(PortMapping.builder().hostPort(guacamolePort).containerPort(guacamolePort).build()) // TODO: determine how to handle host ports
+                        "CLIENT_PARAMS" to "hostname=localhost,port=5900,disable-copy=true"))
+                .portMappings(PortMapping.builder().hostPort(guacamolePort).containerPort(guacamolePort).build())
                 .build()
 
         return listOf(jupyterHub, headlessChrome, guacd, guacamole)
