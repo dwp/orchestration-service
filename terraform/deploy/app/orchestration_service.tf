@@ -52,6 +52,18 @@ module "ecs-fargate-task-definition" {
       value = 8443
     },
     {
+      name  = "orchestrationService.user_task_execution_role_arn"
+      value = module.user-task-definition.iam_roles.task_execution_role.arn
+    },
+    {
+      name  = "orchestrationService.user_task_role_arn"
+      value = module.user-task-definition.iam_roles.task_role.arn
+    },
+    {
+      name  = "orchestrationService.ecr_endpoint"
+      value = local.ecr_endpoint
+    },
+    {
       name  = "orchestrationService.jupyterhub_bucket"
       value = module.jupyter_s3_storage.jupyterhub_bucket.id
     },
@@ -156,7 +168,7 @@ module "ecs-user-host" {
 ## ---------------------------------------------------------------------------------------------------------------------
 ## ECS UserService
 ## ---------------------------------------------------------------------------------------------------------------------
-module "user_task_definition" {
+module "user-task-definition" {
   source      = "../../modules/user-task-definition"
   name_prefix = "${var.name_prefix}-user"
 
