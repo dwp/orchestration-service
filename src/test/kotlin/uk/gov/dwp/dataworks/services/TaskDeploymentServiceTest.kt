@@ -5,6 +5,7 @@ import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.whenever
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatCode
 import org.junit.Test
 import org.junit.jupiter.api.BeforeEach
 import org.junit.runner.RunWith
@@ -20,6 +21,7 @@ import software.amazon.awssdk.services.elasticloadbalancingv2.model.DescribeRule
 import software.amazon.awssdk.services.elasticloadbalancingv2.model.Rule
 import uk.gov.dwp.dataworks.Application
 import uk.gov.dwp.dataworks.JWTObject
+import uk.gov.dwp.dataworks.MultipleLoadBalancersMatchedException
 import uk.gov.dwp.dataworks.aws.AwsCommunicator
 
 @RunWith(SpringRunner::class)
@@ -67,24 +69,30 @@ class TaskDeploymentServiceTest {
 
     @Test
     fun `Single set of additional attributes are replaced appropriately`() {
-        val taskRolePolicyString = taskDeploymentService.parsePolicyDocument(taskRoleDocument, mapOf("ADDITIONAL_PERMISSIONS" to listOf("permissionOne", "permissionTwo")))
-        assertThat(taskRolePolicyString).doesNotContain("ADDITIONAL_PERMISSIONS")
+        val taskRolePolicyString = taskDeploymentService.parsePolicyDocument(taskRoleDocument, mapOf("ecs-task-role-policy" to listOf("permissionOne", "permissionTwo")), "Action")
+        assertThat(taskRolePolicyString).doesNotContain("[]")
         assertThat(taskRolePolicyString).contains("\"permissionOne\",\"permissionTwo\"")
     }
 
     @Test
     fun `Multiple additional attributes are replaced appropriately`() {
-        val taskRolePolicyString = taskDeploymentService.parsePolicyDocument(bucketAccessPolicyDocument, mapOf("ACCESS_RESOURCES" to listOf("permissionOne", "permissionTwo"), "LIST_RESOURCE" to listOf("permissionThree", "permissionFour")))
-        assertThat(taskRolePolicyString).doesNotContain("ACCESS_RESOURCES")
+        val taskRolePolicyString = taskDeploymentService.parsePolicyDocument(bucketAccessPolicyDocument, mapOf("jupyter-s3-list" to listOf("permissionOne", "permissionTwo"), "jupyter-s3-access-document" to listOf("permissionThree", "permissionFour")), "Resource")
+        assertThat(taskRolePolicyString).doesNotContain("[]")
         assertThat(taskRolePolicyString).contains("\"permissionOne\",\"permissionTwo\"")
-        assertThat(taskRolePolicyString).doesNotContain("LIST_RESOURCE")
         assertThat(taskRolePolicyString).contains("\"permissionThree\",\"permissionFour\"")
     }
 
     @Test
-    fun `No additional attributes returns resource to string`() {
-        val taskRolePolicyString = taskDeploymentService.parsePolicyDocument(taskAssumeRoleDocument, emptyMap())
-        assertThat(taskRolePolicyString).isEqualTo(taskAssumeRoleDocument.inputStream.bufferedReader().use { it.readText() })
+    fun `Wrong key attribute throws correct Exception`() {
+        assertThatCode {  taskDeploymentService.parsePolicyDocument(bucketAccessPolicyDocument, mapOf("jupyter-s3-list" to listOf("permissionOne", "permissionTwo")), "") }
+                .isInstanceOf(IllegalArgumentException::class.java)
+                .hasMessage("Key does not match expected values: \"Resource\" or \"Action\"")
+    }
+
+    @Test
+    fun `Attributes are assigned to the correct key`(){
+        val taskRolePolicyString = taskDeploymentService.parsePolicyDocument(bucketAccessPolicyDocument, mapOf("jupyter-s3-list" to listOf("permissionOne")), "Action")
+        assertThat(taskRolePolicyString).contains("\"Action\":[\"s3:ListBucket\",\"permissionOne\"]")
     }
 
     @Test

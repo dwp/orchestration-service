@@ -2,9 +2,13 @@ package uk.gov.dwp.dataworks
 
 import com.auth0.jwt.interfaces.DecodedJWT
 import com.fasterxml.jackson.annotation.JsonCreator
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
+import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder
 import software.amazon.awssdk.services.dynamodb.model.AttributeDefinition
 import software.amazon.awssdk.services.dynamodb.model.ScalarAttributeType
 import kotlin.reflect.full.declaredMemberProperties
+
 
 data class DeployRequest @JsonCreator constructor(
         val jupyterCpu: Int = 512,
@@ -42,3 +46,68 @@ data class UserTask(val correlationId: String,
         }
     }
 }
+
+@JsonDeserialize(builder = StatementObject.StatementObjectBuilder::class)
+data class StatementObject(var Sid: String, var Effect: String, var Action: List<String>, var Resource: List<String>) {
+    @JsonPOJOBuilder(buildMethodName = "StatementObjectBuilder", withPrefix = "set")
+    class StatementObjectBuilder {
+        private lateinit var Sid: String
+        private lateinit var Effect: String
+        private lateinit var Action: List<String>
+        private lateinit var Resource: List<String>
+
+        @JsonProperty("Sid")
+        fun setSid(Sid: String): StatementObjectBuilder {
+            this.Sid = Sid
+            return this
+        }
+
+        @JsonProperty("Effect")
+        fun setEffect(Effect: String): StatementObjectBuilder {
+            this.Effect = Effect
+            return this
+        }
+
+        @JsonProperty("Action")
+        fun setAction(Action: List<String>): StatementObjectBuilder {
+            this.Action = Action
+            return this
+        }
+
+        @JsonProperty("Resource")
+        fun setResource(Resource: List<String>): StatementObjectBuilder {
+            this.Resource = Resource
+            return this
+        }
+
+        fun StatementObjectBuilder(): StatementObject {
+            return StatementObject(Sid, Effect, Action, Resource)
+        }
+    }
+}
+
+@JsonDeserialize(builder = JsonObject.JsonObjectBuilder::class)
+data class JsonObject( var Version: String, var Statement: List<StatementObject>){
+    @JsonPOJOBuilder(buildMethodName = "JsonObjectBuilder", withPrefix = "set")
+    class JsonObjectBuilder{
+        private lateinit var Version: String
+        private lateinit var Statement: List<StatementObject>
+
+        @JsonProperty("Version")
+        fun setVersion(Version: String): JsonObjectBuilder {
+            this.Version = Version
+            return this
+        }
+
+        @JsonProperty("Statement")
+        fun setStatement( Statement: List<StatementObject>):  JsonObjectBuilder {
+            this.Statement = Statement
+            return this
+        }
+
+        fun JsonObjectBuilder(): JsonObject {
+            return JsonObject(Version, Statement)
+        }
+    }
+}
+

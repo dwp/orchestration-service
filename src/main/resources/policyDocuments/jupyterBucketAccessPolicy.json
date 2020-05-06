@@ -15,13 +15,13 @@
         "kms:ReEncrypt*",
         "kms:GenerateDataKey*"
       ],
-      "Resource": [ACCESS_RESOURCES]
+      "Resource": []
     },
     {
       "Sid": "jupyter-s3-list",
       "Effect": "Allow",
-      "Action": "s3:ListBucket",
-      "Resource": [LIST_RESOURCE]
+      "Action": ["s3:ListBucket"],
+      "Resource": []
     }
   ]
 }

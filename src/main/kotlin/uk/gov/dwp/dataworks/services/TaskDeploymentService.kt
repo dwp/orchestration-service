@@ -1,5 +1,10 @@
 package uk.gov.dwp.dataworks.services
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.PropertyNamingStrategy
+import com.fasterxml.jackson.databind.cfg.MapperConfig
+import com.fasterxml.jackson.databind.introspect.AnnotatedField
+import com.fasterxml.jackson.databind.introspect.AnnotatedMethod
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -9,12 +14,15 @@ import software.amazon.awssdk.services.ecs.model.ContainerDefinition
 import software.amazon.awssdk.services.ecs.model.ContainerOverride
 import software.amazon.awssdk.services.ecs.model.KeyValuePair
 import software.amazon.awssdk.services.ecs.model.LoadBalancer
+import uk.gov.dwp.dataworks.JsonObject
 import software.amazon.awssdk.services.ecs.model.NetworkMode
 import software.amazon.awssdk.services.ecs.model.PortMapping
 import software.amazon.awssdk.services.elasticloadbalancingv2.model.TargetTypeEnum
 import uk.gov.dwp.dataworks.UserTask
 import uk.gov.dwp.dataworks.aws.AwsCommunicator
 import uk.gov.dwp.dataworks.logging.DataworksLogger
+import java.io.File
+import java.lang.reflect.Modifier
 import java.util.UUID
 
 @Service
@@ -65,18 +73,18 @@ class TaskDeploymentService {
         activeUserTasks.initialiseDeploymentEntry(correlationId, userName)
 
         // IAM permissions
-        val accessPair = Pair("ACCESS_RESOURCES",
+        val accessPair = Pair("jupyter-s3-access-document",
                 listOf(
                     "${configurationResolver.getStringConfig(ConfigKey.JUPYTER_S3_ARN)}/*",
                     "arn:aws:kms:${configurationResolver.awsRegion}:${awsCommunicator.getAccNumber()}:alias/${userName}-Home")
                     .plus(setArns(cognitoGroups)
                 )
         )
-        val listPair = Pair("LIST_RESOURCE", listOf(configurationResolver.getStringConfig(ConfigKey.JUPYTER_S3_ARN)))
+        val listPair = Pair("jupyter-s3-list", listOf(configurationResolver.getStringConfig(ConfigKey.JUPYTER_S3_ARN)))
         val jupyterMap = mapOf(accessPair, listPair)
-        jupyterBucketAccessRolePolicyString = parsePolicyDocument(jupyterBucketAccessDocument, jupyterMap)
-        taskRolePolicyString = parsePolicyDocument(taskRolePolicyDocument, mapOf("ADDITIONAL_PERMISSIONS" to additionalPermissions))
-        taskAssumeRoleString = parsePolicyDocument(taskAssumeRoleDocument, emptyMap())
+        jupyterBucketAccessRolePolicyString = parsePolicyDocument(jupyterBucketAccessDocument, jupyterMap, "Resources")
+        taskRolePolicyString = parsePolicyDocument(taskRolePolicyDocument, mapOf("ecs-task-role-policy" to additionalPermissions), "Actions")
+        taskAssumeRoleString = File(taskAssumeRoleDocument.uri).toString()
         val jupyterIamPolicy = awsCommunicator.createIamPolicy(correlationId, "$userName-jupyter-s3-document", jupyterBucketAccessRolePolicyString)
         val iamPolicy = awsCommunicator.createIamPolicy(correlationId, "$userName-task-role-document", taskRolePolicyString)
         val iamRole = awsCommunicator.createIamRole(correlationId, "$userName-iam-role", taskAssumeRoleString)
@@ -197,17 +205,22 @@ class TaskDeploymentService {
      * converting the associated `@Value` parameters to Strings and replacing `ADDITIONAL_PERMISSIONS` in
      * [taskRolePolicyString] with the provided [listOfParameters]
      *
-     * @return [taskRolePolicyString] and [taskAssumeRoleString].
+     * @return [taskRolePolicyString] and [jupyterBucketAccessRolePolicyString].
      */
-    fun parsePolicyDocument(resource: Resource, placeholderAndReplacements: Map<String, List<String>>): String {
-        var resourceToString = resource.inputStream.bufferedReader().use { it.readText() }
-        if (placeholderAndReplacements.isNotEmpty()) {
-            placeholderAndReplacements.forEach {
-                logger.info("Adding ${it.key} to ${resource.filename}", "parameters" to it.value.joinToString())
-                var permissionsJson = it.value.joinToString(prefix = "\"", separator = "\",\"", postfix = "\"")
-                resourceToString = resourceToString.replace(it.key, permissionsJson)
+    fun parsePolicyDocument(resource: Resource, sidAndAdditions: Map<String, List<String>>, key: String): String{
+        val mapper = ObjectMapper()
+                .setPropertyNamingStrategy(CustomPropertyNamingStrategy())
+        val obj = mapper.readValue(resource.url, JsonObject::class.java)
+        obj.Statement.forEach {statement ->
+            sidAndAdditions.forEach {
+                if(it.key == statement.Sid) {
+                    if (key == "Resource") statement.Resource = statement.Resource.plus(it.value)
+                    else if (key == "Action") statement.Action = statement.Action.plus(it.value)
+                    else throw IllegalArgumentException("Key does not match expected values: \"Resource\" or \"Action\"")
+                }
             }
         }
+        return mapper .writeValueAsString(obj)
         taskAssumeRoleString = taskAssumeRoleDocument.inputStream.bufferedReader().use { it.readText() }
         taskRolePolicyString = taskRolePolicyDocument.inputStream.bufferedReader().use { it.readText() }
                 .replace("ADDITIONAL_PERMISSIONS", replaceString)
@@ -220,5 +233,45 @@ class TaskDeploymentService {
             list = list.plus("arn:aws:kms:${configurationResolver.awsRegion}:${awsCommunicator.getAccNumber()}:alias/${it}-Shared")
         }
         return list
+    }
+}
+
+
+class CustomPropertyNamingStrategy : PropertyNamingStrategy() {
+    override fun nameForField(config: MapperConfig<*>?, field: AnnotatedField, defaultName: String): String {
+        return convertForField(defaultName)
+    }
+
+    override fun nameForGetterMethod(config: MapperConfig<*>?, method: AnnotatedMethod, defaultName: String): String {
+        return convertForMethod(method, defaultName)
+    }
+
+    override fun nameForSetterMethod(config: MapperConfig<*>?, method: AnnotatedMethod, defaultName: String): String {
+        return convertForMethod(method, defaultName)
+    }
+
+    private fun convertForField(defaultName: String): String {
+        return defaultName
+    }
+
+    private fun convertForMethod(method: AnnotatedMethod, defaultName: String): String {
+        if (isGetter(method)) {
+            return method.name.substring(3)
+        }
+        return if (isSetter(method)) {
+            method.name.substring(3)
+        } else defaultName
+    }
+
+    private fun isGetter(method: AnnotatedMethod): Boolean {
+        if (Modifier.isPublic(method.modifiers) && method.genericParameterTypes.size == 0) {
+            if (method.name.matches(Regex("^get[A-Z].*")) && method.rawReturnType != Void.TYPE) return true
+            if (method.name.matches(Regex("^is[A-Z].*")) && method.rawReturnType != Boolean::class.javaPrimitiveType) return true
+        }
+        return false
+    }
+
+    private fun isSetter(method: AnnotatedMethod): Boolean {
+        return Modifier.isPublic(method.modifiers) && method.rawReturnType == Void.TYPE && method.genericParameterTypes.size == 1 && method.name.matches(Regex("^set[A-Z].*"))
     }
 }
