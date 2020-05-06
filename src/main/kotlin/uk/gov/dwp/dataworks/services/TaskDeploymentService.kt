@@ -152,39 +152,6 @@ class TaskDeploymentService {
         return pairs.map { KeyValuePair.builder().name(it.first).value(it.second).build() }
     }
 
-    private fun buildContainerOverrides(correlationId: String, userName: String, emrHostname: String, jupyterMemory: Int, jupyterCpu: Int): List<ContainerOverride> {
-        val usernamePair = "USER" to userName
-        val hostnamePair = "EMR_HOST_NAME" to emrHostname
-
-        val screenSize = 1920 to 1080
-        val chromeOptsPair = "CHROME_OPTS" to arrayOf(
-                "--no-sandbox",
-                "--window-position=0,0",
-                "--force-device-scale-factor=1",
-                "--incognito",
-                "--noerrdialogs",
-                "--disable-translate",
-                "--no-first-run",
-                "--fast",
-                "--fast-start",
-                "--disable-infobars",
-                "--disable-features=TranslateUI",
-                "--disk-cache-dir=/dev/null",
-                "--test-type https://jupyterHub:8443",
-                "--kiosk",
-                "--window-size=${screenSize.toList().joinToString(",")}"
-        ).joinToString(" ")
-        val vncScreenSizePair = "VNC_SCREEN_SIZE" to screenSize.toList().joinToString("x")
-
-        val chrome = awsCommunicator.buildContainerOverride(correlationId, "headless_chrome", chromeOptsPair, vncScreenSizePair).build()
-        val guacd = awsCommunicator.buildContainerOverride(correlationId, "guacd", usernamePair).build()
-        val guacamole = awsCommunicator.buildContainerOverride(correlationId, "guacamole", "CLIENT_USERNAME" to userName).build()
-        // Jupyter also has configurable resources
-        val jupyter = awsCommunicator.buildContainerOverride(correlationId, "jupyterHub", usernamePair, hostnamePair).cpu(jupyterCpu).memory(jupyterMemory).build()
-
-        return listOf(chrome, guacd, guacamole, jupyter)
-    }
-
     /**
      * Helper method to initialise the lateinit vars [taskAssumeRoleString] and [taskRolePolicyString] by
      * converting the associated `@Value` parameters to Strings and replacing `ADDITIONAL_PERMISSIONS` in

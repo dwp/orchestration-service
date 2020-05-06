@@ -192,20 +192,6 @@ class AwsCommunicator {
         throw UpperRuleLimitReachedException("The upper limit of 1000 rules has been reached on this listener.")
     }
 
-    /**
-     * Helper method to wrap a container name and set of overrides into an incomplete [ContainerOverride.Builder] for
-     * later consumption.
-     */
-    fun buildContainerOverride(correlationId: String, containerName: String, vararg overrides: Pair<String, String>): ContainerOverride.Builder {
-        val overrideKeyPairs = overrides.map { KeyValuePair.builder().name(it.first).value(it.second).build() }
-        logger.info("Overriding container args",
-                "correlation_id" to correlationId,
-                "container_name" to containerName,
-                "overrides" to overrideKeyPairs.joinToString { "${it.name()}:${it.value()}" })
-        return ContainerOverride.builder()
-                .name(containerName)
-                .environment(overrideKeyPairs)
-    }
 
     /**
      * Creates an ECS service with the name [clusterName], friendly service name of [serviceName] and sits
@@ -274,43 +260,6 @@ class AwsCommunicator {
                 }))
 
         return awsClients.ecsClient.registerTaskDefinition(registerTaskDefinitionRequest).taskDefinition()
-    }
-
-    /**
-     * Constructs a [RunTaskRequest] with Task Overrides using the passed in parameters. [TaskOverrides][TaskOverride]
-     * are constructed from the [overrides] and applied to the ECS task definition [taskDefinition].
-     * ECS tasks will be run on EC2 instances.
-     *
-     * @param taskDefinition  The family and revision (family:revision) or full ARN of the task definition to run.
-     * If a revision is not specified, the latest ACTIVE revision is used.
-     */
-    fun buildEcsTask(ecsClusterName: String, taskDefinition: String, taskRoleArn: String, overrides: Collection<ContainerOverride>): RunTaskRequest {
-        val taskOverride = TaskOverride.builder()
-                .containerOverrides(overrides)
-                .taskRoleArn(taskRoleArn)
-                .build()
-
-        return RunTaskRequest.builder()
-                .cluster(ecsClusterName)
-                .launchType("EC2")
-                .overrides(taskOverride)
-                .taskDefinition(taskDefinition)
-                .build()
-    }
-
-    /**
-     * Runs the specified [RunTaskRequest]
-     */
-    fun runEcsTask(correlationId: String, taskRequest: RunTaskRequest) {
-        val task = awsClients.ecsClient.runTask(taskRequest).tasks()[0]
-        logger.info("ECS tasks run",
-                "correlation_id" to correlationId,
-                "instance_arns" to task.containerInstanceArn(),
-                "task_groups" to task.group(),
-                "cluster_arn" to task.clusterArn(),
-                "cpus" to task.cpu(),
-                "memory" to task.memory(),
-                "platform_version" to task.platformVersion())
     }
 
     /**
