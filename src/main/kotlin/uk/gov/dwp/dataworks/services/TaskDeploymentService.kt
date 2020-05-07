@@ -52,6 +52,8 @@ class TaskDeploymentService {
     lateinit var taskRolePolicyDocument: Resource
     private lateinit var taskRolePolicyString: String
 
+    private lateinit var mapForIamParsing: Map<String, List<String>>
+
     companion object {
         val logger: DataworksLogger = DataworksLogger(LoggerFactory.getLogger(TaskDeploymentService::class.java))
     }
@@ -73,16 +75,11 @@ class TaskDeploymentService {
         activeUserTasks.initialiseDeploymentEntry(correlationId, userName)
 
         // IAM permissions
-        val accessPair = Pair("jupyter-s3-access-document",
-                listOf(
-                    "${configurationResolver.getStringConfig(ConfigKey.JUPYTER_S3_ARN)}/*",
-                    "arn:aws:kms:${configurationResolver.awsRegion}:${awsCommunicator.getAccNumber()}:alias/${userName}-Home")
-                    .plus(setArns(cognitoGroups)
-                )
-        )
-        val listPair = Pair("jupyter-s3-list", listOf(configurationResolver.getStringConfig(ConfigKey.JUPYTER_S3_ARN)))
-        val jupyterMap = mapOf(accessPair, listPair)
-        jupyterBucketAccessRolePolicyString = parsePolicyDocument(jupyterBucketAccessDocument, jupyterMap, "Resources")
+        val sharedFolder = createArnStringsList(cognitoGroups, "shared", "${configurationResolver.getStringConfig(ConfigKey.JUPYTER_S3_ARN)}/*")
+        val userFolder = createArnStringsList(listOf(userName), "home", configurationResolver.getStringConfig(ConfigKey.JUPYTER_S3_ARN))
+        val folderAccess = sharedFolder.plus(userFolder)
+        val mapForParsing = mapOf(Pair("jupyter-s3-access-document", folderAccess), Pair("jupyter-s3-list", listOf(configurationResolver.getStringConfig(ConfigKey.JUPYTER_S3_ARN))))
+        jupyterBucketAccessRolePolicyString = parsePolicyDocument(jupyterBucketAccessDocument, mapForParsing, "Resources")
         taskRolePolicyString = parsePolicyDocument(taskRolePolicyDocument, mapOf("ecs-task-role-policy" to additionalPermissions), "Actions")
         taskAssumeRoleString = File(taskAssumeRoleDocument.uri).toString()
         val jupyterIamPolicy = awsCommunicator.createIamPolicy(correlationId, "$userName-jupyter-s3-document", jupyterBucketAccessRolePolicyString)
@@ -227,12 +224,15 @@ class TaskDeploymentService {
         return taskRolePolicyString to taskAssumeRoleString
     }
 
-    fun setArns(groups: List<String>): List<String>{
-        var list: List<String> = emptyList()
-        groups.forEach{
-            list = list.plus("arn:aws:kms:${configurationResolver.awsRegion}:${awsCommunicator.getAccNumber()}:alias/${it}-Shared")
+/**
+ * Helper method to parse user access details into ARN format - returns list of these and the JupyterBucket ARN
+ */
+    fun createArnStringsList(pathPrefix: List<String>, pathSuffix: String, jupyterBucketArn: String): List<String>{
+        var returnList = listOf(jupyterBucketArn)
+        pathPrefix.forEach{
+            returnList = returnList.plus("arn:aws:kms:${configurationResolver.awsRegion}:${awsCommunicator.getAccNumber()}:alias/${it}-${pathSuffix}")
         }
-        return list
+        return returnList
     }
 }
 

@@ -102,15 +102,10 @@ class TaskDeploymentServiceTest {
 
     @Test
     fun `List of arns is returned from setArn function with list passed in`() {
-        val arnList = taskDeploymentService.setArns(listOf("group1", "group2"))
-        assertThat(arnList[0]).isEqualTo("arn:aws:kms:${configurationResolver.awsRegion}:${awsCommunicator.getAccNumber()}:alias/group1-Shared")
-        assertThat(arnList[1]).isEqualTo("arn:aws:kms:${configurationResolver.awsRegion}:${awsCommunicator.getAccNumber()}:alias/group2-Shared")
-    }
-
-    @Test
-    fun `Empty list is returned from setArn function with no list`() {
-        val arnList = taskDeploymentService.setArns(emptyList())
-        assertThat(arnList).isEmpty()
+        val arnList = taskDeploymentService.createArnStringsList(listOf("group1", "group2"), "test-suffix", "jupyter.arn")
+        assertThat(arnList[0]).isEqualTo("jupyter.arn")
+        assertThat(arnList[1]).isEqualTo("arn:aws:kms:${configurationResolver.awsRegion}:${awsCommunicator.getAccNumber()}:alias/group1-test-suffix")
+        assertThat(arnList[2]).isEqualTo("arn:aws:kms:${configurationResolver.awsRegion}:${awsCommunicator.getAccNumber()}:alias/group2-test-suffix")
     }
 
     fun createDescribeRulesResponse(array: Collection<Rule>): DescribeRulesResponse {
