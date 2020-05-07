@@ -37,13 +37,6 @@ class TaskDeploymentServiceTest {
     @Autowired
     private lateinit var taskDeploymentService: TaskDeploymentService
 
-    @Value("classpath:policyDocuments/taskRolePolicy.json")
-    lateinit var taskRoleDocument: Resource
-    @Value("classpath:policyDocuments/taskAssumeRolePolicy.json")
-    lateinit var taskAssumeRoleDocument: Resource
-    @Value("classpath:policyDocuments/jupyterBucketAccessPolicy.json")
-    lateinit var bucketAccessPolicyDocument: Resource
-
     @MockBean
     private lateinit var awsCommunicator: AwsCommunicator
 
@@ -64,48 +57,6 @@ class TaskDeploymentServiceTest {
 
         val taskAssumeRoleDocument = taskDeploymentService.taskAssumeRoleDocument.inputStream.bufferedReader().use { it.readText() }
         assertThat(taskAssumeRoleDocument).isNotNull()
-    }
-
-    @Test
-    fun `Single set of additional attributes are replaced appropriately`() {
-        val taskRolePolicyString = taskDeploymentService.parsePolicyDocument(taskRoleDocument, mapOf("ecs-task-role-policy" to listOf("permissionOne", "permissionTwo")), "Action")
-        assertThat(taskRolePolicyString).doesNotContain("[]")
-        assertThat(taskRolePolicyString).contains("\"permissionOne\",\"permissionTwo\"")
-    }
-
-    @Test
-    fun `Multiple additional attributes are replaced appropriately`() {
-        val taskRolePolicyString = taskDeploymentService.parsePolicyDocument(bucketAccessPolicyDocument, mapOf("jupyter-s3-list" to listOf("permissionOne", "permissionTwo"), "jupyter-s3-access-document" to listOf("permissionThree", "permissionFour")), "Resource")
-        assertThat(taskRolePolicyString).doesNotContain("[]")
-        assertThat(taskRolePolicyString).contains("\"permissionOne\",\"permissionTwo\"")
-        assertThat(taskRolePolicyString).contains("\"permissionThree\",\"permissionFour\"")
-    }
-
-    @Test
-    fun `Wrong key attribute throws correct Exception`() {
-        assertThatCode {  taskDeploymentService.parsePolicyDocument(bucketAccessPolicyDocument, mapOf("jupyter-s3-list" to listOf("permissionOne", "permissionTwo")), "") }
-                .isInstanceOf(IllegalArgumentException::class.java)
-                .hasMessage("Key does not match expected values: \"Resource\" or \"Action\"")
-    }
-
-    @Test
-    fun `Returns proper case for JSON keys, as required by AWS`(){
-        val taskRolePolicyString = taskDeploymentService.parsePolicyDocument(taskRoleDocument, mapOf("ecs-task-role-policy" to listOf("permissionOne", "permissionTwo")), "Action")
-        assertThat(taskRolePolicyString).contains("Statement").contains("Resource").contains("Effect").contains("Version").contains("Action")
-    }
-
-    @Test
-    fun `Attributes are assigned to the correct key`(){
-        val taskRolePolicyString = taskDeploymentService.parsePolicyDocument(bucketAccessPolicyDocument, mapOf("jupyter-s3-list" to listOf("permissionOne")), "Action")
-        assertThat(taskRolePolicyString).contains("\"Action\":[\"s3:ListBucket\",\"permissionOne\"]")
-    }
-
-    @Test
-    fun `List of arns is returned from setArn function with list passed in`() {
-        val arnList = taskDeploymentService.createArnStringsList(listOf("group1", "group2"), "test-suffix", "jupyter.arn")
-        assertThat(arnList[0]).isEqualTo("jupyter.arn")
-        assertThat(arnList[1]).isEqualTo("arn:aws:kms:${configurationResolver.awsRegion}:${awsCommunicator.getAccNumber()}:alias/group1-test-suffix")
-        assertThat(arnList[2]).isEqualTo("arn:aws:kms:${configurationResolver.awsRegion}:${awsCommunicator.getAccNumber()}:alias/group2-test-suffix")
     }
 
     fun createDescribeRulesResponse(array: Collection<Rule>): DescribeRulesResponse {
