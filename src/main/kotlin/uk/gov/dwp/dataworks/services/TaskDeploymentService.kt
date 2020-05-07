@@ -49,6 +49,8 @@ class TaskDeploymentService {
         val containerPort = Integer.parseInt(configurationResolver.getStringConfig(ConfigKey.USER_CONTAINER_PORT))
         val taskExecutionRoleArn = configurationResolver.getStringConfig(ConfigKey.USER_TASK_EXECUTION_ROLE_ARN)
         val taskRoleArn = configurationResolver.getStringConfig(ConfigKey.USER_TASK_ROLE_ARN)
+        val taskSubnets = configurationResolver.getListConfig(ConfigKey.USER_TASK_VPC_SUBNETS)
+        val taskSecurityGroups = configurationResolver.getListConfig(ConfigKey.USER_TASK_VPC_SECURITY_GROUPS)
         val albPort = Integer.parseInt(configurationResolver.getStringConfig(ConfigKey.LOAD_BALANCER_PORT))
         val albName = configurationResolver.getStringConfig(ConfigKey.LOAD_BALANCER_NAME)
         val ecsClusterName = configurationResolver.getStringConfig(ConfigKey.ECS_CLUSTER_NAME)
@@ -61,6 +63,7 @@ class TaskDeploymentService {
             val loadBalancer = awsCommunicator.getLoadBalancerByName(albName)
             val listener = awsCommunicator.getAlbListenerByPort(loadBalancer.loadBalancerArn(), albPort)
             val targetGroup = awsCommunicator.createTargetGroup(correlationId, userName, loadBalancer.vpcId(), containerPort)
+
             // There are 2 distinct LoadBalancer classes in the AWS SDK - ELBV2 and ECS. They represent the same LB but in different ways.
             // The following is the load balancer needed to create an ECS service.
             val ecsLoadBalancer = LoadBalancer.builder()
@@ -80,7 +83,7 @@ class TaskDeploymentService {
             val taskDefinition = awsCommunicator.registerTaskDefinition(correlationId,"orchestration-service-user-$userName-td", taskExecutionRoleArn , taskRoleArn, NetworkMode.AWSVPC, containerDefinitions)
 
             // ECS
-            awsCommunicator.createEcsService(correlationId, userName, ecsClusterName, taskDefinition, ecsLoadBalancer, listOf(), listOf())
+            awsCommunicator.createEcsService(correlationId, userName, ecsClusterName, taskDefinition, ecsLoadBalancer, taskSubnets, taskSecurityGroups)
         } catch (e: Exception) {
             taskDestroyService.destroyServices(userName)
             throw e
