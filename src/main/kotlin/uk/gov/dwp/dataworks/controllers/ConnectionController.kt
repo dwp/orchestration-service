@@ -56,7 +56,7 @@ class ConnectionController {
     @ResponseStatus(HttpStatus.OK)
     fun connect(@RequestHeader("Authorisation") token: String, @RequestBody requestBody: DeployRequest): String {
         val jwtObject = authService.validate(token)
-        return handleRequest(jwtObject.userName, jwtObject.cognitoGroup, requestBody)
+        return handleConnectionRequest(jwtObject.userName, jwtObject.cognitoGroup, requestBody)
     }
 
     @Operation(summary = "Requests the user containers",
@@ -99,7 +99,7 @@ class ConnectionController {
         res.sendError(HttpStatus.UNAUTHORIZED.value(), "Failed to verify JWT token")
     }
 
-    fun handleRequest(userName: String, cognitoGroups: List<String>, requestBody: DeployRequest):String {
+    fun handleConnectionRequest(userName: String, cognitoGroups: List<String>, requestBody: DeployRequest):String {
         if (activeUserTasks.contains(userName)) {
             logger.info("Redirecting user to running containers, as they exist")
         } else {

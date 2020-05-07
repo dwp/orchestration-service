@@ -11,17 +11,15 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.core.io.Resource
 import org.springframework.stereotype.Service
 import software.amazon.awssdk.services.ecs.model.ContainerDefinition
-import software.amazon.awssdk.services.ecs.model.ContainerOverride
 import software.amazon.awssdk.services.ecs.model.KeyValuePair
 import software.amazon.awssdk.services.ecs.model.LoadBalancer
-import uk.gov.dwp.dataworks.JsonObject
+import uk.gov.dwp.dataworks.AwsIamPolicyJsonObject
 import software.amazon.awssdk.services.ecs.model.NetworkMode
 import software.amazon.awssdk.services.ecs.model.PortMapping
 import software.amazon.awssdk.services.elasticloadbalancingv2.model.TargetTypeEnum
 import uk.gov.dwp.dataworks.UserTask
 import uk.gov.dwp.dataworks.aws.AwsCommunicator
 import uk.gov.dwp.dataworks.logging.DataworksLogger
-import java.io.File
 import java.lang.reflect.Modifier
 import java.util.UUID
 
@@ -201,8 +199,8 @@ class TaskDeploymentService {
      */
     fun parsePolicyDocument(resource: Resource, sidAndAdditions: Map<String, List<String>>, key: String): String{
         val mapper = ObjectMapper()
-                .setPropertyNamingStrategy(CustomPropertyNamingStrategy())
-        val obj = mapper.readValue(resource.url, JsonObject::class.java)
+                .setPropertyNamingStrategy(AwsPropertyNamingStrategy())
+        val obj = mapper.readValue(resource.url, AwsIamPolicyJsonObject::class.java)
         obj.Statement.forEach {statement ->
             sidAndAdditions.forEach {
                 if(it.key == statement.Sid) {
@@ -230,7 +228,7 @@ class TaskDeploymentService {
 /**
  * Class to override Jackson methods and ensure Proper Case is respected in serialisation of JSON keys - as required by AWS
  */
-class CustomPropertyNamingStrategy : PropertyNamingStrategy() {
+class AwsPropertyNamingStrategy : PropertyNamingStrategy() {
     override fun nameForField(config: MapperConfig<*>?, field: AnnotatedField, defaultName: String): String {
         return convertForField(defaultName)
     }

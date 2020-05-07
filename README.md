@@ -12,7 +12,6 @@ The service orchestrator for providing remote access into the analytical environ
  
  Header of request must contain the following:
   - `Authorisation`*
-  - `cognito:groups` (a list of cognito user groups as strings that the user should be able to access the shared buckets for)
      
   Optional inputs for body of request are:
   - `jupyterCpu`            - default : 512

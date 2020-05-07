@@ -86,8 +86,8 @@ data class StatementObject(var Sid: String, var Effect: String, var Action: List
     }
 }
 
-@JsonDeserialize(builder = JsonObject.JsonObjectBuilder::class)
-data class JsonObject( var Version: String, var Statement: List<StatementObject>){
+@JsonDeserialize(builder = AwsIamPolicyJsonObject.JsonObjectBuilder::class)
+data class AwsIamPolicyJsonObject(var Version: String, var Statement: List<StatementObject>){
     @JsonPOJOBuilder(buildMethodName = "JsonObjectBuilder", withPrefix = "set")
     class JsonObjectBuilder{
         private lateinit var Version: String
@@ -105,8 +105,8 @@ data class JsonObject( var Version: String, var Statement: List<StatementObject>
             return this
         }
 
-        fun JsonObjectBuilder(): JsonObject {
-            return JsonObject(Version, Statement)
+        fun JsonObjectBuilder(): AwsIamPolicyJsonObject {
+            return AwsIamPolicyJsonObject(Version, Statement)
         }
     }
 }
