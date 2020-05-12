@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
+import org.springframework.core.io.ClassPathResource
 import org.springframework.core.io.Resource
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.junit4.SpringRunner
@@ -36,12 +37,6 @@ class AwsParsingTest {
     @Autowired
     private lateinit var authService: AuthenticationService
 
-    @Value("classpath:policyDocuments/taskRolePolicy.json")
-    lateinit var taskRoleDocument: Resource
-
-    @Value("classpath:policyDocuments/jupyterBucketAccessPolicy.json")
-    lateinit var bucketAccessPolicyDocument: Resource
-
     @MockBean
     private lateinit var awsCommunicator: AwsCommunicator
 
@@ -52,19 +47,28 @@ class AwsParsingTest {
         val jwtObject = JWTObject(decodedJWT, "test_user", listOf("testGroup"))
         whenever(authService.validate(any())).thenReturn(jwtObject)
         whenever(configurationResolver.awsRegion).thenReturn(Region.EU_WEST_2)
-        whenever(awsCommunicator.getAccNumber()).thenReturn("123456")
+        whenever(configurationResolver.getStringConfig(ConfigKey.AWS_ACCOUNT_NUMBER)).thenReturn("123456")
+    }
+
+    @Test
+    fun `Loads policy documents from classpath correctly`() {
+        val taskRolePolicy = ClassPathResource("policyDocuments/jupyterBucketAccessPolicy.json")
+        assertThat(taskRolePolicy).isNotNull()
+
+        val taskAssumeRoleDocument = ClassPathResource("policyDocuments/taskRolePolicy.json")
+        assertThat(taskAssumeRoleDocument).isNotNull()
     }
 
     @Test
     fun `Single set of additional attributes are replaced appropriately`() {
-        val taskRolePolicyString = awsParsing.parsePolicyDocument(taskRoleDocument, mapOf("ecs-task-role-policy" to listOf("permissionOne", "permissionTwo")), "Action")
+        val taskRolePolicyString = awsParsing.parsePolicyDocument("policyDocuments/taskRolePolicy.json", mapOf("ecs-task-role-policy" to listOf("permissionOne", "permissionTwo")), "Action")
         assertThat(taskRolePolicyString).doesNotContain("[]")
         assertThat(taskRolePolicyString).contains("\"permissionOne\",\"permissionTwo\"")
     }
 
     @Test
     fun `Multiple additional attributes are replaced appropriately`() {
-        val taskRolePolicyString = awsParsing.parsePolicyDocument(bucketAccessPolicyDocument, mapOf("jupyter-s3-list" to listOf("permissionOne", "permissionTwo"), "jupyter-s3-access-document" to listOf("permissionThree", "permissionFour")), "Resource")
+        val taskRolePolicyString = awsParsing.parsePolicyDocument("policyDocuments/jupyterBucketAccessPolicy.json", mapOf("jupyter-s3-list" to listOf("permissionOne", "permissionTwo"), "jupyter-s3-access-document" to listOf("permissionThree", "permissionFour")), "Resource")
         assertThat(taskRolePolicyString).doesNotContain("[]")
         assertThat(taskRolePolicyString).contains("\"permissionOne\",\"permissionTwo\"")
         assertThat(taskRolePolicyString).contains("\"permissionThree\",\"permissionFour\"")
@@ -72,20 +76,20 @@ class AwsParsingTest {
 
     @Test
     fun `Wrong key attribute throws correct Exception`() {
-        Assertions.assertThatCode { awsParsing.parsePolicyDocument(bucketAccessPolicyDocument, mapOf("jupyter-s3-list" to listOf("permissionOne", "permissionTwo")), "") }
+        Assertions.assertThatCode { awsParsing.parsePolicyDocument("policyDocuments/jupyterBucketAccessPolicy.json", mapOf("jupyter-s3-list" to listOf("permissionOne", "permissionTwo")), "") }
                 .isInstanceOf(IllegalArgumentException::class.java)
                 .hasMessage("statementKeyToUpdate does not match expected values: \"Resource\" or \"Action\"")
     }
 
     @Test
     fun `Returns proper case for JSON keys, as required by AWS`() {
-        val taskRolePolicyString = awsParsing.parsePolicyDocument(taskRoleDocument, mapOf("ecs-task-role-policy" to listOf("permissionOne", "permissionTwo")), "Action")
+        val taskRolePolicyString = awsParsing.parsePolicyDocument("policyDocuments/taskRolePolicy.json", mapOf("ecs-task-role-policy" to listOf("permissionOne", "permissionTwo")), "Action")
         assertThat(taskRolePolicyString).contains("Statement").contains("Resource").contains("Effect").contains("Version").contains("Action")
     }
 
     @Test
     fun `Attributes are assigned to the correct key`() {
-        val taskRolePolicyString = awsParsing.parsePolicyDocument(bucketAccessPolicyDocument, mapOf("jupyter-s3-list" to listOf("permissionOne")), "Action")
+        val taskRolePolicyString = awsParsing.parsePolicyDocument("policyDocuments/jupyterBucketAccessPolicy.json", mapOf("jupyter-s3-list" to listOf("permissionOne")), "Action")
         assertThat(taskRolePolicyString).contains("\"Action\":[\"s3:ListBucket\",\"permissionOne\"]")
     }
 }

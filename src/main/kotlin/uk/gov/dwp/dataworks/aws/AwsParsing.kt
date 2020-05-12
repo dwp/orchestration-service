@@ -37,13 +37,13 @@ class AwsParsing(){
         val resource = ClassPathResource(pathToResource)
         val mapper = ObjectMapper()
                 .setPropertyNamingStrategy(AwsPropertyNamingStrategy())
-        val obj = mapper.readValue(resource.url, AwsIamPolicyJsonObject::class.java)
+        val obj = mapper.readValue(resource.file, AwsIamPolicyJsonObject::class.java)
         obj.Statement.forEach { statement ->
             when(statementKeyToUpdate) {
-                "Resource" -> try{ statement.Resource.plus(sidAndAdditions[statement.Sid]) }
-                            catch(e: Exception) { throw java.lang.IllegalArgumentException("${statement.Sid} not found in JSON template") }
-                "Action" -> try{ statement.Action.plus(sidAndAdditions[statement.Sid]) }
-                            catch(e: Exception){ throw java.lang.IllegalArgumentException("${statement.Sid} not found in JSON template") }
+                "Resource" -> try{ sidAndAdditions[statement.Sid]?.let { statement.Resource.addAll(it) } }
+                            catch(e: Exception) { e.printStackTrace(); throw java.lang.IllegalArgumentException("${statement.Sid} not found in JSON template") }
+                "Action" -> try{ sidAndAdditions[statement.Sid]?.let { statement.Action.addAll(it) }}
+                            catch(e: Exception){ e.printStackTrace(); throw java.lang.IllegalArgumentException("${statement.Sid} not found in JSON template") }
                 else -> throw IllegalArgumentException("statementKeyToUpdate does not match expected values: \"Resource\" or \"Action\"")
             }
         }
