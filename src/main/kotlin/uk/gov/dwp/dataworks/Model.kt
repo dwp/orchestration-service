@@ -3,8 +3,8 @@ package uk.gov.dwp.dataworks
 import com.auth0.jwt.interfaces.DecodedJWT
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize
-import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder
+import com.fasterxml.jackson.databind.PropertyNamingStrategy
+import com.fasterxml.jackson.databind.annotation.JsonNaming
 import software.amazon.awssdk.services.dynamodb.model.AttributeDefinition
 import software.amazon.awssdk.services.dynamodb.model.ScalarAttributeType
 import kotlin.reflect.full.declaredMemberProperties
@@ -47,6 +47,7 @@ data class UserTask(val correlationId: String,
     }
 }
 
+@JsonNaming(PropertyNamingStrategy.UpperCamelCaseStrategy::class)
 data class StatementObject(
         @JsonProperty("Sid") var Sid: String,
         @JsonProperty("Effect") var Effect: String,
@@ -54,6 +55,7 @@ data class StatementObject(
         @JsonProperty("Resource") var Resource: MutableList<String>
 )
 
+@JsonNaming(PropertyNamingStrategy.UpperCamelCaseStrategy::class)
 data class AwsIamPolicyJsonObject(
         @JsonProperty("Version") var Version: String,
         @JsonProperty("Statement") var Statement: List<StatementObject>
