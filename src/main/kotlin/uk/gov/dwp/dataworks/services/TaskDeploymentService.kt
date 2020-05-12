@@ -39,20 +39,15 @@ class TaskDeploymentService {
 
     @Value("classpath:policyDocuments/jupyterBucketAccesssPolicy.json")
     lateinit var jupyterBucketAccessDocument: Resource
-    private lateinit var jupyterBucketAccessRolePolicyString: String
 
     @Autowired
     private lateinit var authService: AuthenticationService
 
     @Value("classpath:policyDocuments/taskAssumeRolePolicy.json")
     lateinit var taskAssumeRoleDocument: Resource
-    private lateinit var taskAssumeRoleString: String
 
     @Value("classpath:policyDocuments/taskRolePolicy.json")
     lateinit var taskRolePolicyDocument: Resource
-    private lateinit var taskRolePolicyString: String
-
-    private lateinit var mapForIamParsing: Map<String, List<String>>
 
     companion object {
         val logger: DataworksLogger = DataworksLogger(LoggerFactory.getLogger(TaskDeploymentService::class.java))
@@ -95,9 +90,9 @@ class TaskDeploymentService {
             val userFolder = awsParsing.createArnStringsList(listOf(userName), "home", configurationResolver.getStringConfig(ConfigKey.JUPYTER_S3_ARN))
             val folderAccess = sharedFolder.plus(userFolder)
             val mapForParsing = mapOf(Pair("jupyter-s3-access-document", folderAccess), Pair("jupyter-s3-list", listOf(configurationResolver.getStringConfig(ConfigKey.JUPYTER_S3_ARN))))
-            jupyterBucketAccessRolePolicyString = awsParsing.parsePolicyDocument(jupyterBucketAccessDocument, mapForParsing, "Resources")
-            taskRolePolicyString = awsParsing.parsePolicyDocument(taskRolePolicyDocument, mapOf("ecs-task-role-policy" to additionalPermissions), "Actions")
-            taskAssumeRoleString = taskAssumeRoleDocument.inputStream.bufferedReader().use { it.readText() }
+            val jupyterBucketAccessRolePolicyString = awsParsing.parsePolicyDocument(jupyterBucketAccessDocument, mapForParsing, "Resources")
+            val taskRolePolicyString = awsParsing.parsePolicyDocument(taskRolePolicyDocument, mapOf("ecs-task-role-policy" to additionalPermissions), "Actions")
+            val taskAssumeRoleString = taskAssumeRoleDocument.inputStream.bufferedReader().use { it.readText() }
             val jupyterIamPolicy = awsCommunicator.createIamPolicy(correlationId, "$userName-jupyter-s3-document", jupyterBucketAccessRolePolicyString)
             val iamPolicy = awsCommunicator.createIamPolicy(correlationId, "$userName-task-role-document", taskRolePolicyString)
             val iamRole = awsCommunicator.createIamRole(correlationId, "$userName-iam-role", taskAssumeRoleString)

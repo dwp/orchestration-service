@@ -10,6 +10,7 @@ import org.springframework.core.io.Resource
 import org.springframework.stereotype.Component
 import uk.gov.dwp.dataworks.AwsIamPolicyJsonObject
 import uk.gov.dwp.dataworks.services.ConfigurationResolver
+import java.io.File
 import java.lang.reflect.Modifier
 
 @Component
@@ -21,15 +22,13 @@ class AwsParsing(){
     private lateinit var awsCommunicator: AwsCommunicator
 
     /**
-     * Helper method to initialise the lateinit vars [taskRolePolicyString] and [jupyterBucketAccessRolePolicyString] by
-     * converting the JSON to an instance of `JsonObject` data class and adding any requirements before serialising back to JSON
-     *
-     * @return [taskRolePolicyString] and [jupyterBucketAccessRolePolicyString] respectively.
+     * Helper method converts JSON IAM Policy to an instance of `AwsIamPolicyJsonObject` data class
+     * and inserts extra values before serialising back to JSON string.
      */
     fun parsePolicyDocument(resource: Resource, additionsForSid: Map<String, List<String>>, statementKeyToUpdate: String): String{
         val mapper = ObjectMapper()
                 .setPropertyNamingStrategy(AwsPropertyNamingStrategy())
-        val obj = mapper.readValue(resource.url, AwsIamPolicyJsonObject::class.java)
+        val obj = mapper.readValue(File(resource.uri), AwsIamPolicyJsonObject::class.java)
         val updatedStatements = obj.Statement.map { statement ->
             val additions = additionsForSid[statement.Sid] ?: return@map statement
             when(statementKeyToUpdate) {

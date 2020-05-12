@@ -66,7 +66,7 @@ class AuthenticationService {
     }
 
     /**
-     * Helper methods to extract the Cognito username and groups from a JWT Payload.
+     * Helper method to extract the Cognito username from a JWT Payload.
      */
     fun userNameFromJwt(jwt: DecodedJWT): String {
         val username = jwt.getClaim("cognito:username").asString()
@@ -75,6 +75,9 @@ class AuthenticationService {
         return username
     }
 
+    /**
+     * Helper method to extract groups from a JWT Payload.
+     */
     fun groupsFromJwt(jwt: DecodedJWT): List<String> {
         val groups = jwt.getClaim("cognito:groups").asList(String::class.java)
                 ?: throw IllegalArgumentException("No cognito groups found in JWT token")
@@ -93,6 +96,5 @@ class AuthenticationService {
 
         val keystoreData = httpCon.inputStream.bufferedReader().use(BufferedReader::readText)
         return Base64.getEncoder().encodeToString(keystoreData.toByteArray())
-
     }
 }
