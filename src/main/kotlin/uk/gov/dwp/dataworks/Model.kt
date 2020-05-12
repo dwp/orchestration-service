@@ -47,66 +47,14 @@ data class UserTask(val correlationId: String,
     }
 }
 
-@JsonDeserialize(builder = StatementObject.StatementObjectBuilder::class)
-data class StatementObject(var Sid: String, var Effect: String, var Action: List<String>, var Resource: List<String>) {
-    @JsonPOJOBuilder(buildMethodName = "StatementObjectBuilder", withPrefix = "set")
-    class StatementObjectBuilder {
-        private lateinit var Sid: String
-        private lateinit var Effect: String
-        private lateinit var Action: List<String>
-        private lateinit var Resource: List<String>
+data class StatementObject(
+        @JsonProperty("Sid") var Sid: String,
+        @JsonProperty("Effect") var Effect: String,
+        @JsonProperty("Action") var Action: List<String>,
+        @JsonProperty("Resource") var Resource: List<String>
+)
 
-        @JsonProperty("Sid")
-        fun setSid(Sid: String): StatementObjectBuilder {
-            this.Sid = Sid
-            return this
-        }
-
-        @JsonProperty("Effect")
-        fun setEffect(Effect: String): StatementObjectBuilder {
-            this.Effect = Effect
-            return this
-        }
-
-        @JsonProperty("Action")
-        fun setAction(Action: List<String>): StatementObjectBuilder {
-            this.Action = Action
-            return this
-        }
-
-        @JsonProperty("Resource")
-        fun setResource(Resource: List<String>): StatementObjectBuilder {
-            this.Resource = Resource
-            return this
-        }
-
-        fun StatementObjectBuilder(): StatementObject {
-            return StatementObject(Sid, Effect, Action, Resource)
-        }
-    }
-}
-
-@JsonDeserialize(builder = AwsIamPolicyJsonObject.JsonObjectBuilder::class)
-data class AwsIamPolicyJsonObject(var Version: String, var Statement: List<StatementObject>){
-    @JsonPOJOBuilder(buildMethodName = "JsonObjectBuilder", withPrefix = "set")
-    class JsonObjectBuilder{
-        private lateinit var Version: String
-        private lateinit var Statement: List<StatementObject>
-
-        @JsonProperty("Version")
-        fun setVersion(Version: String): JsonObjectBuilder {
-            this.Version = Version
-            return this
-        }
-
-        @JsonProperty("Statement")
-        fun setStatement( Statement: List<StatementObject>):  JsonObjectBuilder {
-            this.Statement = Statement
-            return this
-        }
-
-        fun JsonObjectBuilder(): AwsIamPolicyJsonObject {
-            return AwsIamPolicyJsonObject(Version, Statement)
-        }
-    }
-}
+data class AwsIamPolicyJsonObject(
+        @JsonProperty("Version") var Version: String,
+        @JsonProperty("Statement") var Statement: List<StatementObject>
+)
