@@ -26,20 +26,20 @@ class AwsParsing(){
      *
      * @return [taskRolePolicyString] and [jupyterBucketAccessRolePolicyString] respectively.
      */
-    fun parsePolicyDocument(resource: Resource, sidAndAdditions: Map<String, List<String>>, key: String): String{
+    fun parsePolicyDocument(resource: Resource, additionsForSid: Map<String, List<String>>, statementKeyToUpdate: String): String{
         val mapper = ObjectMapper()
                 .setPropertyNamingStrategy(AwsPropertyNamingStrategy())
         val obj = mapper.readValue(resource.url, AwsIamPolicyJsonObject::class.java)
-        obj.Statement.forEach {statement ->
-            sidAndAdditions.forEach {
-                if(it.key == statement.Sid) {
-                    if (key == "Resource") statement.Resource = statement.Resource.plus(it.value)
-                    else if (key == "Action") statement.Action = statement.Action.plus(it.value)
-                    else throw IllegalArgumentException("Key does not match expected values: \"Resource\" or \"Action\"")
-                }
+        val updatedStatements = obj.Statement.map { statement ->
+            val additions = additionsForSid[statement.Sid] ?: return@map statement
+            when(statementKeyToUpdate) {
+                "Resource" -> return@map statement.let { it.Resource = it.Resource.plus(additions); it }
+                "Action" -> return@map statement.let { it.Action = it.Action.plus(additions); it }
+                else -> throw IllegalArgumentException("statementKeyToUpdate does not match expected values: \"Resource\" or \"Action\"")
             }
         }
-        return mapper.writeValueAsString(obj)
+        val updatedObject = obj.let { it.Statement = updatedStatements; it }
+        return mapper.writeValueAsString(updatedObject)
     }
 
     /**

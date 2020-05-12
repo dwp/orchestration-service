@@ -74,7 +74,7 @@ class AwsParsingTest {
     fun `Wrong key attribute throws correct Exception`() {
         Assertions.assertThatCode { awsParsing.parsePolicyDocument(bucketAccessPolicyDocument, mapOf("jupyter-s3-list" to listOf("permissionOne", "permissionTwo")), "") }
                 .isInstanceOf(IllegalArgumentException::class.java)
-                .hasMessage("Key does not match expected values: \"Resource\" or \"Action\"")
+                .hasMessage("statementKeyToUpdate does not match expected values: \"Resource\" or \"Action\"")
     }
 
     @Test
