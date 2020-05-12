@@ -46,11 +46,10 @@ class AwsParsing(){
      * Helper method to parse user access details into ARN format - returns list of these and the JupyterBucket ARN
      */
     fun createArnStringsList(pathPrefix: List<String>, pathSuffix: String, jupyterBucketArn: String): List<String>{
-        var returnList = listOf(jupyterBucketArn)
-        pathPrefix.forEach{
-            returnList = returnList.plus("arn:aws:kms:${configurationResolver.awsRegion}:${awsCommunicator.getAccNumber()}:alias/${it}-${pathSuffix}")
+        var kmsArnListList = pathPrefix.map{
+            "arn:aws:kms:${configurationResolver.awsRegion}:${awsCommunicator.getAccNumber()}:alias/${it}-${pathSuffix}"
         }
-        return returnList
+        return kmsArnListList.plus(jupyterBucketArn)
     }
 }
 

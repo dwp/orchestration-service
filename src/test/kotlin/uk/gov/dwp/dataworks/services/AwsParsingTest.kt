@@ -92,8 +92,8 @@ class AwsParsingTest {
     @Test
     fun `List of arns is returned from setArn function with list passed in`() {
         val arnList = awsParsing.createArnStringsList(listOf("group1", "group2"), "test-suffix", "jupyter.arn")
-        assertThat(arnList[0]).isEqualTo("jupyter.arn")
-        assertThat(arnList[1]).isEqualTo("arn:aws:kms:${configurationResolver.awsRegion}:${awsCommunicator.getAccNumber()}:alias/group1-test-suffix")
-        assertThat(arnList[2]).isEqualTo("arn:aws:kms:${configurationResolver.awsRegion}:${awsCommunicator.getAccNumber()}:alias/group2-test-suffix")
+        assertThat(arnList[0]).isEqualTo("arn:aws:kms:${configurationResolver.awsRegion}:${awsCommunicator.getAccNumber()}:alias/group1-test-suffix")
+        assertThat(arnList[1]).isEqualTo("arn:aws:kms:${configurationResolver.awsRegion}:${awsCommunicator.getAccNumber()}:alias/group2-test-suffix")
+        assertThat(arnList[2]).isEqualTo("jupyter.arn")
     }
 }
