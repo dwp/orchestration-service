@@ -40,16 +40,6 @@ class AwsParsing(){
         val updatedObject = obj.let { it.Statement = updatedStatements; it }
         return mapper.writeValueAsString(updatedObject)
     }
-
-    /**
-     * Helper method to parse user access details into ARN format - returns list of these and the JupyterBucket ARN
-     */
-    fun createArnStringsList(pathPrefix: List<String>, pathSuffix: String, jupyterBucketArn: String): List<String>{
-        var kmsArnListList = pathPrefix.map{
-            "arn:aws:kms:${configurationResolver.awsRegion}:${awsCommunicator.getAccNumber()}:alias/${it}-${pathSuffix}"
-        }
-        return kmsArnListList.plus(jupyterBucketArn)
-    }
 }
 
 /**

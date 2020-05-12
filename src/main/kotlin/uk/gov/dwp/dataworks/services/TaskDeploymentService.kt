@@ -86,11 +86,7 @@ class TaskDeploymentService {
             awsCommunicator.createAlbRoutingRule(correlationId, userName, listener.listenerArn(), targetGroup.targetGroupArn())
 
             //IAM Permissions
-            val sharedFolder = awsParsing.createArnStringsList(cognitoGroups, "shared", "${configurationResolver.getStringConfig(ConfigKey.JUPYTER_S3_ARN)}/*")
-            val userFolder = awsParsing.createArnStringsList(listOf(userName), "home", configurationResolver.getStringConfig(ConfigKey.JUPYTER_S3_ARN))
-            val folderAccess = sharedFolder.plus(userFolder)
-            val mapForParsing = mapOf(Pair("jupyter-s3-access-document", folderAccess), Pair("jupyter-s3-list", listOf(configurationResolver.getStringConfig(ConfigKey.JUPYTER_S3_ARN))))
-            val jupyterBucketAccessRolePolicyString = awsParsing.parsePolicyDocument(jupyterBucketAccessDocument, mapForParsing, "Resources")
+            val jupyterBucketAccessRolePolicyString = awsParsing.parsePolicyDocument(jupyterBucketAccessDocument, parseMap(cognitoGroups, userName), "Resources")
             val taskRolePolicyString = awsParsing.parsePolicyDocument(taskRolePolicyDocument, mapOf("ecs-task-role-policy" to additionalPermissions), "Actions")
             val taskAssumeRoleString = taskAssumeRoleDocument.inputStream.bufferedReader().use { it.readText() }
             val jupyterIamPolicy = awsCommunicator.createIamPolicy(correlationId, "$userName-jupyter-s3-document", jupyterBucketAccessRolePolicyString)
@@ -186,5 +182,12 @@ class TaskDeploymentService {
 
     private fun pairsToKeyValuePairs(vararg pairs: Pair<String, String>): Collection<KeyValuePair> {
         return pairs.map { KeyValuePair.builder().name(it.first).value(it.second).build() }
+    }
+
+    private fun parseMap (cognitoGroups: List<String>, userName: String): Map<String, List<String>> {
+        val folderAccess = cognitoGroups
+                .map{"arn:aws:kms:${configurationResolver.awsRegion}:${awsCommunicator.getAccNumber()}:alias/${it}-shared"}
+                .plus(listOf("${configurationResolver.getStringConfig(ConfigKey.JUPYTER_S3_ARN)}/*", "arn:aws:kms:${configurationResolver.awsRegion}:${awsCommunicator.getAccNumber()}:alias/${userName}-home"))
+        return mapOf(Pair("jupyter-s3-access-document", folderAccess), Pair("jupyter-s3-list", listOf(configurationResolver.getStringConfig(ConfigKey.JUPYTER_S3_ARN))))
     }
 }
