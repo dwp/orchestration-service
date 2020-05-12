@@ -171,9 +171,11 @@ class TaskDeploymentService {
     }
 
     private fun parseMap (cognitoGroups: List<String>, userName: String): Map<String, List<String>> {
+        val accountNumber = configurationResolver.getStringConfig(ConfigKey.AWS_ACCOUNT_NUMBER)
+        val jupyterS3Arn = configurationResolver.getStringConfig(ConfigKey.JUPYTER_S3_ARN)
         val folderAccess = cognitoGroups
-                .map{"arn:aws:kms:${configurationResolver.awsRegion}:${awsCommunicator.getAccNumber()}:alias/${it}-shared"}
-                .plus(listOf("${configurationResolver.getStringConfig(ConfigKey.JUPYTER_S3_ARN)}/*", "arn:aws:kms:${configurationResolver.awsRegion}:${awsCommunicator.getAccNumber()}:alias/${userName}-home"))
-        return mapOf(Pair("jupyter-s3-access-document", folderAccess), Pair("jupyter-s3-list", listOf(configurationResolver.getStringConfig(ConfigKey.JUPYTER_S3_ARN))))
+                .map{"arn:aws:kms:${configurationResolver.awsRegion}:$accountNumber:alias/$it-shared"}
+                .plus(listOf("$jupyterS3Arn/*", "arn:aws:kms:${configurationResolver.awsRegion}:$accountNumber:alias/$userName-home"))
+        return mapOf(Pair("jupyter-s3-access-document", folderAccess), Pair("jupyter-s3-list", listOf(jupyterS3Arn)))
     }
 }

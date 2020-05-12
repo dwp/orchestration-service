@@ -528,8 +528,4 @@ class AwsCommunicator {
                 "correlation_id" to correlationId,
                 "user_name" to primaryKeyValue)
     }
-
-    fun getAccNumber(): String? {
-        return awsClients.stsClients.callerIdentity.account()
-    }
 }

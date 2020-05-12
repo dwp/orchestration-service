@@ -25,7 +25,6 @@ class AwsClients {
     lateinit var ecsClient: EcsClient
     lateinit var iamClient: IamClient
     lateinit var dynamoDbClient: DynamoDbClient
-    lateinit var stsClients: StsClient
 
     @PostConstruct
     fun initialiseClients() {
@@ -33,6 +32,5 @@ class AwsClients {
         ecsClient = EcsClient.builder().region(configurationResolver.awsRegion).build()
         iamClient = IamClient.builder().region(Region.AWS_GLOBAL).build()
         dynamoDbClient = DynamoDbClient.builder().region(configurationResolver.awsRegion).build()
-        stsClients = StsClient.builder().region(configurationResolver.awsRegion).build()
     }
 }

@@ -84,6 +84,10 @@ module "ecs-fargate-task-definition" {
       value = module.jupyter_s3_storage.jupyterhub_bucket.arn
     },
     {
+      name = "orchestrationService.aws_account_number"
+      value = local.account[local.environment]
+    },
+    {
       name  = "PROXY_HOST"
       value = data.terraform_remote_state.emr_cluster_broker_infra.outputs.vpc.internet_proxy_vpce.dns_name
     },
