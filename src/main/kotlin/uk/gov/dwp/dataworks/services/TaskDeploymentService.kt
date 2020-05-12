@@ -170,7 +170,7 @@ class TaskDeploymentService {
         return pairs.map { KeyValuePair.builder().name(it.first).value(it.second).build() }
     }
 
-    private fun parseMap (cognitoGroups: List<String>, userName: String): Map<String, List<String>> {
+    fun parseMap (cognitoGroups: List<String>, userName: String): Map<String, List<String>> {
         val accountNumber = configurationResolver.getStringConfig(ConfigKey.AWS_ACCOUNT_NUMBER)
         val jupyterS3Arn = configurationResolver.getStringConfig(ConfigKey.JUPYTER_S3_ARN)
         val folderAccess = cognitoGroups
