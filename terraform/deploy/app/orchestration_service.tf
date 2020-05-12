@@ -80,10 +80,6 @@ module "ecs-fargate-task-definition" {
       value = local.ecr_endpoint
     },
     {
-      name  = "orchestrationService.jupyterhub_bucket"
-      value = module.jupyter_s3_storage.jupyterhub_bucket.id
-    },
-    {
       name  = "orchestrationService.jupyterhub_bucket_arn"
       value = module.jupyter_s3_storage.jupyterhub_bucket.arn
     },
