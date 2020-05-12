@@ -50,8 +50,8 @@ data class UserTask(val correlationId: String,
 data class StatementObject(
         @JsonProperty("Sid") var Sid: String,
         @JsonProperty("Effect") var Effect: String,
-        @JsonProperty("Action") var Action: List<String>,
-        @JsonProperty("Resource") var Resource: List<String>
+        @JsonProperty("Action") var Action: MutableList<String>,
+        @JsonProperty("Resource") var Resource: MutableList<String>
 )
 
 data class AwsIamPolicyJsonObject(

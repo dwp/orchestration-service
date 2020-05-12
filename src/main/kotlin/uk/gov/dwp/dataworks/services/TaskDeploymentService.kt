@@ -1,10 +1,5 @@
 package uk.gov.dwp.dataworks.services
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.PropertyNamingStrategy
-import com.fasterxml.jackson.databind.cfg.MapperConfig
-import com.fasterxml.jackson.databind.introspect.AnnotatedField
-import com.fasterxml.jackson.databind.introspect.AnnotatedMethod
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -13,7 +8,6 @@ import org.springframework.stereotype.Service
 import software.amazon.awssdk.services.ecs.model.ContainerDefinition
 import software.amazon.awssdk.services.ecs.model.KeyValuePair
 import software.amazon.awssdk.services.ecs.model.LoadBalancer
-import uk.gov.dwp.dataworks.AwsIamPolicyJsonObject
 import software.amazon.awssdk.services.ecs.model.NetworkMode
 import software.amazon.awssdk.services.ecs.model.PortMapping
 import software.amazon.awssdk.services.elasticloadbalancingv2.model.TargetTypeEnum
@@ -21,7 +15,6 @@ import uk.gov.dwp.dataworks.UserTask
 import uk.gov.dwp.dataworks.aws.AwsCommunicator
 import uk.gov.dwp.dataworks.aws.AwsParsing
 import uk.gov.dwp.dataworks.logging.DataworksLogger
-import java.lang.reflect.Modifier
 import java.util.UUID
 
 @Service
