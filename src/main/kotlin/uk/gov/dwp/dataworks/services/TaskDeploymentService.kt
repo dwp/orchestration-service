@@ -29,18 +29,11 @@ class TaskDeploymentService {
     private lateinit var awsParsing: AwsParsing
     @Autowired
     private lateinit var configurationResolver: ConfigurationResolver
-
-    @Value("classpath:policyDocuments/jupyterBucketAccesssPolicy.json")
-    lateinit var jupyterBucketAccessDocument: Resource
-
     @Autowired
     private lateinit var authService: AuthenticationService
 
     @Value("classpath:policyDocuments/taskAssumeRolePolicy.json")
     lateinit var taskAssumeRoleDocument: Resource
-
-    @Value("classpath:policyDocuments/taskRolePolicy.json")
-    lateinit var taskRolePolicyDocument: Resource
 
     companion object {
         val logger: DataworksLogger = DataworksLogger(LoggerFactory.getLogger(TaskDeploymentService::class.java))
@@ -79,8 +72,8 @@ class TaskDeploymentService {
             awsCommunicator.createAlbRoutingRule(correlationId, userName, listener.listenerArn(), targetGroup.targetGroupArn())
 
             //IAM Permissions
-            val jupyterBucketAccessRolePolicyString = awsParsing.parsePolicyDocument(jupyterBucketAccessDocument, parseMap(cognitoGroups, userName), "Resources")
-            val taskRolePolicyString = awsParsing.parsePolicyDocument(taskRolePolicyDocument, mapOf("ecs-task-role-policy" to additionalPermissions), "Actions")
+            val jupyterBucketAccessRolePolicyString = awsParsing.parsePolicyDocument("policyDocuments/jupyterBucketAccesssPolicy.json", parseMap(cognitoGroups, userName), "Resources")
+            val taskRolePolicyString = awsParsing.parsePolicyDocument("policyDocuments/taskRolePolicy.json", mapOf("ecs-task-role-policy" to additionalPermissions), "Actions")
             val taskAssumeRoleString = taskAssumeRoleDocument.inputStream.bufferedReader().use { it.readText() }
             val jupyterIamPolicy = awsCommunicator.createIamPolicy(correlationId, "$userName-jupyter-s3-document", jupyterBucketAccessRolePolicyString)
             val iamPolicy = awsCommunicator.createIamPolicy(correlationId, "$userName-task-role-document", taskRolePolicyString)
