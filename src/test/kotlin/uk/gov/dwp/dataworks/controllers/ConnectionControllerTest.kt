@@ -46,7 +46,7 @@ class ConnectionControllerTest {
         System.setProperty(ConfigKey.ECS_CLUSTER_NAME.key, "test_ecs")
         System.setProperty(ConfigKey.USER_CONTAINER_URL.key, "test_url")
         System.setProperty(ConfigKey.DEBUG.key, "true")
-        val jwtObject = JWTObject(mock<DecodedJWT>(), "test_user")
+        val jwtObject = JWTObject(mock<DecodedJWT>(), "test_user", listOf("group1", "group2"))
         whenever(authService.validate(any())).thenReturn(jwtObject)
     }
 
@@ -120,22 +120,11 @@ class ConnectionControllerTest {
     }
 
     @Test
-    fun `400 with missing cognito groups from header deployusercontainers`() {
-        mvc.perform(post("/deployusercontainers")
+    fun `200 with missing cognito groups from header deployusercontainers`() {
+        mvc.perform(post("/debug/deploy")
                 .content("{}")
                 .header("Authorisation", "test_user")
                 .header("content-type", "application/json"))
-                .andExpect(status().isBadRequest)
-                .andExpect(status().reason("Missing request header 'cognito:groups' for method parameter of type List"))
-    }
-
-    @Test
-    fun `200 with empty string for cognito groups deployusercontainers`() {
-        mvc.perform(post("/deployusercontainers")
-                .header("Authorisation", "test_user")
-                .header("cognito:groups", "")
-                .header("content-type", "application/json")
-                .content("{\"emrClusterHostName\":\"\"}"))
                 .andExpect(status().isOk)
     }
 
