@@ -129,4 +129,14 @@ class ConnectionControllerTest {
                 .andExpect(status().reason("Missing request header 'cognito:groups' for method parameter of type List"))
     }
 
+    @Test
+    fun `200 with empty string for cognito groups deployusercontainers`() {
+        mvc.perform(post("/deployusercontainers")
+                .header("Authorisation", "test_user")
+                .header("cognito:groups", "")
+                .header("content-type", "application/json")
+                .content("{\"emrClusterHostName\":\"\"}"))
+                .andExpect(status().isOk)
+    }
+
 }

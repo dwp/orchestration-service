@@ -12,6 +12,7 @@ The service orchestrator for providing remote access into the analytical environ
  
  Header of request must contain the following:
   - `Authorisation`*
+  - `cognito:groups` - can be an empty string
      
   Optional inputs for body of request are:
   - `jupyterCpu`            - default : 512
