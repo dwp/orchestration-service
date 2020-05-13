@@ -59,7 +59,6 @@ import software.amazon.awssdk.services.iam.model.DetachRolePolicyRequest
 import software.amazon.awssdk.services.iam.model.NoSuchEntityException
 import software.amazon.awssdk.services.iam.model.Policy
 import software.amazon.awssdk.services.iam.model.Role
-import software.amazon.awssdk.services.sts.model.GetCallerIdentityRequest
 import uk.gov.dwp.dataworks.MultipleListenersMatchedException
 import uk.gov.dwp.dataworks.MultipleLoadBalancersMatchedException
 import uk.gov.dwp.dataworks.NetworkConfigurationMissingException

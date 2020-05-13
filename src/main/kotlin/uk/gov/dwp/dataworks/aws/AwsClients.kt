@@ -9,7 +9,6 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbClient
 import software.amazon.awssdk.services.ecs.EcsClient
 import software.amazon.awssdk.services.elasticloadbalancingv2.ElasticLoadBalancingV2Client
 import software.amazon.awssdk.services.iam.IamClient
-import software.amazon.awssdk.services.sts.StsClient
 import uk.gov.dwp.dataworks.services.ConfigurationResolver
 import javax.annotation.PostConstruct
 

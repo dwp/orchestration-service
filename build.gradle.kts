@@ -30,7 +30,6 @@ dependencies {
 	implementation("software.amazon.awssdk:elasticloadbalancingv2")
 	implementation("software.amazon.awssdk:iam")
 	implementation("software.amazon.awssdk:dynamodb")
-	implementation("software.amazon.awssdk:sts")
 
 	// Spring
 	implementation("org.springframework.boot:spring-boot-starter-web")
