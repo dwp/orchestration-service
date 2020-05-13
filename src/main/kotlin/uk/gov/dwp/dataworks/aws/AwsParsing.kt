@@ -29,13 +29,12 @@ class AwsParsing(){
         val resource = ClassPathResource(pathToResource)
         val mapper = ObjectMapper()
         val obj = mapper.readValue(resource.file, AwsIamPolicyJsonObject::class.java)
-        obj.Statement.forEach { statement ->
-            when(statementKeyToUpdate) {
-                "Resource" -> try{ sidAndAdditions[statement.Sid]?.let { statement.Resource.addAll(it) } }
-                            catch(e: Exception) { e.printStackTrace(); throw java.lang.IllegalArgumentException("${statement.Sid} not found in JSON template") }
-                "Action" -> try{ sidAndAdditions[statement.Sid]?.let { statement.Action.addAll(it) }}
-                            catch(e: Exception){ e.printStackTrace(); throw java.lang.IllegalArgumentException("${statement.Sid} not found in JSON template") }
-                else -> throw IllegalArgumentException("statementKeyToUpdate does not match expected values: \"Resource\" or \"Action\"")
+        obj.Statement.filter { sidAndAdditions.containsKey(it.Sid) }
+                .forEach{ statement ->
+                when(statementKeyToUpdate) {
+                    "Resource" -> sidAndAdditions[statement.Sid]?.let { statement.Resource.addAll(it) }
+                    "Action" -> sidAndAdditions[statement.Sid]?.let { statement.Action.addAll(it) }
+                    else -> throw IllegalArgumentException("statementKeyToUpdate does not match expected values: \"Resource\" or \"Action\"")
             }
         }
         return mapper.writeValueAsString(obj)
