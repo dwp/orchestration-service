@@ -10,6 +10,7 @@ import software.amazon.awssdk.services.ecs.model.KeyValuePair
 import software.amazon.awssdk.services.ecs.model.LoadBalancer
 import software.amazon.awssdk.services.ecs.model.NetworkMode
 import software.amazon.awssdk.services.ecs.model.PortMapping
+import software.amazon.awssdk.services.ecs.model.LogConfiguration
 import software.amazon.awssdk.services.elasticloadbalancingv2.model.TargetTypeEnum
 import software.amazon.awssdk.services.iam.model.Policy
 import uk.gov.dwp.dataworks.aws.AwsCommunicator
