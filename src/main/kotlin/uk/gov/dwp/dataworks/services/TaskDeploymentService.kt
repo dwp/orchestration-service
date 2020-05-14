@@ -94,10 +94,24 @@ class TaskDeploymentService {
         }
     }
 
+    private fun buildLogConfiguration(userName: String, containerName: String) {
+        var logConfig = LogConfiguration.builder()                
+            .logDriver("awslogs")
+            .options(mapOf(
+                "awslogs-group" to configurationResolver.getStringConfig(ConfigKey.CONTAINER_LOG_GROUP), 
+                "awslogs-region" to configurationResolver.getStringConfig(ConfigKey.AWS_REGION),
+                "awslogs-stream-prefix" to userName + "_" + containerName
+            ))
+            .build()
+        return logConfig
+    }
+
     private fun buildContainerDefinitions(userName: String, emrHostname: String, jupyterMemory: Int, jupyterCpu: Int, guacamolePort: Int): Collection<ContainerDefinition> {
         val ecrEndpoint = configurationResolver.getStringConfig(ConfigKey.ECR_ENDPOINT)
         val screenSize = 1920 to 1080
         
+        
+
         val jupyterHub = ContainerDefinition.builder()
                 .name("jupyterHub")
                 .image("$ecrEndpoint/aws-analytical-env/jupyterhub")
@@ -106,15 +120,7 @@ class TaskDeploymentService {
                 .essential(true)
                 .portMappings(PortMapping.builder().containerPort(8000).hostPort(8000).build())
                 .environment(pairsToKeyValuePairs("USER" to userName, "EMR_HOST_NAME" to emrHostname))
-                .logConfiguration(LogConfiguration.builder()                
-                    .logDriver("awslogs")
-                    .options(mapOf(
-                        "awslogs-group" to configurationResolver.getStringConfig(ConfigKey.CONTAINER_LOG_GROUP), 
-                        "awslogs-region" to configurationResolver.getStringConfig(ConfigKey.AWS_REGION),
-                        "awslogs-stream-prefix" to userName + "_jupyterhub"
-                    ))
-                    .build()
-                )
+                .logConfiguration(buildLogConfiguration(userName, "jupyterHub"))
                 .build()
 
         val headlessChrome = ContainerDefinition.builder()
@@ -144,15 +150,7 @@ class TaskDeploymentService {
                                 "--connectivity-check-url=https://localhost:8000",
                                 "--window-size=${screenSize.toList().joinToString(",")}").joinToString(" "),
                         "VNC_SCREEN_SIZE" to screenSize.toList().joinToString("x")))
-                .logConfiguration(LogConfiguration.builder()                
-                    .logDriver("awslogs")
-                    .options(mapOf(
-                        "awslogs-group" to configurationResolver.getStringConfig(ConfigKey.CONTAINER_LOG_GROUP), 
-                        "awslogs-region" to configurationResolver.getStringConfig(ConfigKey.AWS_REGION),
-                        "awslogs-stream-prefix" to userName + "_headlessChrome"
-                    ))
-                    .build()
-                )
+                .logConfiguration(buildLogConfiguration(userName, "headless_chrome"))
                 .build()
 
         val guacd = ContainerDefinition.builder()
@@ -162,15 +160,7 @@ class TaskDeploymentService {
                 .memory(128)
                 .essential(true)
                 .portMappings(PortMapping.builder().hostPort(4822).containerPort(4822).build())
-                .logConfiguration(LogConfiguration.builder()                
-                    .logDriver("awslogs")
-                    .options(mapOf(
-                        "awslogs-group" to configurationResolver.getStringConfig(ConfigKey.CONTAINER_LOG_GROUP), 
-                        "awslogs-region" to configurationResolver.getStringConfig(ConfigKey.AWS_REGION),
-                        "awslogs-stream-prefix" to userName + "_guacd"
-                    ))
-                    .build()
-                )
+                .logConfiguration(buildLogConfiguration(userName, "guacd"))
                 .build()
 
         val guacamole = ContainerDefinition.builder()
@@ -188,15 +178,7 @@ class TaskDeploymentService {
                         "CLIENT_PARAMS" to "hostname=localhost,port=5900,disable-copy=true",
                         "CLIENT_USERNAME" to userName))
                 .portMappings(PortMapping.builder().hostPort(guacamolePort).containerPort(guacamolePort).build())
-                .logConfiguration(LogConfiguration.builder()                
-                    .logDriver("awslogs")
-                    .options(mapOf(
-                        "awslogs-group" to configurationResolver.getStringConfig(ConfigKey.CONTAINER_LOG_GROUP), 
-                        "awslogs-region" to configurationResolver.getStringConfig(ConfigKey.AWS_REGION),
-                        "awslogs-stream-prefix" to userName + "_guacamole"
-                    ))
-                    .build()
-                )
+                .logConfiguration(buildLogConfiguration(userName, "guacamole"))
                 .build()
 
         return listOf(jupyterHub, headlessChrome, guacd, guacamole)
