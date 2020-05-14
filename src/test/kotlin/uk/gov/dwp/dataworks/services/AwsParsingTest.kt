@@ -40,14 +40,6 @@ class AwsParsingTest {
 
     private val decodedJWT = mock<DecodedJWT>()
 
-    @BeforeEach
-    fun setup() {
-        val jwtObject = JWTObject(decodedJWT, "test_user", listOf("testGroup"))
-        whenever(authService.validate(any())).thenReturn(jwtObject)
-        whenever(configurationResolver.awsRegion).thenReturn(Region.EU_WEST_2)
-        whenever(configurationResolver.getStringConfig(ConfigKey.AWS_ACCOUNT_NUMBER)).thenReturn("123456")
-    }
-
     @Test
     fun `Loads policy documents from classpath correctly`() {
         val taskRolePolicy = ClassPathResource("policyDocuments/jupyterBucketAccessPolicy.json")

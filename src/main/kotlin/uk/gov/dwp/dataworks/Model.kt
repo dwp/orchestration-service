@@ -49,14 +49,14 @@ data class UserTask(val correlationId: String,
 
 @JsonNaming(PropertyNamingStrategy.UpperCamelCaseStrategy::class)
 data class StatementObject(
-        @JsonProperty("Sid") var Sid: String,
-        @JsonProperty("Effect") var Effect: String,
-        @JsonProperty("Action") var Action: MutableList<String>,
-        @JsonProperty("Resource") var Resource: MutableList<String>
+        @JsonProperty("Sid") var sid: String,
+        @JsonProperty("Effect") var effect: String,
+        @JsonProperty("Action") var action: MutableList<String>,
+        @JsonProperty("Resource") var resource: MutableList<String>
 )
 
 @JsonNaming(PropertyNamingStrategy.UpperCamelCaseStrategy::class)
 data class AwsIamPolicyJsonObject(
-        @JsonProperty("Version") var Version: String,
-        @JsonProperty("Statement") var Statement: List<StatementObject>
+        @JsonProperty("Version") var version: String,
+        @JsonProperty("Statement") var statement: List<StatementObject>
 )

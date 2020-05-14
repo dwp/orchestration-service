@@ -11,7 +11,6 @@ import software.amazon.awssdk.services.ecs.model.LoadBalancer
 import software.amazon.awssdk.services.ecs.model.NetworkMode
 import software.amazon.awssdk.services.ecs.model.PortMapping
 import software.amazon.awssdk.services.elasticloadbalancingv2.model.TargetTypeEnum
-import uk.gov.dwp.dataworks.UserTask
 import uk.gov.dwp.dataworks.aws.AwsCommunicator
 import uk.gov.dwp.dataworks.aws.AwsParsing
 import uk.gov.dwp.dataworks.logging.DataworksLogger
@@ -170,6 +169,10 @@ class TaskDeploymentService {
         return pairs.map { KeyValuePair.builder().name(it.first).value(it.second).build() }
     }
 
+    /*
+    *   Helper method to parse environment variables into arn strings and return lists of the values paired
+    *   with the relevant SID of the IAM statement
+     */
     fun parseMap (cognitoGroups: List<String>, userName: String): Map<String, List<String>> {
         val accountNumber = configurationResolver.getStringConfig(ConfigKey.AWS_ACCOUNT_NUMBER)
         val jupyterS3Arn = configurationResolver.getStringConfig(ConfigKey.JUPYTER_S3_ARN)
