@@ -11,6 +11,7 @@ import software.amazon.awssdk.services.ecs.model.LoadBalancer
 import software.amazon.awssdk.services.ecs.model.NetworkMode
 import software.amazon.awssdk.services.ecs.model.PortMapping
 import software.amazon.awssdk.services.elasticloadbalancingv2.model.TargetTypeEnum
+import software.amazon.awssdk.services.iam.model.Policy
 import uk.gov.dwp.dataworks.aws.AwsCommunicator
 import uk.gov.dwp.dataworks.aws.AwsParsing
 import uk.gov.dwp.dataworks.logging.DataworksLogger
@@ -71,14 +72,12 @@ class TaskDeploymentService {
             awsCommunicator.createAlbRoutingRule(correlationId, userName, listener.listenerArn(), targetGroup.targetGroupArn())
 
             //IAM Permissions
-            val jupyterBucketAccessRolePolicyString = awsParsing.parsePolicyDocument("policyDocuments/jupyterBucketAccessPolicy.json", parseMap(cognitoGroups, userName), "Resources")
             val taskRolePolicyString = awsParsing.parsePolicyDocument("policyDocuments/taskRolePolicy.json", mapOf("ecs-task-role-policy" to additionalPermissions), "Actions")
             val taskAssumeRoleString = taskAssumeRoleDocument.inputStream.bufferedReader().use { it.readText() }
-            val jupyterIamPolicy = awsCommunicator.createIamPolicy(correlationId, "$userName-jupyter-s3-document", jupyterBucketAccessRolePolicyString)
             val iamPolicy = awsCommunicator.createIamPolicy(correlationId, "$userName-task-role-document", taskRolePolicyString)
             val iamRole = awsCommunicator.createIamRole(correlationId, "$userName-iam-role", taskAssumeRoleString)
             awsCommunicator.attachIamPolicyToRole(correlationId, iamPolicy, iamRole)
-            awsCommunicator.attachIamPolicyToRole(correlationId, jupyterIamPolicy, iamRole)
+            awsCommunicator.attachIamPolicyToRole(correlationId, setupJupyterIam(cognitoGroups, userName, correlationId), iamRole)
 
             val containerDefinitions = buildContainerDefinitions(userName, emrClusterHostname, jupyterMemory, jupyterCpu, containerPort)
             val taskDefinition = awsCommunicator.registerTaskDefinition(correlationId,"orchestration-service-user-$userName-td", taskExecutionRoleArn , taskRoleArn, NetworkMode.AWSVPC, containerDefinitions)
@@ -167,6 +166,11 @@ class TaskDeploymentService {
 
     private fun pairsToKeyValuePairs(vararg pairs: Pair<String, String>): Collection<KeyValuePair> {
         return pairs.map { KeyValuePair.builder().name(it.first).value(it.second).build() }
+    }
+
+    fun setupJupyterIam(cognitoGroups: List<String>, userName: String, correlationId: String): Policy {
+        val jupyterBucketAccessRolePolicyString = awsParsing.parsePolicyDocument("policyDocuments/jupyterBucketAccessPolicy.json", parseMap(cognitoGroups, userName), "Resources")
+        return awsCommunicator.createIamPolicy(correlationId, "$userName-jupyter-s3-document", jupyterBucketAccessRolePolicyString)
     }
 
     /*
