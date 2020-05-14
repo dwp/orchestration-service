@@ -18,7 +18,6 @@ import software.amazon.awssdk.services.dynamodb.model.ScalarAttributeType
 import software.amazon.awssdk.services.dynamodb.model.UpdateItemRequest
 import software.amazon.awssdk.services.ecs.model.AwsVpcConfiguration
 import software.amazon.awssdk.services.ecs.model.ContainerDefinition
-import software.amazon.awssdk.services.ecs.model.LogConfiguration
 import software.amazon.awssdk.services.ecs.model.CreateServiceRequest
 import software.amazon.awssdk.services.ecs.model.DeleteServiceRequest
 import software.amazon.awssdk.services.ecs.model.NetworkConfiguration
