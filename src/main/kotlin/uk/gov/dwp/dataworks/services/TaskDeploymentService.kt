@@ -111,8 +111,9 @@ class TaskDeploymentService {
                         "awslogs-group" to configurationResolver.getStringConfig(ConfigKey.CONTAINER_LOG_GROUP), 
                         "awslogs-region" to configurationResolver.getStringConfig(ConfigKey.AWS_REGION),
                         "awslogs-stream-prefix" to userName + "_jupyterhub"
-                    )
-                    .build())
+                    ))
+                    .build()
+                )
                 .build()
 
         val headlessChrome = ContainerDefinition.builder()
@@ -148,8 +149,9 @@ class TaskDeploymentService {
                         "awslogs-group" to configurationResolver.getStringConfig(ConfigKey.CONTAINER_LOG_GROUP), 
                         "awslogs-region" to configurationResolver.getStringConfig(ConfigKey.AWS_REGION),
                         "awslogs-stream-prefix" to userName + "_headlessChrome"
-                    )
-                    .build())
+                    ))
+                    .build()
+                )
                 .build()
 
         val guacd = ContainerDefinition.builder()
@@ -165,8 +167,9 @@ class TaskDeploymentService {
                         "awslogs-group" to configurationResolver.getStringConfig(ConfigKey.CONTAINER_LOG_GROUP), 
                         "awslogs-region" to configurationResolver.getStringConfig(ConfigKey.AWS_REGION),
                         "awslogs-stream-prefix" to userName + "_guacd"
-                    )
-                    .build())
+                    ))
+                    .build()
+                )
                 .build()
 
         val guacamole = ContainerDefinition.builder()
@@ -190,8 +193,9 @@ class TaskDeploymentService {
                         "awslogs-group" to configurationResolver.getStringConfig(ConfigKey.CONTAINER_LOG_GROUP), 
                         "awslogs-region" to configurationResolver.getStringConfig(ConfigKey.AWS_REGION),
                         "awslogs-stream-prefix" to userName + "_guacamole"
-                    )
-                    .build())
+                    ))
+                    .build()
+                )
                 .build()
 
         return listOf(jupyterHub, headlessChrome, guacd, guacamole)
