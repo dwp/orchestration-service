@@ -22,6 +22,7 @@ import uk.gov.dwp.dataworks.Application
 import uk.gov.dwp.dataworks.JWTObject
 import uk.gov.dwp.dataworks.aws.AwsCommunicator
 import uk.gov.dwp.dataworks.aws.AwsParsing
+import java.lang.module.ModuleDescriptor.read
 
 @RunWith(SpringRunner::class)
 @ContextConfiguration(classes = [Application::class])
@@ -40,20 +41,20 @@ class AwsParsingTest {
     @MockBean
     private lateinit var awsCommunicator: AwsCommunicator
 
-    private val decodedJWT = mock<DecodedJWT>()
-
     @Value("classpath:policyDocuments/taskRolePolicy.json")
     lateinit var taskRoleDocument: Resource
     @Value("classpath:policyDocuments/jupyterBucketAccessPolicy.json")
     lateinit var jupyterBucketAccessDocument: Resource
 
     @Test
-    fun `Loads policy documents from classpath correctly`() {
-        val taskRolePolicy = ClassPathResource("policyDocuments/jupyterBucketAccessPolicy.json")
-        assertThat(taskRolePolicy).isNotNull()
+    fun `Reads policy documents from correctly`() {
+        val taskRolePolicy = taskRoleDocument.inputStream.bufferedReader()
+        assertThat(taskRolePolicy).isNotNull
+        assertThat(taskRolePolicy.use { it.readText() }).contains(" \"Sid\": \"ecs-task-role-policy\",\n")
 
-        val taskAssumeRoleDocument = ClassPathResource("policyDocuments/taskRolePolicy.json")
-        assertThat(taskAssumeRoleDocument).isNotNull()
+        val jupyterBucketAccessPolicy = jupyterBucketAccessDocument.inputStream.bufferedReader()
+        assertThat(jupyterBucketAccessPolicy).isNotNull
+        assertThat(jupyterBucketAccessPolicy.use { it.readText() }).contains("\"Sid\": \"jupyter-s3-access-document\",\n")
     }
 
     @Test
