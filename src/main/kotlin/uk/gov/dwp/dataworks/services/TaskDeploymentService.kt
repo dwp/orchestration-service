@@ -94,13 +94,13 @@ class TaskDeploymentService {
         }
     }
 
-    private fun buildLogConfiguration(userName: String, containerName: String) {
-        var logConfig = LogConfiguration.builder()                
+    private fun buildLogConfiguration(userName: String, containerName: String): LogConfiguration {
+        val logConfig = LogConfiguration.builder()
             .logDriver("awslogs")
             .options(mapOf(
                 "awslogs-group" to configurationResolver.getStringConfig(ConfigKey.CONTAINER_LOG_GROUP), 
                 "awslogs-region" to configurationResolver.getStringConfig(ConfigKey.AWS_REGION),
-                "awslogs-stream-prefix" to userName + "_" + containerName
+                "awslogs-stream-prefix" to "${userName}_${containerName}"
             ))
             .build()
         return logConfig
@@ -110,8 +110,6 @@ class TaskDeploymentService {
         val ecrEndpoint = configurationResolver.getStringConfig(ConfigKey.ECR_ENDPOINT)
         val screenSize = 1920 to 1080
         
-        
-
         val jupyterHub = ContainerDefinition.builder()
                 .name("jupyterHub")
                 .image("$ecrEndpoint/aws-analytical-env/jupyterhub")
