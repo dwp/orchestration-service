@@ -40,8 +40,6 @@ class TaskDeploymentService {
     @Value("classpath:policyDocuments/jupyterBucketAccessPolicy.json")
     lateinit var jupyterBucketAccessDocument: Resource
 
-    val accountNumber = configurationResolver.getStringConfig(ConfigKey.AWS_ACCOUNT_NUMBER)
-
     companion object {
         val logger: DataworksLogger = DataworksLogger(LoggerFactory.getLogger(TaskDeploymentService::class.java))
     }
@@ -59,6 +57,7 @@ class TaskDeploymentService {
         val ecsClusterName = configurationResolver.getStringConfig(ConfigKey.ECS_CLUSTER_NAME)
         val emrClusterHostname = configurationResolver.getStringConfig(ConfigKey.EMR_CLUSTER_HOSTNAME)
         val jupyterS3Bucket = configurationResolver.getStringConfig(ConfigKey.JUPYTER_S3_ARN)
+        val accountNumber = configurationResolver.getStringConfig(ConfigKey.AWS_ACCOUNT_NUMBER)
 
         //Create an entry in DynamoDB for current deployment
         activeUserTasks.initialiseDeploymentEntry(correlationId, userName)
@@ -85,7 +84,7 @@ class TaskDeploymentService {
             val iamPolicy = awsCommunicator.createIamPolicy(correlationId, "$userName-task-role-document", taskRolePolicyString)
             val iamRole = awsCommunicator.createIamRole(correlationId, "$userName-iam-role", taskAssumeRoleString)
             awsCommunicator.attachIamPolicyToRole(correlationId, iamPolicy, iamRole)
-            awsCommunicator.attachIamPolicyToRole(correlationId, setupJupyterIam(cognitoGroups, userName, correlationId), iamRole)
+            awsCommunicator.attachIamPolicyToRole(correlationId, setupJupyterIam(cognitoGroups, userName, correlationId, accountNumber), iamRole)
 
             val containerDefinitions = buildContainerDefinitions(userName, emrClusterHostname, jupyterMemory, jupyterCpu, containerPort, jupyterS3Bucket, "arn:aws:kms:${configurationResolver.awsRegion}:$accountNumber:alias/$userName-home", "arn:aws:kms:${configurationResolver.awsRegion}:$accountNumber:alias/${cognitoGroups.first()}-shared")
             val taskDefinition = awsCommunicator.registerTaskDefinition(correlationId,"orchestration-service-user-$userName-td", taskExecutionRoleArn , iamRole.arn(), NetworkMode.AWSVPC, containerDefinitions)
@@ -193,8 +192,8 @@ class TaskDeploymentService {
         return pairs.map { KeyValuePair.builder().name(it.first).value(it.second).build() }
     }
 
-    fun setupJupyterIam(cognitoGroups: List<String>, userName: String, correlationId: String): Policy {
-        val jupyterBucketAccessRolePolicyString = awsParsing.parsePolicyDocument(jupyterBucketAccessDocument, parseMap(cognitoGroups, userName), "Resource")
+    fun setupJupyterIam(cognitoGroups: List<String>, userName: String, correlationId: String, accountId: String): Policy {
+        val jupyterBucketAccessRolePolicyString = awsParsing.parsePolicyDocument(jupyterBucketAccessDocument, parseMap(cognitoGroups, userName, accountId), "Resource")
         return awsCommunicator.createIamPolicy(correlationId, "$userName-jupyter-s3-document", jupyterBucketAccessRolePolicyString)
     }
 
@@ -202,11 +201,11 @@ class TaskDeploymentService {
     *   Helper method to parse environment variables into arn strings and return lists of the values paired
     *   with the relevant SID of the IAM statement
      */
-    fun parseMap (cognitoGroups: List<String>, userName: String): Map<String, List<String>> {
+    fun parseMap (cognitoGroups: List<String>, userName: String, accountId: String): Map<String, List<String>> {
         val jupyterS3Arn = configurationResolver.getStringConfig(ConfigKey.JUPYTER_S3_ARN)
         val folderAccess = cognitoGroups
-                .map{"arn:aws:kms:${configurationResolver.awsRegion}:$accountNumber:alias/$it-shared"}
-                .plus(listOf("$jupyterS3Arn/*", "arn:aws:kms:${configurationResolver.awsRegion}:$accountNumber:alias/$userName-home"))
+                .map{"arn:aws:kms:${configurationResolver.awsRegion}:$accountId:alias/$it-shared"}
+                .plus(listOf("$jupyterS3Arn/*", "arn:aws:kms:${configurationResolver.awsRegion}:$accountId:alias/$userName-home"))
         return mapOf(Pair("jupyters3accessdocument", folderAccess), Pair("jupyters3list", listOf(jupyterS3Arn)))
     }
 }
