@@ -40,6 +40,8 @@ class TaskDeploymentService {
     @Value("classpath:policyDocuments/jupyterBucketAccessPolicy.json")
     lateinit var jupyterBucketAccessDocument: Resource
 
+    val accountNumber = configurationResolver.getStringConfig(ConfigKey.AWS_ACCOUNT_NUMBER)
+
     companion object {
         val logger: DataworksLogger = DataworksLogger(LoggerFactory.getLogger(TaskDeploymentService::class.java))
     }
@@ -56,6 +58,7 @@ class TaskDeploymentService {
         val albName = configurationResolver.getStringConfig(ConfigKey.LOAD_BALANCER_NAME)
         val ecsClusterName = configurationResolver.getStringConfig(ConfigKey.ECS_CLUSTER_NAME)
         val emrClusterHostname = configurationResolver.getStringConfig(ConfigKey.EMR_CLUSTER_HOSTNAME)
+        val jupyterS3Bucket = configurationResolver.getStringConfig(ConfigKey.JUPYTER_S3_ARN)
 
         //Create an entry in DynamoDB for current deployment
         activeUserTasks.initialiseDeploymentEntry(correlationId, userName)
@@ -84,7 +87,7 @@ class TaskDeploymentService {
             awsCommunicator.attachIamPolicyToRole(correlationId, iamPolicy, iamRole)
             awsCommunicator.attachIamPolicyToRole(correlationId, setupJupyterIam(cognitoGroups, userName, correlationId), iamRole)
 
-            val containerDefinitions = buildContainerDefinitions(userName, emrClusterHostname, jupyterMemory, jupyterCpu, containerPort)
+            val containerDefinitions = buildContainerDefinitions(userName, emrClusterHostname, jupyterMemory, jupyterCpu, containerPort, jupyterS3Bucket, "arn:aws:kms:${configurationResolver.awsRegion}:$accountNumber:alias/$userName-home", "arn:aws:kms:${configurationResolver.awsRegion}:$accountNumber:alias/${cognitoGroups.first()}-shared")
             val taskDefinition = awsCommunicator.registerTaskDefinition(correlationId,"orchestration-service-user-$userName-td", taskExecutionRoleArn , iamRole.arn(), NetworkMode.AWSVPC, containerDefinitions)
 
             // ECS
@@ -110,7 +113,7 @@ class TaskDeploymentService {
         return logConfig
     }
 
-    private fun buildContainerDefinitions(userName: String, emrHostname: String, jupyterMemory: Int, jupyterCpu: Int, guacamolePort: Int): Collection<ContainerDefinition> {
+    private fun buildContainerDefinitions(userName: String, emrHostname: String, jupyterMemory: Int, jupyterCpu: Int, guacamolePort: Int, jupyterS3Bucket: String, KMS_HOME: String, KMS_SHARED: String): Collection<ContainerDefinition> {
         val ecrEndpoint = configurationResolver.getStringConfig(ConfigKey.ECR_ENDPOINT)
         val screenSize = 1920 to 1080
         
@@ -121,7 +124,7 @@ class TaskDeploymentService {
                 .memory(jupyterMemory)
                 .essential(true)
                 .portMappings(PortMapping.builder().containerPort(8000).hostPort(8000).build())
-                .environment(pairsToKeyValuePairs("USER" to userName, "EMR_HOST_NAME" to emrHostname))
+                .environment(pairsToKeyValuePairs("USER" to userName, "EMR_HOST_NAME" to emrHostname, "S3_BUCKET" to jupyterS3Bucket.substringAfterLast(":"), "KMS_HOME" to KMS_HOME, "KMS_SHARED" to KMS_SHARED))
                 .logConfiguration(buildLogConfiguration(userName, "jupyterHub"))
                 .build()
 
@@ -200,7 +203,6 @@ class TaskDeploymentService {
     *   with the relevant SID of the IAM statement
      */
     fun parseMap (cognitoGroups: List<String>, userName: String): Map<String, List<String>> {
-        val accountNumber = configurationResolver.getStringConfig(ConfigKey.AWS_ACCOUNT_NUMBER)
         val jupyterS3Arn = configurationResolver.getStringConfig(ConfigKey.JUPYTER_S3_ARN)
         val folderAccess = cognitoGroups
                 .map{"arn:aws:kms:${configurationResolver.awsRegion}:$accountNumber:alias/$it-shared"}
