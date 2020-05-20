@@ -173,7 +173,7 @@ module "ecs-user-host" {
   common_tags        = merge(local.common_tags, { Name = "${var.name_prefix}-user-host" })
   instance_type      = "t3.2xlarge"
   name_prefix        = "${var.name_prefix}-user-host"
-  frontend_alb_sg_id = data.terraform_remote_state.aws_analytical_env_infra.outputs.vpc.aws_vpc.lb_sg.id //todo
+  frontend_alb_sg_id = data.terraform_remote_state.aws_analytical_env_infra.outputs.alb_sg.id
 
   guacamole_port     = local.guacamole_port
   vpc = {
