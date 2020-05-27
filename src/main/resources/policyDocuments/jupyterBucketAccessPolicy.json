@@ -22,7 +22,7 @@
         "kms:ReEncrypt*",
         "kms:GenerateDataKey*"
       ],
-      "Resource": ["*"]
+      "Resource": []
     },
     {
       "Sid": "jupyters3list",
