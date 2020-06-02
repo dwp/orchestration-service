@@ -230,11 +230,11 @@ module "cleanup_lambda" {
 module "orchestration_service_failed_to_destroy_alarm" {
   source = "dwp/metric-filter-alarm/aws"
 
-  log_group_name    = module.ecs-fargate-task-definition.log_group
-  metric_namespace  = "/app/${var.name_prefix}"
-  pattern           = "{ $.message = \"Failed to destroy*\"}"
-  alarm_name        = "FailedToDestroy"
-  alarm_action_arns = [data.terraform_remote_state.security-tools.outputs.sns_topic_london_monitoring.arn]
+  log_group_name      = module.ecs-fargate-task-definition.log_group
+  metric_namespace    = "/app/${var.name_prefix}"
+  pattern             = "{ $.message = \"Failed to destroy*\"}"
+  alarm_name          = "FailedToDestroy"
+  alarm_action_arns   = [data.terraform_remote_state.security-tools.outputs.sns_topic_london_monitoring.arn]
   evaluation_periods  = "1"
   period              = 60
   threshold           = 0
