@@ -231,7 +231,7 @@ module "orchestration_service_failed_to_destroy_alarm" {
   source  = "dwp/metric-filter-alarm/aws"
   version = "1.1.5"
 
-  log_group_name      = module.ecs-fargate-task-definition.log_group
+  log_group_name      = module.ecs-fargate-task-definition.log_group.name
   metric_namespace    = "/app/${var.name_prefix}"
   pattern             = "{ $.message = \"Failed to destroy*\"}"
   alarm_name          = "Orchestration Service Failed To Destroy Resources"
