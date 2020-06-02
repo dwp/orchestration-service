@@ -1,6 +1,6 @@
 resource "aws_iam_role" "cleanup_lambda_role" {
   name               = "${var.name_prefix}-role"
-  assume_role_policy = data.aws_iam_policy_document.assume_role_cleanup_lambda
+  assume_role_policy = data.aws_iam_policy_document.assume_role_cleanup_lambda.json
   tags               = var.common_tags
 }
 
@@ -27,6 +27,7 @@ resource "aws_iam_role_policy" "cleanup_lambda_dynamo_policy" {
 
 data aws_iam_policy_document cleanup_lambda_dynamo_policy_document {
   statement {
+    sid = "cleanupLambdaDynamo"
     actions = [
       "dynamodb:Scan"
     ]
@@ -41,16 +42,31 @@ resource "aws_iam_role_policy" "cleanup_lambda_logging_policy" {
 
 data aws_iam_policy_document cleanup_lambda_logging_policy_document {
   statement {
-    actions = [
-      "logs:CreateLogGroup"
-    ]
-    resources = ["arn:aws:logs:${var.region}:${var.account}:*"]
-  }
-  statement {
+    sid = "cleanupLambdaLogging"
     actions = [
       "logs:PutLogEvents",
       "logs:CreateLogStream"
     ]
-    resources = ["arn:aws:dynamodb:${var.region}:${var.account}:log-group:${var.name_prefix}-cleanup-lambda:*"]
+    resources = [aws_cloudwatch_log_group.cleanup_lambda_logs.arn]
+  }
+}
+
+resource "aws_iam_role_policy" "cleanup_lambda_ec2_policy_policy" {
+  role   = aws_iam_role.cleanup_lambda_role.id
+  policy = data.aws_iam_policy_document.cleanup_lambda_ec2_policy_document.json
+}
+
+data aws_iam_policy_document cleanup_lambda_ec2_policy_document {
+  statement {
+    sid = "cleanupLambdaEc2"
+    actions = [
+      "ec2:CreateNetworkInterface",
+      "ec2:DescribeNetworkInterfaces",
+      "ec2:DeleteNetworkInterface",
+      "ec2:DescribeSecurityGroups",
+      "ec2:DescribeSubnets",
+      "ec2:DescribeVpcs"
+    ]
+    resources = ["*"]
   }
 }

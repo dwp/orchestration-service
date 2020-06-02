@@ -4,9 +4,11 @@ import json
 import os
 
 table_name = os.environ.get("TABLE_NAME")
+region = os.environ.get("REGION")
+endpoint = os.environ.get("ENDPOINT")
 http = urllib3.PoolManager()
-dynamodb = boto3.resource("dynamodb", region_name="")  # TODO: add region as env.var. to be passed in
-table = dynamodb.Table("tableName")  # TODO: add table_name as env.var. to be passed in
+dynamodb = boto3.resource("dynamodb", region_name=region)
+table = dynamodb.Table(table_name)
 
 def query_active_users():
     userObjects = table.scan(ProjectionExpression = "username")["Items"]
@@ -18,7 +20,6 @@ def query_active_users():
 def lambda_handler(event, context):
     userList = query_active_users()
     data = {'usernames': userList}
-    endpoint = ""  # TODO: add env. var. for URL for OS and add "/cleanup"
     encoded_data = json.dumps(data).encode('utf-8')
 
     resp = http.request(

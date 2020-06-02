@@ -206,14 +206,18 @@ module "jupyter_s3_storage" {
 
 #
 ## ---------------------------------------------------------------------------------------------------------------------
-## JupyterHub S3 Storage
+## Cleanup Lambda
 ## ---------------------------------------------------------------------------------------------------------------------
 module "cleanup_lambda" {
   source      = "../../modules/cleanup-lambda"
   name_prefix = "${var.name_prefix}-cleanup-lambda"
 
-  common_tags = local.common_tags
-  account     = local.account[local.environment]
-  region      = var.region
-  table_name  = "orchestration_service_user_tasks"
+  common_tags         = local.common_tags
+  account             = local.account[local.environment]
+  region              = var.region
+  table_name          = "orchestration_service_user_tasks"
+  fqdn                = module.ecs-fargate-service.fqdn
+  aws_subnets_private = data.terraform_remote_state.aws_analytical_env_infra.outputs.vpc.aws_subnets_private.*.id
+  alb_sg              = module.ecs-fargate-service.lb_sg.id
+  vpc_id              = data.terraform_remote_state.aws_analytical_env_infra.outputs.vpc.aws_vpc
 }
