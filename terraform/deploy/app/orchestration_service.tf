@@ -227,7 +227,7 @@ module "cleanup_lambda" {
 ## Cloudwatch Log Metrics/Alarms
 ## ---------------------------------------------------------------------------------------------------------------------
 
-module "failed_to_destroy_alarm" {
+module "orchestration_service_failed_to_destroy_alarm" {
   source = "dwp/metric-filter-alarm/aws"
 
   log_group_name    = module.ecs-fargate-task-definition.log_group
@@ -235,22 +235,26 @@ module "failed_to_destroy_alarm" {
   pattern           = "{ $.message = \"Failed to destroy*\"}"
   alarm_name        = "FailedToDestroy"
   alarm_action_arns = [data.terraform_remote_state.security-tools.outputs.sns_topic_london_monitoring.arn]
-  period            = "60"
-  threshold         = "0"
-  statistic         = "Sum"
+  evaluation_periods  = "1"
+  period              = 60
+  threshold           = 0
+  statistic           = "Sum"
+  comparison_operator = "GreaterThanThreshold"
 }
 
-module "invalid_user_desktop_alarm" {
+module "guacamole_invalid_user_desktop_alarm" {
   source = "dwp/metric-filter-alarm/aws"
 
   log_group_name   = module.ecs-user-host.outputs.user_container_log_group
-  metric_namespace = "/app/guacamole"
+  metric_namespace = "/app/${var.name_prefix}-user-host-guacamole"
   pattern          = "Cognito user tried to access desktop for"
   # No consistent JSON logging for these container_logs, so pattern is plaintext search
   alarm_name = "InvalidUserDesktopAccess"
   alarm_action_arns = [
   data.terraform_remote_state.security-tools.outputs.sns_topic_london_monitoring.arn]
-  period    = "60"
-  threshold = "0"
-  statistic = "Sum"
+  evaluation_periods  = "1"
+  period              = 60
+  threshold           = 0
+  statistic           = "Sum"
+  comparison_operator = "GreaterThanThreshold"
 }
