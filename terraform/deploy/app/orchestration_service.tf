@@ -203,3 +203,17 @@ module "jupyter_s3_storage" {
   logging_bucket = data.terraform_remote_state.security-tools.outputs.logstore_bucket.id
   vpc_id         = data.terraform_remote_state.aws_analytical_env_infra.outputs.vpc.aws_vpc
 }
+
+#
+## ---------------------------------------------------------------------------------------------------------------------
+## JupyterHub S3 Storage
+## ---------------------------------------------------------------------------------------------------------------------
+module "cleanup_lambda" {
+  source      = "../../modules/cleanup-lambda"
+  name_prefix = "${var.name_prefix}-cleanup-lambda"
+
+  common_tags    = local.common_tags
+  account        = local.account[local.environment]
+  region         = var.region
+  table_name     = "orchestration_service_user_tasks"
+}
