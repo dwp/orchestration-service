@@ -228,12 +228,13 @@ module "cleanup_lambda" {
 ## ---------------------------------------------------------------------------------------------------------------------
 
 module "orchestration_service_failed_to_destroy_alarm" {
-  source = "dwp/metric-filter-alarm/aws"
+  source  = "dwp/metric-filter-alarm/aws"
+  version = "1.1.5"
 
   log_group_name      = module.ecs-fargate-task-definition.log_group
   metric_namespace    = "/app/${var.name_prefix}"
   pattern             = "{ $.message = \"Failed to destroy*\"}"
-  alarm_name          = "FailedToDestroy"
+  alarm_name          = "Orchestration Service Failed To Destroy Resources"
   alarm_action_arns   = [data.terraform_remote_state.security-tools.outputs.sns_topic_london_monitoring.arn]
   evaluation_periods  = "1"
   period              = 60
@@ -243,15 +244,15 @@ module "orchestration_service_failed_to_destroy_alarm" {
 }
 
 module "guacamole_invalid_user_desktop_alarm" {
-  source = "dwp/metric-filter-alarm/aws"
+  source  = "dwp/metric-filter-alarm/aws"
+  version = "1.1.5"
 
   log_group_name   = module.ecs-user-host.outputs.user_container_log_group
   metric_namespace = "/app/${var.name_prefix}-user-host-guacamole"
-  pattern          = "Cognito user tried to access desktop for"
   # No consistent JSON logging for these container_logs, so pattern is plaintext search
-  alarm_name = "InvalidUserDesktopAccess"
-  alarm_action_arns = [
-  data.terraform_remote_state.security-tools.outputs.sns_topic_london_monitoring.arn]
+  pattern             = "Cognito user tried to access desktop for"
+  alarm_name          = "Cognito user tried to access another desktop"
+  alarm_action_arns   = [data.terraform_remote_state.security-tools.outputs.sns_topic_london_monitoring.arn]
   evaluation_periods  = "1"
   period              = 60
   threshold           = 0
