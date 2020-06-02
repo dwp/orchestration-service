@@ -24,5 +24,8 @@ output "container_name" {
 
 output "log_group" {
   description = "Name of the log group for OS"
-  value       = aws_cloudwatch_log_group.lamda_logs.name
+  value = {
+    name = aws_cloudwatch_log_group.lamda_logs.name
+    arn  = aws_cloudwatch_log_group.lamda_logs.arn
+  }
 }
