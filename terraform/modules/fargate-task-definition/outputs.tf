@@ -21,3 +21,8 @@ output "container_name" {
   description = "Name of the container"
   value       = var.container_name
 }
+
+output "log_group" {
+  description = "Name of the log group for OS"
+  value       = aws_cloudwatch_log_group.lamda_logs.name
+}
