@@ -1,7 +1,9 @@
 import boto3
 import urllib3
 import json
+import os
 
+table_name = os.environ.get("TABLE_NAME")
 http = urllib3.PoolManager()
 dynamodb = boto3.resource("dynamodb", region_name="")  # TODO: add region as env.var. to be passed in
 table = dynamodb.Table("tableName")  # TODO: add table_name as env.var. to be passed in

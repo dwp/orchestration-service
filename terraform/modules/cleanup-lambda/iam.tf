@@ -16,12 +16,12 @@ data "aws_iam_policy_document" "assume_role_cleanup_lambda" {
 }
 
 resource "aws_iam_role_policy_attachment" "cleanup_lambda_basic_policy_attach" {
-  role = aws_iam_role.cleanup_lambda_role.name
+  role       = aws_iam_role.cleanup_lambda_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
 resource "aws_iam_role_policy" "cleanup_lambda_dynamo_policy" {
-  role = aws_iam_role.cleanup_lambda_role.id
+  role   = aws_iam_role.cleanup_lambda_role.id
   policy = data.aws_iam_policy_document.cleanup_lambda_dynamo_policy_document.json
 }
 
@@ -35,7 +35,7 @@ data aws_iam_policy_document cleanup_lambda_dynamo_policy_document {
 }
 
 resource "aws_iam_role_policy" "cleanup_lambda_logging_policy" {
-  role = aws_iam_role.cleanup_lambda_role.id
+  role   = aws_iam_role.cleanup_lambda_role.id
   policy = data.aws_iam_policy_document.cleanup_lambda_logging_policy_document.json
 }
 

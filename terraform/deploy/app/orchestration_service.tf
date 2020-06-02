@@ -212,8 +212,8 @@ module "cleanup_lambda" {
   source      = "../../modules/cleanup-lambda"
   name_prefix = "${var.name_prefix}-cleanup-lambda"
 
-  common_tags    = local.common_tags
-  account        = local.account[local.environment]
-  region         = var.region
-  table_name     = "orchestration_service_user_tasks"
+  common_tags = local.common_tags
+  account     = local.account[local.environment]
+  region      = var.region
+  table_name  = "orchestration_service_user_tasks"
 }
