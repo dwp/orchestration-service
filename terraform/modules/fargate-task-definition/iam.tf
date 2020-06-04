@@ -1,5 +1,6 @@
 data "aws_iam_policy_document" "ecs-tasks" {
   statement {
+    sid = "AllowAssumeRole"
     actions = [
       "sts:AssumeRole"
     ]
@@ -13,6 +14,8 @@ data "aws_iam_policy_document" "ecs-tasks" {
 
 data "aws_iam_policy_document" "task_role" {
   statement {
+    # TODO - Restrict/Amend permissions
+    sid = "AllowABunchOfStuff"
     actions = [
       "dynamodb:CreateTable",
       "dynamodb:DeleteItem",
