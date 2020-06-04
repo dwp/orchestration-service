@@ -6,7 +6,7 @@ resource "aws_iam_role" "cleanup_lambda_role" {
 
 data "aws_iam_policy_document" "assume_role_cleanup_lambda" {
   statement {
-    sid = "AllowAssumeRole"
+    sid     = "AllowAssumeRole"
     actions = ["sts:AssumeRole"]
 
     principals {
