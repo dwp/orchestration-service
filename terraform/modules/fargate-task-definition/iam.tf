@@ -1,6 +1,6 @@
 data "aws_iam_policy_document" "ecs-tasks" {
   statement {
-    sid = "AllowAssumeRole"
+    sid = "AllowECSTasksAssumeRole"
     actions = [
       "sts:AssumeRole"
     ]
@@ -14,8 +14,7 @@ data "aws_iam_policy_document" "ecs-tasks" {
 
 data "aws_iam_policy_document" "task_role" {
   statement {
-    # TODO - Restrict/Amend permissions
-    sid = "AllowABunchOfStuff"
+    sid = "AllowDynamoDBActionsOnUserTable"
     actions = [
       "dynamodb:CreateTable",
       "dynamodb:DeleteItem",
@@ -23,7 +22,20 @@ data "aws_iam_policy_document" "task_role" {
       "dynamodb:ListTables",
       "dynamodb:PutItem",
       "dynamodb:UpdateItem",
+    ]
+    resources = ["*"]
+  }
+  statement {
+    sid = "AllowEC2DescribeImage"
+    actions = [
       "ec2:DescribeImages",
+    ]
+
+    resources = ["*"]
+  }
+  statement {
+    sid = "AllowECSActionsToCreateUserContainers"
+    actions = [
       "ecs:CreateService",
       "ecs:DeleteService",
       "ecs:DescribeServices",
@@ -31,6 +43,12 @@ data "aws_iam_policy_document" "task_role" {
       "ecs:RegisterTaskDefinition",
       "ecs:RunTask",
       "ecs:UpdateService",
+    ]
+    resources = ["*"]
+  }
+  statement {
+    sid = "AllowELBActionsToAttachUserContainers"
+    actions = [
       "elasticloadbalancing:CreateRule",
       "elasticloadbalancing:CreateTargetGroup",
       "elasticloadbalancing:DeleteTargetGroup",
@@ -39,6 +57,12 @@ data "aws_iam_policy_document" "task_role" {
       "elasticloadbalancing:DescribeLoadBalancers",
       "elasticloadbalancing:DescribeRules",
       "elasticloadbalancing:DescribeTargetGroupAttributes",
+    ]
+    resources = ["*"]
+  }
+  statement {
+    sid = "AllowIAMActionsForUserContainerRoles"
+    actions = [
       "iam:AttachRolePolicy",
       "iam:CreatePolicy",
       "iam:CreateRole",
@@ -48,10 +72,7 @@ data "aws_iam_policy_document" "task_role" {
       "iam:PassRole",
       "kms:DescribeKey",
     ]
-
-    resources = [
-      "*",
-    ]
+    resources = ["*"]
   }
 }
 
