@@ -155,3 +155,25 @@ meta:
               signature_version = s3v4
               addressing_style = virtual
             EOF
+    set-ecs-account-settigns:
+      task: set-ecs-account-settigns
+      config:
+        platform: linux
+        image_resource:
+          type: docker-image
+          source:
+            repository: ((docker-awscli.repository))
+            version: ((docker-awscli.version))
+            tag: ((docker-awscli.version))
+        inputs:
+          - name: .aws
+        params:
+          AWS_DEFAULT_PROFILE: ci
+          AWS_SHARED_CREDENTIALS_FILE: .aws/credentials
+          AWS_CONFIG_FILE: .aws/config
+        run:
+          path: sh
+          args:
+          - -exc
+          - |
+            aws ecs put-account-setting-default --name awsvpcTrunking --value enabled

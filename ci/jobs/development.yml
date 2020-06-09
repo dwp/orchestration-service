@@ -14,3 +14,8 @@ jobs:
     config:
       run:
         dir: 'orchestration-service/terraform/deploy/app'
+  - .: (( inject meta.plan.create-aws-profiles ))
+    config:
+      params:
+        AWS_ACC: ((aws_account.development))
+  - .: (( inject meta.plan.set-ecs-account-settigns ))

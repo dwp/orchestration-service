@@ -20,4 +20,9 @@ jobs:
         dir: 'orchestration-service/terraform/deploy/app'
     params:
       TF_WORKSPACE: integration
+  - .: (( inject meta.plan.create-aws-profiles ))
+    config:
+      params:
+        AWS_ACC: ((aws_account.integration))
+  - .: (( inject meta.plan.set-ecs-account-settigns ))
 
