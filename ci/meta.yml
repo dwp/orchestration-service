@@ -32,7 +32,7 @@ meta:
         image_resource:
           type: docker-image
           source:
-            repository: hashicorp/terraform
+            repository: ((terraform12.repository))
             tag: ((dataworks.terraform_version))
         params:
           TF_INPUT: false
