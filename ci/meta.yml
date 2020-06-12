@@ -8,7 +8,6 @@ meta:
           type: docker-image
           source:
             repository: dwpdigital/jinja-yaml-aws
-            version: 0.0.19
             tag: 0.0.19
         run:
           path: sh
@@ -34,7 +33,6 @@ meta:
           type: docker-image
           source:
             repository: hashicorp/terraform
-            version: ((dataworks.terraform_version))
             tag: ((dataworks.terraform_version))
         params:
           TF_INPUT: false
