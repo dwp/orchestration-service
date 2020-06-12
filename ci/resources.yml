@@ -2,9 +2,8 @@ resources:
 - name: orchestration-service-pr
   type: pull-request
   source:
-    access_token: ((dataworks-secrets.enterprise_github_pat))
-    repo: dwp/orchestration-service
-    uri: https://github.com/dwp/orchestration-service.git
+    access_token: ((dataworks-secrets.concourse_github_pat))
+    repository: dwp/orchestration-service
   check_every: 720h
   webhook_token: ((dataworks.concourse_github_webhook_token))
 
@@ -12,7 +11,7 @@ resources:
   type: git
   source:
     branch: master
-    access_token: ((dataworks-secrets.enterprise_github_pat))
+    access_token: ((dataworks-secrets.concourse_github_pat))
     uri: https://github.com/dwp/orchestration-service.git
   check_every: 720h
   webhook_token: ((dataworks.concourse_github_webhook_token))
