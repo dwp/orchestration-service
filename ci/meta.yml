@@ -16,6 +16,7 @@ meta:
             - -exc
             - |
               python bootstrap_terraform.py
+              sed -i '/^assume_role/ d' terraform/deploy/$DEPLOY_PATH/terraform.tfvars
               cp terraform/deploy/$DEPLOY_PATH/terraform.tf ../terraform-config
               cp terraform/deploy/$DEPLOY_PATH/terraform.tfvars ../terraform-config
           dir: orchestration-service
@@ -54,7 +55,7 @@ meta:
             cp ../../../../terraform-config/terraform.tfvars .
             terraform init
             terraform workspace show
-            terraform plan -var assume_role=ci -out terraform.plan
+            terraform plan -out terraform.plan
             terraform apply -auto-approve terraform.plan
         inputs:
         - name: orchestration-service
@@ -73,7 +74,7 @@ meta:
             cp ../../../../terraform-config/terraform.tfvars .
             terraform init
             terraform workspace show
-            terraform plan -var assume_role=ci -detailed-exitcode
+            terraform plan -detailed-exitcode
         inputs:
         - name: orchestration-service
         - name: terraform-config
