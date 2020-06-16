@@ -32,7 +32,6 @@ data "aws_iam_policy_document" "task_role" {
     actions = [
       "dynamodb:DeleteItem",
       "dynamodb:GetItem",
-      "dynamodb:ListTables",
       "dynamodb:PutItem",
       "dynamodb:UpdateItem",
     ]
