@@ -57,8 +57,8 @@ data "aws_iam_policy_document" "task_role" {
     ]
     resources = ["*"]
     condition {
-      test = "ArnEquals"
-      values = ["arn:aws:ecs:eu-west-2:${var.account}:cluster/orchestration-service-user-host"]
+      test     = "ArnEquals"
+      values   = ["arn:aws:ecs:eu-west-2:${var.account}:cluster/orchestration-service-user-host"]
       variable = "ecs:cluster"
     }
   }
