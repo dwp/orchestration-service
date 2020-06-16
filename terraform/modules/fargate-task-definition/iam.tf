@@ -14,16 +14,29 @@ data "aws_iam_policy_document" "ecs-tasks" {
 
 data "aws_iam_policy_document" "task_role" {
   statement {
-    sid = "AllowDynamoDBActionsOnUserTable"
+    sid = "AllowDynamoDBCreateTable"
     actions = [
       "dynamodb:CreateTable",
+    ]
+    resources = ["*"]
+  }
+  statement {
+    sid = "AllowDynamoDbListALlTables"
+    actions = [
+      "dynamodb:ListTables",
+    ]
+    resources = ["*"]
+  }
+  statement {
+    sid = "AllowDynamoDBActionsOnUserTable"
+    actions = [
       "dynamodb:DeleteItem",
       "dynamodb:GetItem",
       "dynamodb:ListTables",
       "dynamodb:PutItem",
       "dynamodb:UpdateItem",
     ]
-    resources = ["*"]
+    resources = ["arn:aws:dynamodb:eu-west-2:${var.account}:table/orchestration_service_user_tasks"]
   }
   statement {
     sid = "AllowEC2DescribeImage"
@@ -39,11 +52,23 @@ data "aws_iam_policy_document" "task_role" {
       "ecs:CreateService",
       "ecs:DeleteService",
       "ecs:DescribeServices",
-      "ecs:DescribeTaskDefinition",
-      "ecs:RegisterTaskDefinition",
       "ecs:RunTask",
       "ecs:UpdateService",
     ]
+    resources = ["*"]
+    condition {
+      test = "ArnEquals"
+      values = ["arn:aws:ecs:eu-west-2:${var.account}:cluster/orchestration-service-user-host"]
+      variable = "ecs:cluster"
+    }
+  }
+  statement {
+    sid = "ECSTaskDefinitionsActions"
+    actions = [
+      "ecs:DescribeTaskDefinition",
+      "ecs:RegisterTaskDefinition",
+    ]
+    // Doesn't accept conditions or resource limitations
     resources = ["*"]
   }
   statement {
@@ -58,6 +83,7 @@ data "aws_iam_policy_document" "task_role" {
       "elasticloadbalancing:DescribeRules",
       "elasticloadbalancing:DescribeTargetGroupAttributes",
     ]
+    // Unable to restrict conditions or resources effectively
     resources = ["*"]
   }
   statement {
@@ -70,6 +96,13 @@ data "aws_iam_policy_document" "task_role" {
       "iam:DeletePolicy",
       "iam:DeleteRole",
       "iam:PassRole",
+    ]
+    resources = ["*"]
+  }
+
+  statement {
+    sid = "AllowKMSKeyDescribeForUserContainer"
+    actions = [
       "kms:DescribeKey",
     ]
     resources = ["*"]
