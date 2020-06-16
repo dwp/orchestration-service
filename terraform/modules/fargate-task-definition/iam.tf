@@ -86,19 +86,27 @@ data "aws_iam_policy_document" "task_role" {
     resources = ["*"]
   }
   statement {
-    sid = "AllowIAMActionsForUserContainerRoles"
+    sid = "AllowIAMPolicyActionsForUserContainerRoles"
+    actions = [
+      "iam:CreatePolicy",
+      "iam:DeletePolicy",
+    ]
+    resources = [
+      "arn:aws:iam::${var.account}:policy/analytical-*-iamPolicyTaskArn",
+      "arn:aws:iam::${var.account}:policy/analytical-*-iamPolicyUserArn",
+    ]
+  }
+  statement {
+    sid = "AllowIAMRoleActionsForUserContainerRoles"
     actions = [
       "iam:AttachRolePolicy",
-      "iam:CreatePolicy",
       "iam:CreateRole",
       "iam:DetachRolePolicy",
-      "iam:DeletePolicy",
       "iam:DeleteRole",
       "iam:PassRole",
     ]
-    resources = ["*"]
+    resources = ["arn:aws:iam::${var.account}:role/orchestration-service-user-*"]
   }
-
   statement {
     sid = "AllowKMSKeyDescribeForUserContainer"
     actions = [
