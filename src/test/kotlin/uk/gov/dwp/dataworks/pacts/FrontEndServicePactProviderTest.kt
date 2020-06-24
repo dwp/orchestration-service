@@ -7,6 +7,7 @@ import au.com.dius.pact.provider.junit.State
 import au.com.dius.pact.provider.junit.loader.PactUrl
 import au.com.dius.pact.provider.junit.target.TestTarget
 import au.com.dius.pact.provider.spring.target.MockMvcTarget
+import com.auth0.jwt.exceptions.JWTVerificationException
 import com.auth0.jwt.interfaces.DecodedJWT
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
@@ -23,7 +24,7 @@ import uk.gov.dwp.dataworks.services.*
 
 @RunWith(RestPactRunner::class)
 @Provider("OrchestrationService")
-@PactUrl(urls = ["https://github.com/dwp/dataworks-analytical-frontend-service/releases/download/0.0.42/frontendservice-orchestrationservice.json"])
+@PactUrl(urls = ["https://gist.githubusercontent.com/caseyr232/fe601ca662ecaeb488db91002129893e/raw/4fa09e3dfbdf0240c2f90227a4b17c6356d5b7ce/gistfile3.txt"])
 
 class FrontEndServicePactProviderTest {
 
@@ -61,8 +62,6 @@ class FrontEndServicePactProviderTest {
 
     @State("I am awaiting an invalid connection")
     fun `a request for a tooling environment with invalid token`() {
-        val decodedJWT : DecodedJWT = mock()
-        val goodJWT = JWTObject(userName = "validUser", cognitoGroup = emptyList(), verifiedJWT = decodedJWT )
-        whenever(authServiceMock.validate(anyString())).thenReturn(goodJWT)
+        whenever(authServiceMock.validate(anyString())).thenThrow(JWTVerificationException(""))
     }
 }
