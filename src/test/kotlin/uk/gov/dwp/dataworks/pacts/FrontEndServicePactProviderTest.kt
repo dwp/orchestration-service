@@ -1,6 +1,5 @@
 package uk.gov.dwp.dataworks.pacts
 
-import org.junit.runner.RunWith
 import au.com.dius.pact.provider.junit.Provider
 import au.com.dius.pact.provider.junit.RestPactRunner
 import au.com.dius.pact.provider.junit.State
@@ -9,11 +8,10 @@ import au.com.dius.pact.provider.junit.target.TestTarget
 import au.com.dius.pact.provider.spring.target.MockMvcTarget
 import com.auth0.jwt.exceptions.JWTVerificationException
 import com.auth0.jwt.interfaces.DecodedJWT
-import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.whenever
 import org.junit.Before
-import org.mockito.ArgumentMatchers.any
+import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.InjectMocks
 import org.mockito.Mock
@@ -24,7 +22,7 @@ import uk.gov.dwp.dataworks.services.*
 
 @RunWith(RestPactRunner::class)
 @Provider("OrchestrationService")
-@PactUrl(urls = ["https://gist.githubusercontent.com/caseyr232/fe601ca662ecaeb488db91002129893e/raw/4fa09e3dfbdf0240c2f90227a4b17c6356d5b7ce/gistfile3.txt"])
+@PactUrl(urls = ["https://github.com/dwp/dataworks-analytical-frontend-service/releases/latest/download/frontendservice-orchestrationservice.json"])
 
 class FrontEndServicePactProviderTest {
 
