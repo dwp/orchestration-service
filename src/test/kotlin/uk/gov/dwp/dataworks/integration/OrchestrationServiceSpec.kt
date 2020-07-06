@@ -1,4 +1,4 @@
-package uk.gov.dwp.dataworks
+package uk.gov.dwp.dataworks.integration
 
 import cloud.localstack.LocalstackTestRunner
 import cloud.localstack.docker.annotation.LocalstackDockerProperties
@@ -29,12 +29,12 @@ import software.amazon.awssdk.services.iam.IamClient
 import software.amazon.awssdk.services.kms.KmsClient
 import software.amazon.awssdk.services.kms.model.AlreadyExistsException
 import software.amazon.awssdk.services.kms.model.CreateAliasRequest
+import uk.gov.dwp.dataworks.JWTObject
 import uk.gov.dwp.dataworks.aws.AwsClients
 import uk.gov.dwp.dataworks.aws.AwsCommunicator
 import uk.gov.dwp.dataworks.aws.AwsParsing
 import uk.gov.dwp.dataworks.controllers.ConnectionController
 import uk.gov.dwp.dataworks.services.*
-import java.lang.Exception
 import java.net.URI
 
 @RunWith(SpringRunner::class)
