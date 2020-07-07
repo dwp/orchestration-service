@@ -3,9 +3,7 @@ package uk.gov.dwp.dataworks.integration
 import cloud.localstack.LocalstackTestRunner
 import cloud.localstack.docker.annotation.LocalstackDockerProperties
 import com.auth0.jwt.JWT
-import com.nhaarman.mockitokotlin2.any
-import com.nhaarman.mockitokotlin2.doReturn
-import com.nhaarman.mockitokotlin2.whenever
+import com.nhaarman.mockitokotlin2.*
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
 import org.junit.Test
@@ -30,6 +28,7 @@ import software.amazon.awssdk.services.elasticloadbalancingv2.model.LoadBalancer
 import software.amazon.awssdk.services.elasticloadbalancingv2.model.Rule
 import software.amazon.awssdk.services.elasticloadbalancingv2.model.TargetGroup
 import software.amazon.awssdk.services.iam.IamClient
+import software.amazon.awssdk.services.iam.model.GetPolicyRequest
 import software.amazon.awssdk.services.iam.model.GetRoleRequest
 import software.amazon.awssdk.services.kms.KmsClient
 import software.amazon.awssdk.services.kms.model.AlreadyExistsException
@@ -41,6 +40,7 @@ import uk.gov.dwp.dataworks.aws.AwsCommunicator
 import uk.gov.dwp.dataworks.aws.AwsParsing
 import uk.gov.dwp.dataworks.controllers.ConnectionController
 import uk.gov.dwp.dataworks.services.*
+import java.lang.Exception
 import java.net.URI
 
 @RunWith(SpringRunner::class)
@@ -78,7 +78,7 @@ class OrchestrationServiceSpec {
 
     @Autowired
     private lateinit var mvc: MockMvc
-    @Autowired
+    @SpyBean
     private lateinit var taskDeploymentService: TaskDeploymentService
 
     private lateinit var localIamClient: IamClient
@@ -97,7 +97,9 @@ class OrchestrationServiceSpec {
     @SpyBean
     private lateinit var awsCommunicator: AwsCommunicator
 
-    private val testJwt = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjb2duaXRvOmdyb3VwcyI6WyJjZzEiLCJjZzIiXSwiY29nbml0bzp1c2VybmFtZSI6InRlc3R1c2VybmFtZSIsInVzZXJuYW1lIjoidXNlck5hbWUiLCJpc3MiOiJUZXN0SXNzdWVyIiwic3ViIjoiMTIzNDU2Nzg5MCJ9.lXKrCqpkHBUKR1yN7H85QXH9Yyq-aFWWcLa2VDxkP8SbqEnPttW7DGRL0jj2Pm8JimSvc0WFGZvvyT7cCZllEyjCHjCRIXgXbIv5pg9kFzRNgp2D7W-MujZAul6-TJrJ3h9Dv0RRKklrZvKr6PXCnwpFGqrwlzUg-2zMh9x2QEK4Hjr7-EZWJtorJAtSYKUWwKh_wLrFb9PBwSDIrbO0i1snJHIM1_ti6S7_qf4Mmf29Zzn_HeakLnLM06YPCxqkV-KM4ABsax9BQirQF67KI9o7p5SgNjqlDscb6gn5XmV6eGG193rtMiiPxhgioP4eMQFzpA_ZuNbB1om7qsEdWA"
+    private val newUserTestJwt = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjb2duaXRvOmdyb3VwcyI6WyJjZzEiLCJjZzIiXSwiY29nbml0bzp1c2VybmFtZSI6InRlc3R1c2VybmFtZSIsInVzZXJuYW1lIjoidXNlck5hbWUiLCJpc3MiOiJUZXN0SXNzdWVyIiwic3ViIjoiMTIzNDU2Nzg5MCJ9.lXKrCqpkHBUKR1yN7H85QXH9Yyq-aFWWcLa2VDxkP8SbqEnPttW7DGRL0jj2Pm8JimSvc0WFGZvvyT7cCZllEyjCHjCRIXgXbIv5pg9kFzRNgp2D7W-MujZAul6-TJrJ3h9Dv0RRKklrZvKr6PXCnwpFGqrwlzUg-2zMh9x2QEK4Hjr7-EZWJtorJAtSYKUWwKh_wLrFb9PBwSDIrbO0i1snJHIM1_ti6S7_qf4Mmf29Zzn_HeakLnLM06YPCxqkV-KM4ABsax9BQirQF67KI9o7p5SgNjqlDscb6gn5XmV6eGG193rtMiiPxhgioP4eMQFzpA_ZuNbB1om7qsEdWA"
+    private val existingUserTestJwt = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjb2duaXRvOmdyb3VwcyI6WyJjZzEiLCJjZzIiXSwiY29nbml0bzp1c2VybmFtZSI6ImV4aXN0aW5ndGVzdHVzZXJuYW1lIiwidXNlcm5hbWUiOiJ1c2VyTmFtZSIsImlzcyI6IlRlc3RJc3N1ZXIiLCJzdWIiOiIxMjM0NTY3ODkwIn0.nt7d_o7R8aTvNEa9saVjDm_-kwmDwsly1dfqB5bFUZfapb2W_tVEOaPuH78lKgUAifOjao4EOrfkp-5SNKIzecmdHtSoRNymrl7f95S-kgLayJsA2-qSPCSOvoPa_LKOmmMWH9-3TtZb-fd5D-pWJGx40dqErFkUx2sYt9MRmIV5HA0-oCsLjpwYHh5dD6rhI-G40ABqGlqSWHCJBIBYeKfy1TBt8Sz8ldrNVPQqy6-TRCTKsosXV4hbONTEcAijgBSLblZ8lfjn7YfACpMLfS3PhZreGRUVGsEiXGIZT-eDlgKsDeRzW23AF_b5_Wu2pxS_n2XwEUKTfgYmUY_FLg"
+    private val disconnectUserTestJwt = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjb2duaXRvOmdyb3VwcyI6WyJjZzEiLCJjZzIiXSwiY29nbml0bzp1c2VybmFtZSI6ImRpc2Nvbm5lY3R0ZXN0dXNlcm5hbWUiLCJ1c2VybmFtZSI6InVzZXJOYW1lIiwiaXNzIjoiVGVzdElzc3VlciIsInN1YiI6IjEyMzQ1Njc4OTAifQ.dHYSqA4GCAoUrnDriCkf_cchwZWuMOjBVBbZEgYqDpvoHGgB1ChtIWhasIISBbYBjYStsNLa7zeb00dSP6cRYQ82XE1OHWcmpnReHAha27ub9kaWKEYuAcdtL_e9FBbO3FT2rm3mIfh_3jQ538wKSnDfEJgl_lF4oo26Xlk5htBznM5O7byk9ne2rQKxI182szp6xtMAEmwx0hzeAQOOLyLyxHZVBSg2TgnDeJYOUEdtVGFTvI3TtZbA5_-7RVIHf_AftvkVJSY6wNVBPxwvzq4VAzRKmyH6oe1dMQANI1Jj7LiN-nk82FmUsx4El812CBLIkudytJBvX2GXTrEobg"
 
     private fun createTable() {
         try {
@@ -122,30 +124,34 @@ class OrchestrationServiceSpec {
             localKmsClient.createAlias(CreateAliasRequest.builder().aliasName("alias/cg2-shared").targetKeyId(sharedKmsKey2.keyId()).build())
             val userKmsKey = localKmsClient.createKey(CreateKeyRequest.builder().build()).keyMetadata()
             localKmsClient.createAlias(CreateAliasRequest.builder().aliasName("alias/testusername123-home").targetKeyId(userKmsKey.keyId()).build())
+            val existingUserKmsKey = localKmsClient.createKey(CreateKeyRequest.builder().build()).keyMetadata()
+            localKmsClient.createAlias(CreateAliasRequest.builder().aliasName("alias/existingtestusername123-home").targetKeyId(existingUserKmsKey.keyId()).build())
+            val disconnectUserKmsKey = localKmsClient.createKey(CreateKeyRequest.builder().build()).keyMetadata()
+            localKmsClient.createAlias(CreateAliasRequest.builder().aliasName("alias/disconnecttestusername123-home").targetKeyId(disconnectUserKmsKey.keyId()).build())
         } catch (e: AlreadyExistsException){
             println("KMS keys already exist")
         }
     }
 
-    private fun getDynamoEntry(): MutableMap<String, AttributeValue> {
+    private fun getDynamoEntry(userName: String): MutableMap<String, AttributeValue> {
         val keyToGet = HashMap<String, AttributeValue>()
         keyToGet["userName"] = AttributeValue.builder()
-                .s("testusername123").build()
+                .s(userName).build()
         val request = GetItemRequest.builder().key(keyToGet).tableName(ActiveUserTasks.dynamoTableName).build()
         return localDynamoClient.getItem(request).item();
     }
-//    fun putEntryToTable(){
-//        try {
-//            localDynamoClient.updateItem(UpdateItemRequest.builder()
-//                    .tableName(ActiveUserTasks.dynamoTableName)
-//                    .key(mapOf(ActiveUserTasks.dynamoPrimaryKey to AttributeValue.builder().s(username).build()))
-//                    .updateExpression(updateExpression)
-//                    .expressionAttributeValues(mapOf(":value" to AttributeValue.builder().s(attribute.second).build()))
-//                    .build())
-//        } catch (e: Exception) {
-//            throw Exception("Error putting test data to localDynamoDb" + e.printStackTrace())
-//        }
-//    }
+
+    private fun setupExistingUser (username: String, jwtToken: String) {
+        try {
+            mvc.perform(MockMvcRequestBuilders.post("/connect")
+                    .content("{\"emrClusterHostName\":\"\"}")
+                    .header("content-type", "application/json")
+                    .header("Authorisation", jwtToken))
+            if (!awsCommunicator.getDynamoDeploymentEntry(username).hasItem()) throw Exception()
+        } catch (e : Exception){
+            println("Failed setting up existing user for @Test: No duplicate DynamoDB entries are attempted when user exists")
+        }
+    }
 
     @Before
     fun setup() {
@@ -170,31 +176,63 @@ class OrchestrationServiceSpec {
                 .whenever(awsCommunicator).createEcsService(anyString(),anyString(),anyString(), any(), any(), any(), any())
         createTable()
         addKmsKeys()
+        setupExistingUser("existingtestusername", existingUserTestJwt)
+        setupExistingUser("disconnecttestusername", disconnectUserTestJwt)
     }
 
     @Test
     fun `IAM Roles, policies and DynamoDB entry correctly created, when not present, on authenticated call to connect API`() {
-        whenever(authenticationService.validate(anyString())).thenReturn(JWTObject(JWT.decode(testJwt),
+        whenever(authenticationService.validate(anyString())).thenReturn(JWTObject(JWT.decode(newUserTestJwt),
                 "testusername123", listOf("cg1", "cg2")))
         assertDoesNotThrow{
             mvc.perform(MockMvcRequestBuilders.post("/connect")
                 .content("{\"emrClusterHostName\":\"\"}")
                 .header("content-type", "application/json")
-                .header("Authorisation", testJwt)).andExpect(MockMvcResultMatchers.status().isOk)
+                .header("Authorisation", newUserTestJwt)).andExpect(MockMvcResultMatchers.status().isOk)
             val role = localIamClient.getRole(GetRoleRequest.builder().roleName("orchestration-service-user-testusername123-role").build()).role()
             assertThat(role).isNotNull
 
-            val returnedItem = getDynamoEntry()
+            val returnedItem = getDynamoEntry("testusername123")
             assertThat(returnedItem.contains("analytical-testusername123-iamPolicyTaskArn")
                     && returnedItem.contains("analytical-testusername123-iamPolicyUserArn")
                     && returnedItem.contains("orchestration-service-user-testusername123-role")
             )
         }
     }
-}
 
-// TODO: Test disconnect and connect with DynamoDB - user exists/doesn't
-// TODO: Test disconnect and connect with IAM
+    @Test
+    fun `No duplicate DynamoDB entries are attempted when user exists` () {
+        whenever(authenticationService.validate(anyString())).thenReturn(JWTObject(JWT.decode(existingUserTestJwt),
+                "existingtestusername123", listOf("cg1", "cg2")))
+        mvc.perform(MockMvcRequestBuilders.post("/connect")
+                .content("{\"emrClusterHostName\":\"\"}")
+                .header("content-type", "application/json")
+                .header("Authorisation", existingUserTestJwt)).andExpect(MockMvcResultMatchers.status().isOk)
+//      Checks that the taskDeploymentService.runContainers() method is only called with the parameters of the existing users once (during setup())
+        verify(taskDeploymentService, times(1)).runContainers("existingtestusername123", listOf("cg1", "cg2"), 256, 512, emptyList())
+    }
+
+    @Test
+    fun `IAM Roles and DynamoDB entries deleted on disconnect` () {
+        val role = localIamClient.getRole(GetRoleRequest.builder().roleName("orchestration-service-user-disconnecttestusername123-role").build()).role()
+        val userPolicy = localIamClient.getPolicy(GetPolicyRequest.builder().policyArn("arn:aws:iam::000000000000:policy/analytical-disconnecttestusername123-iamPolicyUserArn").build())
+        val taskPolicy = localIamClient.getPolicy(GetPolicyRequest.builder().policyArn("arn:aws:iam::000000000000:policy/analytical-disconnecttestusername123-iamPolicyTaskArn").build())
+        assertThat(role).isNotNull
+        assertThat(userPolicy).isNotNull
+        assertThat(taskPolicy).isNotNull
+        assertThat(awsCommunicator.getDynamoDeploymentEntry("disconnecttestusername123").hasItem())
+        whenever(authenticationService.validate(anyString())).thenReturn(JWTObject(JWT.decode(disconnectUserTestJwt),
+                "disconnecttestusername123", listOf("cg1", "cg2")))
+        mvc.perform(MockMvcRequestBuilders.post("/disconnect")
+                .content("{\"emrClusterHostName\":\"\"}")
+                .header("content-type", "application/json")
+                .header("Authorisation", existingUserTestJwt)).andExpect(MockMvcResultMatchers.status().isOk)
+        assertThat(!awsCommunicator.getDynamoDeploymentEntry("disconnecttestusername123").hasItem())
+        assertThat(role).isNull()
+        assertThat(userPolicy).isNull()
+        assertThat(taskPolicy).isNull()
+    }
+}
 
 @RunWith(LocalstackTestRunner::class)
 @LocalstackDockerProperties(services = ["dynamodb", "kms", "iam"], ignoreDockerRunErrors = true)
@@ -239,7 +277,6 @@ class LocalStackClients {
     @Test
     fun testConnectionIam() {
         val localIamClient = localIamClient()
-        assertThat(localIamClient.listUsers()).isNotNull()
+        assertThat(localIamClient.listUsers()).isNotNull
     }
 }
-
