@@ -2,14 +2,12 @@ package uk.gov.dwp.dataworks.integration
 
 import cloud.localstack.LocalstackTestRunner
 import cloud.localstack.docker.annotation.LocalstackDockerProperties
-import software.amazon.awssdk.services.kms.model.CreateKeyRequest
 import com.auth0.jwt.JWT
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.whenever
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
-import software.amazon.awssdk.services.dynamodb.DynamoDbClient
 import org.junit.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.runner.RunWith
@@ -23,18 +21,20 @@ import org.springframework.test.context.junit4.SpringRunner
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient
 import software.amazon.awssdk.services.dynamodb.model.*
-import software.amazon.awssdk.services.ecs.model.NetworkMode
-import software.amazon.awssdk.services.ecs.model.RegisterTaskDefinitionRequest
 import software.amazon.awssdk.services.ecs.model.Service
 import software.amazon.awssdk.services.ecs.model.TaskDefinition
-import software.amazon.awssdk.services.elasticloadbalancingv2.model.*
+import software.amazon.awssdk.services.elasticloadbalancingv2.model.Listener
+import software.amazon.awssdk.services.elasticloadbalancingv2.model.LoadBalancer
+import software.amazon.awssdk.services.elasticloadbalancingv2.model.Rule
+import software.amazon.awssdk.services.elasticloadbalancingv2.model.TargetGroup
 import software.amazon.awssdk.services.iam.IamClient
-import software.amazon.awssdk.services.iam.model.CreatePolicyRequest
 import software.amazon.awssdk.services.iam.model.GetRoleRequest
 import software.amazon.awssdk.services.kms.KmsClient
 import software.amazon.awssdk.services.kms.model.AlreadyExistsException
 import software.amazon.awssdk.services.kms.model.CreateAliasRequest
+import software.amazon.awssdk.services.kms.model.CreateKeyRequest
 import uk.gov.dwp.dataworks.JWTObject
 import uk.gov.dwp.dataworks.aws.AwsClients
 import uk.gov.dwp.dataworks.aws.AwsCommunicator
@@ -99,8 +99,7 @@ class OrchestrationServiceSpec {
 
     private val testJwt = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjb2duaXRvOmdyb3VwcyI6WyJjZzEiLCJjZzIiXSwiY29nbml0bzp1c2VybmFtZSI6InRlc3R1c2VybmFtZSIsInVzZXJuYW1lIjoidXNlck5hbWUiLCJpc3MiOiJUZXN0SXNzdWVyIiwic3ViIjoiMTIzNDU2Nzg5MCJ9.lXKrCqpkHBUKR1yN7H85QXH9Yyq-aFWWcLa2VDxkP8SbqEnPttW7DGRL0jj2Pm8JimSvc0WFGZvvyT7cCZllEyjCHjCRIXgXbIv5pg9kFzRNgp2D7W-MujZAul6-TJrJ3h9Dv0RRKklrZvKr6PXCnwpFGqrwlzUg-2zMh9x2QEK4Hjr7-EZWJtorJAtSYKUWwKh_wLrFb9PBwSDIrbO0i1snJHIM1_ti6S7_qf4Mmf29Zzn_HeakLnLM06YPCxqkV-KM4ABsax9BQirQF67KI9o7p5SgNjqlDscb6gn5XmV6eGG193rtMiiPxhgioP4eMQFzpA_ZuNbB1om7qsEdWA"
 
-    fun createTable() {
-
+    private fun createTable() {
         try {
             val tableRequest = CreateTableRequest.builder()
                     .tableName(ActiveUserTasks.dynamoTableName)
@@ -115,7 +114,7 @@ class OrchestrationServiceSpec {
         }
     }
 
-    fun addKmsKeys() {
+    private fun addKmsKeys() {
         try {
             val sharedKmsKey1 = localKmsClient.createKey(CreateKeyRequest.builder().build()).keyMetadata()
             localKmsClient.createAlias(CreateAliasRequest.builder().aliasName("alias/cg1-shared").targetKeyId(sharedKmsKey1.keyId()).build())
@@ -126,6 +125,14 @@ class OrchestrationServiceSpec {
         } catch (e: AlreadyExistsException){
             println("KMS keys already exist")
         }
+    }
+
+    private fun getDynamoEntry(): MutableMap<String, AttributeValue> {
+        val keyToGet = HashMap<String, AttributeValue>()
+        keyToGet["userName"] = AttributeValue.builder()
+                .s("testusername123").build()
+        val request = GetItemRequest.builder().key(keyToGet).tableName(ActiveUserTasks.dynamoTableName).build()
+        return localDynamoClient.getItem(request).item();
     }
 //    fun putEntryToTable(){
 //        try {
@@ -163,12 +170,10 @@ class OrchestrationServiceSpec {
                 .whenever(awsCommunicator).createEcsService(anyString(),anyString(),anyString(), any(), any(), any(), any())
         createTable()
         addKmsKeys()
-        println(localKmsClient.listKeys())
-        println(localKmsClient.listAliases())
     }
 
     @Test
-    fun `IAM Role created on authenticated call to connect API`() {
+    fun `IAM Roles, policies and DynamoDB entry correctly created, when not present, on authenticated call to connect API`() {
         whenever(authenticationService.validate(anyString())).thenReturn(JWTObject(JWT.decode(testJwt),
                 "testusername123", listOf("cg1", "cg2")))
         assertDoesNotThrow{
@@ -178,6 +183,12 @@ class OrchestrationServiceSpec {
                 .header("Authorisation", testJwt)).andExpect(MockMvcResultMatchers.status().isOk)
             val role = localIamClient.getRole(GetRoleRequest.builder().roleName("orchestration-service-user-testusername123-role").build()).role()
             assertThat(role).isNotNull
+
+            val returnedItem = getDynamoEntry()
+            assertThat(returnedItem.contains("analytical-testusername123-iamPolicyTaskArn")
+                    && returnedItem.contains("analytical-testusername123-iamPolicyUserArn")
+                    && returnedItem.contains("orchestration-service-user-testusername123-role")
+            )
         }
     }
 }
