@@ -95,7 +95,7 @@ class TaskDeploymentService {
             awsCommunicator.attachIamPolicyToRole(correlationId, iamPolicy, iamRole)
             awsCommunicator.attachIamPolicyToRole(correlationId, setupJupyterIam(cognitoGroups, userName, correlationId, accountNumber), iamRole)
 
-            val containerDefinitions = buildContainerDefinitions(userName, emrClusterHostname, jupyterMemory, jupyterCpu, containerPort, jupyterS3Bucket, "arn:aws:kms:${configurationResolver.awsRegion}:$accountNumber:alias/$userName-home", "arn:aws:kms:${configurationResolver.awsRegion}:$accountNumber:alias/${cognitoGroups.first()}-shared")
+            val containerDefinitions = buildContainerDefinitions(userName, emrClusterHostname, jupyterMemory, jupyterCpu, containerPort, jupyterS3Bucket, "arn:aws:kms:${configurationResolver.getStringConfig(ConfigKey.AWS_REGION)}:$accountNumber:alias/$userName-home", "arn:aws:kms:${configurationResolver.getStringConfig(ConfigKey.AWS_REGION)}:$accountNumber:alias/${cognitoGroups.first()}-shared")
             val taskDefinition = awsCommunicator.registerTaskDefinition(correlationId, "orchestration-service-user-$userName-td", taskExecutionRoleArn, iamRole.arn(), NetworkMode.AWSVPC, containerDefinitions)
 
             // ECS
