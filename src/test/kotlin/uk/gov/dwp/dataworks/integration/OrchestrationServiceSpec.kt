@@ -24,8 +24,14 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers
 import software.amazon.awssdk.services.dynamodb.model.*
+import software.amazon.awssdk.services.ecs.model.NetworkMode
+import software.amazon.awssdk.services.ecs.model.RegisterTaskDefinitionRequest
+import software.amazon.awssdk.services.ecs.model.Service
+import software.amazon.awssdk.services.ecs.model.TaskDefinition
 import software.amazon.awssdk.services.elasticloadbalancingv2.model.*
 import software.amazon.awssdk.services.iam.IamClient
+import software.amazon.awssdk.services.iam.model.CreatePolicyRequest
+import software.amazon.awssdk.services.iam.model.GetRoleRequest
 import software.amazon.awssdk.services.kms.KmsClient
 import software.amazon.awssdk.services.kms.model.AlreadyExistsException
 import software.amazon.awssdk.services.kms.model.CreateAliasRequest
@@ -43,7 +49,7 @@ import java.net.URI
             "orchestrationService.aws_region=us-east-1",
             "orchestrationService.user_container_port=1234",
             "orchestrationService.user_container_url=www.com",
-            "orchestrationService.user_task_execution_role_arn=1234abcd",
+            "orchestrationService.user_task_execution_role_arn=arn:aws:iam::000000000000:policy/analytical-testusername123-taskRolePolicyArn",
             "orchestrationService.user_task_subnets=testSubnets",
             "orchestrationService.user_task_security_groups=testSg",
             "orchestrationService.load_balancer_port=1234",
@@ -55,7 +61,7 @@ import java.net.URI
             "orchestrationService.aws_account_number=000000000000",
             "orchestrationService.ecr_endpoint=endpoint",
             "orchestrationService.debug=false",
-            "orchestrationService.jupyterhub_bucket_arn=abc1234"
+            "orchestrationService.jupyterhub_bucket_arn=arn:aws:s3:::bucketTest"
         ],
         controllers = [
             ConnectionController::class,
@@ -142,7 +148,7 @@ class OrchestrationServiceSpec {
         localDynamoClient = localStackClients.localDynamoDbClient()
         whenever(awsClients.kmsClient).thenReturn(localKmsClient)
         whenever(awsClients.dynamoDbClient).thenReturn(localDynamoClient)
-        whenever(awsClients.iamClient).thenReturn(localIamClient)
+        doReturn(localIamClient).whenever(awsClients).iamClient
         doReturn(LoadBalancer.builder().loadBalancerArn("abc123").vpcId("12345").build())
                 .whenever(awsCommunicator).getLoadBalancerByName(anyString())
         doReturn(Listener.builder().listenerArn("abc123").build())
@@ -150,7 +156,11 @@ class OrchestrationServiceSpec {
         doReturn(TargetGroup.builder().targetGroupArn("1234abcd").build())
                 .whenever(awsCommunicator).createTargetGroup(anyString(), any(), any(),any(),any())
         doReturn(Rule.builder().build())
-                .whenever(awsCommunicator).createAlbRoutingRule( any(), any(),any(),any())
+                .whenever(awsCommunicator).createAlbRoutingRule(any(), any(),any(),any())
+        doReturn(TaskDefinition.builder().build())
+                .whenever(awsCommunicator).registerTaskDefinition(any(), anyString(), anyString(), anyString(), any(), any())
+        doReturn(Service.builder().build())
+                .whenever(awsCommunicator).createEcsService(anyString(),anyString(),anyString(), any(), any(), any(), any())
         createTable()
         addKmsKeys()
         println(localKmsClient.listKeys())
@@ -162,17 +172,18 @@ class OrchestrationServiceSpec {
         whenever(authenticationService.validate(anyString())).thenReturn(JWTObject(JWT.decode(testJwt),
                 "testusername123", listOf("cg1", "cg2")))
         assertDoesNotThrow{
-        mvc.perform(MockMvcRequestBuilders.post("/connect")
+            mvc.perform(MockMvcRequestBuilders.post("/connect")
                 .content("{\"emrClusterHostName\":\"\"}")
                 .header("content-type", "application/json")
                 .header("Authorisation", testJwt)).andExpect(MockMvcResultMatchers.status().isOk)
-//            val role = localIamClient.getRole(GetRoleRequest.builder().roleName("orchestration-service-user-testusername123-role").build()).role()
-//            assertThat(role).isNotNull
-        println(localIamClient.listRoles())
+            val role = localIamClient.getRole(GetRoleRequest.builder().roleName("orchestration-service-user-testusername123-role").build()).role()
+            assertThat(role).isNotNull
         }
     }
 }
 
+// TODO: Test disconnect and connect with DynamoDB - user exists/doesn't
+// TODO: Test disconnect and connect with IAM
 
 @RunWith(LocalstackTestRunner::class)
 @LocalstackDockerProperties(services = ["dynamodb", "kms", "iam"], ignoreDockerRunErrors = true)
