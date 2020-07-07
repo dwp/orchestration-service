@@ -93,7 +93,6 @@ class AwsCommunicator {
      * @throws MultipleLoadBalancersMatchedException when more than one Load balancer is located with name [albName]
      */
     fun getLoadBalancerByName(albName: String): LoadBalancer {
-        println(awsClients.albClient)
         val albs = awsClients.albClient.describeLoadBalancers(DescribeLoadBalancersRequest.builder().names(albName).build())
                 .loadBalancers()
         if (albs.size == 1) return albs[0]
