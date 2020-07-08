@@ -108,12 +108,29 @@ jobs:
             echo ${VERSION} > VERSION
             ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} ./VERSION
 
+  integration-test:
+    docker:
+      - image: circleci/python:3.7.3
+    steps:
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: false
+      - run:
+          name: "Run the integration test"
+          command: |
+            sudo apt-get update
+            sudo pip3 install localstack
+            localstack start
+            ./truststores.sh
+            ./gradlew integration
+
 workflows:
   version: 2
   build-and-deploy:
     jobs:
       - build
       - test
+      - integration-test
       - snyk-pr:
           filters:
             branches:

@@ -28,6 +28,8 @@ import software.amazon.awssdk.services.elasticloadbalancingv2.model.LoadBalancer
 import software.amazon.awssdk.services.elasticloadbalancingv2.model.Rule
 import software.amazon.awssdk.services.elasticloadbalancingv2.model.TargetGroup
 import software.amazon.awssdk.services.iam.IamClient
+import software.amazon.awssdk.services.iam.model.CreatePolicyRequest
+import software.amazon.awssdk.services.iam.model.CreateRoleRequest
 import software.amazon.awssdk.services.iam.model.GetPolicyRequest
 import software.amazon.awssdk.services.iam.model.GetRoleRequest
 import software.amazon.awssdk.services.kms.KmsClient
@@ -72,8 +74,6 @@ import java.net.URI
 
 )
 class OrchestrationServiceSpec {
-//    TODO: Add env. vars. for tests
-
     private val localStackClients: LocalStackClients = LocalStackClients()
 
     @Autowired
@@ -221,12 +221,10 @@ class OrchestrationServiceSpec {
         assertThat(userPolicy).isNotNull
         assertThat(taskPolicy).isNotNull
         assertThat(awsCommunicator.getDynamoDeploymentEntry("disconnecttestusername123").hasItem())
-        whenever(authenticationService.validate(anyString())).thenReturn(JWTObject(JWT.decode(disconnectUserTestJwt),
-                "disconnecttestusername123", listOf("cg1", "cg2")))
         mvc.perform(MockMvcRequestBuilders.post("/disconnect")
                 .content("{\"emrClusterHostName\":\"\"}")
                 .header("content-type", "application/json")
-                .header("Authorisation", existingUserTestJwt)).andExpect(MockMvcResultMatchers.status().isOk)
+                .header("Authorisation", disconnectUserTestJwt)).andExpect(MockMvcResultMatchers.status().isOk)
         assertThat(!awsCommunicator.getDynamoDeploymentEntry("disconnecttestusername123").hasItem())
         assertThat(role).isNull()
         assertThat(userPolicy).isNull()
