@@ -64,9 +64,15 @@ dependencies {
 	testImplementation("cloud.localstack:localstack-utils:0.2.1")
 }
 
+// Exclude the integration tests from the main test class, as they require a localstack container to be running
+tasks{
+	test{
+		exclude("**/integration/**")
+	}
+}
+
 tasks.withType<Test> {
 	useJUnitPlatform()
-	exclude("**/*OrchestrationServiceSpec*")
 }
 
 sourceSets {
