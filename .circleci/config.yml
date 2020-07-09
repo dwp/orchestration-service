@@ -111,7 +111,14 @@ jobs:
   integration-test:
     docker:
       - image: circleci/openjdk:11.0.3-jdk-stretch
+        environment:
+          AWS_DEFAULT_REGION: us-east-1
+          AWS_SECRET_ACCESS_KEY: foo
+          AWS_ACCESS_KEY_ID: bar
       - image: localstack/localstack
+        environment:
+          DEBUG: 1
+          SERVICES: dynamodb,iam,kms
     steps:
       - checkout
       - run:
