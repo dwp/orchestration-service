@@ -1,7 +1,5 @@
 package uk.gov.dwp.dataworks.integration
 
-import cloud.localstack.LocalstackTestRunner
-import cloud.localstack.docker.annotation.LocalstackDockerProperties
 import com.auth0.jwt.JWT
 import com.nhaarman.mockitokotlin2.*
 import org.assertj.core.api.Assertions.assertThat
@@ -232,8 +230,6 @@ class OrchestrationServiceSpec {
     }
 }
 
-@RunWith(LocalstackTestRunner::class)
-@LocalstackDockerProperties(services = ["dynamodb", "kms", "iam"], ignoreDockerRunErrors = true)
 class LocalStackClients {
 
     @Bean
