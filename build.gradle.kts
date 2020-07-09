@@ -66,7 +66,7 @@ dependencies {
 
 tasks.withType<Test> {
 	useJUnitPlatform()
-	exclude(listOf("*integration*"))
+	exclude("**/*OrchestrationServiceSpec*")
 }
 
 sourceSets {
