@@ -109,17 +109,14 @@ jobs:
             ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} ./VERSION
 
   integration-test:
-    machine: true
+    docker:
+      - image: circleci/openjdk:11.0.3-jdk-stretch
+      - image: localstack/localstack
     steps:
       - checkout
       - run:
           name: "Run the integration test"
           command: |
-            sudo apt-get update
-            sudo apt-get install openjdk-8-jdk
-            sudo pip install localstack
-
-            localstack start
             ./gradlew integration
 
 workflows:
