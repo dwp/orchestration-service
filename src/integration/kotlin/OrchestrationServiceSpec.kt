@@ -8,7 +8,6 @@ import org.junit.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyString
-import org.mockito.InjectMocks
 import org.mockito.MockitoAnnotations
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
@@ -45,7 +44,6 @@ import uk.gov.dwp.dataworks.services.*
 
 import java.lang.Exception
 import java.net.URI
-import java.util.concurrent.TimeUnit
 
 @RunWith(SpringRunner::class)
 @WebMvcTest(
@@ -101,7 +99,8 @@ class OrchestrationServiceSpec {
     private val disconnectUserTestJwt = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjb2duaXRvOmdyb3VwcyI6WyJjZzEiLCJjZzIiXSwiY29nbml0bzp1c2VybmFtZSI6ImRpc2Nvbm5lY3R0ZXN0dXNlcm5hbWUiLCJ1c2VybmFtZSI6InVzZXJOYW1lIiwiaXNzIjoiVGVzdElzc3VlciIsInN1YiI6IjEyMzQ1Njc4OTAifQ.dHYSqA4GCAoUrnDriCkf_cchwZWuMOjBVBbZEgYqDpvoHGgB1ChtIWhasIISBbYBjYStsNLa7zeb00dSP6cRYQ82XE1OHWcmpnReHAha27ub9kaWKEYuAcdtL_e9FBbO3FT2rm3mIfh_3jQ538wKSnDfEJgl_lF4oo26Xlk5htBznM5O7byk9ne2rQKxI182szp6xtMAEmwx0hzeAQOOLyLyxHZVBSg2TgnDeJYOUEdtVGFTvI3TtZbA5_-7RVIHf_AftvkVJSY6wNVBPxwvzq4VAzRKmyH6oe1dMQANI1Jj7LiN-nk82FmUsx4El812CBLIkudytJBvX2GXTrEobg"
 
     private fun createTable() {
-        try {
+        val tables = localDynamoClient.listTables()
+        if(!tables.tableNames().contains(ActiveUserTasks.dynamoTableName)){
             val tableRequest = CreateTableRequest.builder()
                     .tableName(ActiveUserTasks.dynamoTableName)
                     .keySchema(KeySchemaElement.builder().attributeName("userName").keyType("HASH").build())
@@ -110,9 +109,7 @@ class OrchestrationServiceSpec {
                     .build()
             val table = localDynamoClient.createTable(tableRequest)
             println(table)
-        } catch (e: ResourceNotFoundException){
-            println("Table already exists")
-        }
+        } else println("Table already exists")
     }
 
     private fun addKmsKeys() {
@@ -193,7 +190,6 @@ class OrchestrationServiceSpec {
             )
         }
     }
-
 
     @Test
     fun `No duplicate DynamoDB entries are attempted when user exists` () {
