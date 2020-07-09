@@ -111,6 +111,10 @@ jobs:
   integration-test:
     docker:
       - image: circleci/python:3.7.3
+      - image: localstack/localstack
+        environment:
+          DEBUG: 1
+          SERVICES: dynamodb,iam,kms
     steps:
       - checkout
       - setup_remote_docker:
@@ -119,8 +123,7 @@ jobs:
           name: "Run the integration test"
           command: |
             sudo apt-get update
-            sudo pip install localstack
-            localstack start
+            sudo apt-get install openjdk-8-jdk
             ./truststores.sh
             ./gradlew integration
 
