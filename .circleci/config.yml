@@ -119,7 +119,7 @@ jobs:
           name: "Run the integration test"
           command: |
             sudo apt-get update
-            sudo pip3 install localstack
+            sudo pip install localstack
             localstack start
             ./truststores.sh
             ./gradlew integration
