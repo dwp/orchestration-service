@@ -42,6 +42,7 @@ import uk.gov.dwp.dataworks.aws.AwsCommunicator
 import uk.gov.dwp.dataworks.aws.AwsParsing
 import uk.gov.dwp.dataworks.controllers.ConnectionController
 import uk.gov.dwp.dataworks.services.*
+
 import java.lang.Exception
 import java.net.URI
 import java.util.concurrent.TimeUnit
@@ -70,8 +71,7 @@ import java.util.concurrent.TimeUnit
             ConnectionController::class,
             ConfigurationResolver::class,
             TaskDeploymentService::class,
-            AwsParsing::class,
-            ActiveUserTasks::class
+            AwsParsing::class
         ]
 
 )
@@ -85,11 +85,10 @@ class OrchestrationServiceSpec {
     private lateinit var mvc: MockMvc
     @SpyBean
     private lateinit var awsCommunicator: AwsCommunicator
-    @Autowired
+    @MockBean
     private lateinit var activeUserTasks: ActiveUserTasks
     @SpyBean
     private lateinit var taskDeploymentService: TaskDeploymentService
-
     @MockBean
     private lateinit var taskDestroyService: TaskDestroyService
     @MockBean
@@ -157,11 +156,7 @@ class OrchestrationServiceSpec {
     @Before
     fun setup() {
         println("Inside setup")
-        doNothing().whenever(awsCommunicator).createDynamoDbTable(any(),any(),any())
         MockitoAnnotations.initMocks(this)
-//        localIamClient = localStackClients.localIamClient()
-//        localKmsClient = localStackClients.localKmsClient()
-//        localDynamoClient = localStackClients.localDynamoDbClient()
         whenever(awsClients.kmsClient).thenReturn(localKmsClient)
         doReturn(localDynamoClient).whenever(awsClients).dynamoDbClient
         doReturn(localIamClient).whenever(awsClients).iamClient
@@ -181,23 +176,23 @@ class OrchestrationServiceSpec {
         addKmsKeys()
     }
 
-//    @Test
-//    fun `IAM Roles, policies and DynamoDB entry correctly created, when not present, on authenticated call to connect API`() {
-//        whenever(authenticationService.validate(newUserTestJwt)).thenReturn(JWTObject(JWT.decode(newUserTestJwt),
-//                "testusername123", listOf("cg1", "cg2")))
-//        assertDoesNotThrow{
-//            setupUser("testusername123", newUserTestJwt)
-//
-//            val role = localIamClient.getRole(GetRoleRequest.builder().roleName("orchestration-service-user-testusername123-role").build()).role()
-//            assertThat(role).isNotNull
-//
-//            val returnedItem = getDynamoEntry("testusername123")
-//            assertThat(returnedItem.contains("analytical-testusername123-iamPolicyTaskArn")
-//                    && returnedItem.contains("analytical-testusername123-iamPolicyUserArn")
-//                    && returnedItem.contains("orchestration-service-user-testusername123-role")
-//            )
-//        }
-//    }
+    @Test
+    fun `IAM Roles, policies and DynamoDB entry correctly created, when not present, on authenticated call to connect API`() {
+        whenever(authenticationService.validate(newUserTestJwt)).thenReturn(JWTObject(JWT.decode(newUserTestJwt),
+                "testusername123", listOf("cg1", "cg2")))
+        assertDoesNotThrow{
+            setupUser("testusername123", newUserTestJwt)
+
+            val role = localIamClient.getRole(GetRoleRequest.builder().roleName("orchestration-service-user-testusername123-role").build()).role()
+            assertThat(role).isNotNull
+
+            val returnedItem = getDynamoEntry("testusername123")
+            assertThat(returnedItem.contains("analytical-testusername123-iamPolicyTaskArn")
+                    && returnedItem.contains("analytical-testusername123-iamPolicyUserArn")
+                    && returnedItem.contains("orchestration-service-user-testusername123-role")
+            )
+        }
+    }
 
 
     @Test
@@ -206,35 +201,32 @@ class OrchestrationServiceSpec {
                 "existingtestusername123", listOf("cg1", "cg2")))
         setupUser("existingtestusername123", existingUserTestJwt)
         assertThat(awsCommunicator.getDynamoDeploymentEntry("existingtestusername123").hasItem())
-        println(awsCommunicator.getDynamoDeploymentEntry("existingtestusername123"))
+        doReturn(true).whenever(activeUserTasks).contains("existingtestusername123")
         setupUser("existingtestusername123", existingUserTestJwt)
-
-//      Checks that the taskDeploymentService.runContainers() method is only called with the parameters of the existing users once (during setup())
         verify(taskDeploymentService, times(1)).runContainers("existingtestusername123", listOf("cg1", "cg2"), 256, 512, emptyList())
     }
 
-//    @Test
-//    fun `IAM Roles and DynamoDB entries deleted on disconnect` () {
-//        whenever(authenticationService.validate(disconnectUserTestJwt)).thenReturn(JWTObject(JWT.decode(existingUserTestJwt),
-//                "disconnecttestusername123", listOf("cg1", "cg2")))
-//        setupUser("disconnecttestusername123", disconnectUserTestJwt)
-//        fun getRole(): Role? {return  localIamClient.getRole(GetRoleRequest.builder().roleName("orchestration-service-user-disconnecttestusername123-role").build()).role()}
-//        fun getUserPolicy(): Policy? {return localIamClient.getPolicy(GetPolicyRequest.builder().policyArn("arn:aws:iam::000000000000:policy/analytical-disconnecttestusername123-iamPolicyUserArn").build()).policy()}
-//        fun getTaskPolicy(): Policy? {return localIamClient.getPolicy(GetPolicyRequest.builder().policyArn("arn:aws:iam::000000000000:policy/analytical-disconnecttestusername123-iamPolicyTaskArn").build()).policy()}
-//        assertThat(getRole()).isNotNull
-//        assertThat(getUserPolicy()).isNotNull
-//        assertThat(getTaskPolicy()).isNotNull
-//        assertThat(awsCommunicator.getDynamoDeploymentEntry("disconnecttestusername123").hasItem())
-//        mvc.perform(MockMvcRequestBuilders.post("/disconnect")
-//                .content("{\"emrClusterHostName\":\"\"}")
-//                .header("content-type", "application/json")
-//                .header("Authorisation", disconnectUserTestJwt)).andExpect(MockMvcResultMatchers.status().isOk)
-//        assertThat(!awsCommunicator.getDynamoDeploymentEntry("disconnecttestusername123").hasItem())
-//    }
+    @Test
+    fun `IAM Roles and DynamoDB entries deleted on disconnect` () {
+        whenever(authenticationService.validate(disconnectUserTestJwt)).thenReturn(JWTObject(JWT.decode(existingUserTestJwt),
+                "disconnecttestusername123", listOf("cg1", "cg2")))
+        setupUser("disconnecttestusername123", disconnectUserTestJwt)
+        fun getRole(): Role? {return  localIamClient.getRole(GetRoleRequest.builder().roleName("orchestration-service-user-disconnecttestusername123-role").build()).role()}
+        fun getUserPolicy(): Policy? {return localIamClient.getPolicy(GetPolicyRequest.builder().policyArn("arn:aws:iam::000000000000:policy/analytical-disconnecttestusername123-iamPolicyUserArn").build()).policy()}
+        fun getTaskPolicy(): Policy? {return localIamClient.getPolicy(GetPolicyRequest.builder().policyArn("arn:aws:iam::000000000000:policy/analytical-disconnecttestusername123-iamPolicyTaskArn").build()).policy()}
+        assertThat(getRole()).isNotNull
+        assertThat(getUserPolicy()).isNotNull
+        assertThat(getTaskPolicy()).isNotNull
+        assertThat(awsCommunicator.getDynamoDeploymentEntry("disconnecttestusername123").hasItem())
+        mvc.perform(MockMvcRequestBuilders.post("/disconnect")
+                .content("{\"emrClusterHostName\":\"\"}")
+                .header("content-type", "application/json")
+                .header("Authorisation", disconnectUserTestJwt)).andExpect(MockMvcResultMatchers.status().isOk)
+        assertThat(!awsCommunicator.getDynamoDeploymentEntry("disconnecttestusername123").hasItem())
+    }
 }
 
 class LocalStackClients {
-
     @Bean
     fun localDynamoDbClient(): DynamoDbClient {
         return DynamoDbClient.builder()

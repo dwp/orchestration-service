@@ -130,27 +130,27 @@ workflows:
   version: 2
   build-and-deploy:
     jobs:
-#      - build
-#      - test
+      - build
+      - test
       - integration-test
-#      - snyk-pr:
-#          filters:
-#            branches:
-#              ignore: master
-#      - snyk-master:
-#          filters:
-#            branches:
-#              only: master
-#      - publish-github-release:
-#          requires:
-#            - build
-#          filters:
-#            branches:
-#              only: master
-#      - publish-latest:
-#          requires:
-#            - build
-#            - publish-github-release
-#          filters:
-#            branches:
-#              only: master
+      - snyk-pr:
+          filters:
+            branches:
+              ignore: master
+      - snyk-master:
+          filters:
+            branches:
+              only: master
+      - publish-github-release:
+          requires:
+            - build
+          filters:
+            branches:
+              only: master
+      - publish-latest:
+          requires:
+            - build
+            - publish-github-release
+          filters:
+            branches:
+              only: master
