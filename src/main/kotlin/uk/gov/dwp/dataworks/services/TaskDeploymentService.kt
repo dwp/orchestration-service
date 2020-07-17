@@ -66,7 +66,7 @@ class TaskDeploymentService {
         activeUserTasks.initialiseDeploymentEntry(correlationId, userName)
 
         val mapper: ObjectMapper = jacksonObjectMapper()
-        var defaultTags : Map<String,String> = mapper.readValue(configurationResolver.getStringConfig(ConfigKey.TAGS))
+        val defaultTags : Map<String,String> = mapper.readValue(configurationResolver.getStringConfig(ConfigKey.TAGS))
 
         val tags : Collection<Tag> = mutableListOf()
 

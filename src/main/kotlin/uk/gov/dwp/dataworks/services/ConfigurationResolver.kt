@@ -71,5 +71,5 @@ enum class ConfigKey(val key: String, val isList: Boolean) {
     ECR_ENDPOINT("orchestrationService.ecr_endpoint", false),
     AWS_ACCOUNT_NUMBER("orchestrationService.aws_account_number", false),
     CONTAINER_LOG_GROUP("orchestrationService.container_log_group", false),
-    TAGS("TAGS", isList = false)
+    TAGS("TAGS", false)
 }
