@@ -68,11 +68,12 @@ class TaskDeploymentService {
         val mapper: ObjectMapper = jacksonObjectMapper()
         val defaultTags : Map<String,String> = mapper.readValue(configurationResolver.getStringConfig(ConfigKey.TAGS))
 
-        val tags : Collection<Tag> = mutableListOf()
+        val tags : MutableCollection<Tag> = mutableListOf()
 
-        defaultTags.forEach { tags.plusElement(Tag.builder().key(it.key).value(it.value).build())}
-        tags.plusElement(Tag.builder().key("CreatedBy").value("Orchestration Service").build());
-        tags.plusElement(Tag.builder().key("Team").value(cognitoGroups.first()))
+        defaultTags.forEach { tags += tags + Tag.builder().key(it.key).value(it.value).build()}
+        tags += Tag.builder().key("CreatedBy").value("Orchestration Service").build()
+        tags += Tag.builder().key("Team").value(cognitoGroups.first()).build()
+        tags += Tag.builder().key("Name").value("orchestration-service-user-$userName-td").build()
 
         try {
             // Load balancer & Routing

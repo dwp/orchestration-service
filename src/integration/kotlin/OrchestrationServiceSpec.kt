@@ -63,7 +63,8 @@ import java.net.URI
             "orchestrationService.aws_account_number=000000000000",
             "orchestrationService.ecr_endpoint=endpoint",
             "orchestrationService.debug=false",
-            "orchestrationService.jupyterhub_bucket_arn=arn:aws:s3:::bucketTest"
+            "orchestrationService.jupyterhub_bucket_arn=arn:aws:s3:::bucketTest",
+            "TAGS={\"Environmemt\":\"integration\"}"
         ],
         controllers = [
             ConnectionController::class,
