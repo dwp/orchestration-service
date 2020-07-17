@@ -118,7 +118,7 @@ module "ecs-fargate-task-definition" {
     },
     {
       name  = "TAGS"
-      value = local.common_tags
+      value = jsonencode(local.common_tags)
     }
   ]
 }
