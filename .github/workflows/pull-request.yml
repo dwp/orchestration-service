@@ -1,0 +1,93 @@
+name: 'Pull Request'
+on:
+  pull_request:
+    branches:
+      - master
+env:
+  IMAGE_NAME: dwpdigital/orchestration-service
+
+jobs:
+  pull_request:
+
+    runs-on: ubuntu-latest
+
+    services:
+      localstack:
+        image: localstack/localstack:latest
+        ports:
+          - 4566:4566
+        env:
+          DEBUG: 1
+          SERVICES: dynamodb,iam,kms
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+
+      - name: terraform-setup
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 0.12.19
+      - name: terraform-fmt
+        id: fmt
+        run: terraform fmt --recursive
+
+      - name: build-docker-image
+        run: |
+          ./gradlew clean build
+          docker build -t ${{ env.IMAGE_NAME }}:latest .
+
+      - name: test
+        run: ./gradlew build test
+
+      - name: integration-test
+        env:
+          AWS_DEFAULT_REGION: us-east-1
+          AWS_SECRET_ACCESS_KEY: foo
+          AWS_ACCESS_KEY_ID: bar
+        run: ./gradlew integration
+
+      - name: archive-docker-image
+        run: docker save -o image.tar ${{ env.IMAGE_NAME }}
+
+      - name: snyk-scan
+        uses: snyk/actions/docker@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          image: ${{ env.IMAGE_NAME }}
+          args: --file=Dockerfile --policy-path=./.snyk --severity-threshold=high --exclude-base-image-vulns --org=dwp-dataworks
+
+#      get-publish-version:
+#        runs-on: ubuntu-latest
+#        outputs:
+#          publish-version: ${{ steps.get-publish-version.outputs.publish-version }}
+#        steps:
+#          - name: Get publish version
+#            id: get-publish-version
+#            run: |
+#              LATEST_VERSION=$(curl --silent "https://api.github.com/repos/${{ github.repository }}/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+#              [  -z "$LATEST_VERSION" ] && LATEST_VERSION="0.0.0"
+#              VERSION=$(echo $LATEST_VERSION | awk -F. '{$NF = $NF + 1;} 1' | sed 's/ /./g')
+#              echo "::set-output name=publish-version::${VERSION}"
+#
+#      publish-github-release:
+#        runs-on: ubuntu-latest
+#        needs: get-publish-version
+#        steps:
+#          - name: Checkout code
+#            uses: actions/checkout@v2
+#
+#          - name: Create GitHub Release
+#            id: create_release
+#            uses: actions/create-release@latest
+#            env:
+#              GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#            with:
+#              tag_name: ${{ needs.get-publish-version.outputs.publish-version }}
+#              release_name: Release ${{ needs.get-publish-version.outputs.publish-version }}
+#              draft: false
+#              prerelease: false
+
+
+
