@@ -37,16 +37,6 @@ jobs:
           ./gradlew clean build
           docker build -t ${{ env.IMAGE_NAME }}:latest .
 
-      - name: notify-slack
-        uses: 8398a7/action-slack@v3
-        with:
-          status: ${{ job.status }}
-          fields: repo,message,commit,author,workflow,job
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
-        if: ${{ success() }}
-
       - name: test
         run: ./gradlew build test
 
