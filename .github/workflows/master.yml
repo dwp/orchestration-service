@@ -9,6 +9,27 @@ env:
   IMAGE_NAME: dwpdigital/orchestration-service
 
 jobs:
+  build:
+    runs-on: ubuntu-lates
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+
+      - name: build-docker-image
+        run: |
+          ./gradlew clean build
+          docker build -t ${{ env.IMAGE_NAME }}:latest .
+
+      - name: notify-slack
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          fields: repo,message,commit,author,workflow,job
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        if: ${{ failure() }}
+
   get-publish-version:
     runs-on: ubuntu-latest
     outputs:
@@ -21,6 +42,7 @@ jobs:
           [  -z "$LATEST_VERSION" ] && LATEST_VERSION="0.0.0"
           VERSION=$(echo $LATEST_VERSION | awk -F. '{$NF = $NF + 1;} 1' | sed 's/ /./g')
           echo "::set-output name=publish-version::${VERSION}"
+
   publish-github-release:
     runs-on: ubuntu-latest
     needs: get-publish-version
