@@ -85,7 +85,7 @@ module "ecs-fargate-task-definition" {
       value = local.account[local.environment]
     },
     {
-      name = "orchestrationService.data_science_git_repo"
+      name  = "orchestrationService.data_science_git_repo"
       value = local.data_science_git_repo
     },
     {
