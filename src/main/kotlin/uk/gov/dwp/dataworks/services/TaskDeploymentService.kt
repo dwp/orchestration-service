@@ -179,6 +179,7 @@ class TaskDeploymentService {
                 .environment(pairsToKeyValuePairs(
                         "VNC_OPTS" to "-rfbport 5900 -xkb -noxrecord -noxfixes -noxdamage -display :1 -nopw -wait 5 -noclipboard",
                         "CHROME_OPTS" to arrayOf(
+                                "--host-rules='MAP * localhost:8000'",
                                 "--no-sandbox",
                                 "--window-position=0,0",
                                 "--force-device-scale-factor=1",
