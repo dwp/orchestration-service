@@ -85,6 +85,10 @@ module "ecs-fargate-task-definition" {
       value = local.account[local.environment]
     },
     {
+      name  = "orchestrationService.data_science_git_repo"
+      value = local.data_science_git_repo
+    },
+    {
       name  = "PROXY_HOST"
       value = data.terraform_remote_state.analytical_service_infra.outputs.vpc.internet_proxy_vpce.dns_name
     },
@@ -119,7 +123,16 @@ module "ecs-fargate-task-definition" {
     {
       name  = "TAGS"
       value = jsonencode(local.common_tags)
+    },
+    {
+      name  = "orchestrationService.push_gateway_host"
+      value = data.terraform_remote_state.aws_analytical_env_infra.outputs.alb_fqdn
+    },
+    {
+      name  = "orchestrationService.push_gateway_cron"
+      value = "*/5 * * * *"
     }
+
   ]
 }
 #
@@ -169,12 +182,12 @@ module "ecs-user-host" {
   source = "../../modules/ecs-user"
   ami_id = data.aws_ami.hardened.id
   auto_scaling = {
-    max_size              = 1
-    min_size              = 1
+    max_size              = local.environment == "production" ? 6 : 3
+    min_size              = local.environment == "production" ? 3 : 1
     max_instance_lifetime = 604800
   }
   common_tags        = merge(local.common_tags, { Name = "${var.name_prefix}-user-host" })
-  instance_type      = "t3.2xlarge"
+  instance_type      = "m5.2xlarge"
   name_prefix        = "${var.name_prefix}-user-host"
   frontend_alb_sg_id = data.terraform_remote_state.aws_analytical_env_infra.outputs.alb_sg.id
   guacamole_port     = local.guacamole_port
