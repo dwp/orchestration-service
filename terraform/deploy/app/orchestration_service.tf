@@ -183,7 +183,7 @@ module "ecs-user-host" {
   ami_id = data.aws_ami.hardened.id
   auto_scaling = {
     max_size              = local.environment == "production" ? 6 : 3
-    min_size              = local.environment == "production" ? 3 : 1
+    min_size              = 0
     max_instance_lifetime = 604800
   }
   common_tags        = merge(local.common_tags, { Name = "${var.name_prefix}-user-host" })
