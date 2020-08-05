@@ -1,7 +1,7 @@
 resource "aws_cloudwatch_event_rule" "fire_at_three_seventeen" {
   name                = "between-three-and-four"
   description         = "Fires every day at 03:17am"
-  schedule_expression = "cron(17 3 * * ? *)"
+  schedule_expression = "cron(17 0 * * ? *)"
 }
 
 resource "aws_cloudwatch_event_target" "cleanup_lambda_target" {
