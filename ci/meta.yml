@@ -113,5 +113,5 @@ meta:
               terraform init
               terraform taint "module.ecs-user-host.aws_autoscaling_group.user_host"
         inputs:
-          - name: aws-analytical-env
+          - name: orchestration-service
           - name: terraform-config
