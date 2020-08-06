@@ -193,6 +193,8 @@ module "ecs-user-host" {
   guacamole_port     = local.guacamole_port
   emr_sg_id          = data.terraform_remote_state.aws_analytical_env_app.outputs.emr_sg_id
   management_account = local.account[local.management_account[local.environment]]
+  pushgateway_sg_id  = data.terraform_remote_state.aws_analytical_env_infra.outputs.alb_sg.id
+
   vpc = {
     id                   = data.terraform_remote_state.aws_analytical_env_infra.outputs.vpc.aws_vpc.id
     aws_subnets_private  = data.terraform_remote_state.aws_analytical_env_infra.outputs.vpc.aws_subnets_private
