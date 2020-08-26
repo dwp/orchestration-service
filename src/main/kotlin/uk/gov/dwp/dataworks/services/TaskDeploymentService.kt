@@ -157,7 +157,7 @@ class TaskDeploymentService {
                 .build()
         val hue = ContainerDefinition.builder()
                 .name("hue")
-                .image("$ecrEndpoint/aws-analytical-env/hue")
+                .image("$ecrEndpoint/matt_test") //TODO: Change to actual image repo
                 .cpu(jupyterCpu)
                 .memory(jupyterMemory)
                 .essential(true)
