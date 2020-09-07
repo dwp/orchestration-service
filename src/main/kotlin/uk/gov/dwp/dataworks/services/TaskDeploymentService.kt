@@ -161,7 +161,7 @@ class TaskDeploymentService {
                 .cpu(jupyterCpu)
                 .memory(jupyterMemory)
                 .essential(true)
-                .portMappings(PortMapping.builder().containerPort(6000).hostPort(6000).build())
+                .portMappings(PortMapping.builder().containerPort(8888).hostPort(8888).build())
                 .environment(pairsToKeyValuePairs("USER" to userName, "EMR_HOST_NAME" to emrHostname, "S3_BUCKET" to jupyterS3Bucket.substringAfterLast(":"), "KMS_HOME" to kmsHome, "KMS_SHARED" to kmsShared, "DISABLE_AUTH" to "true"))
                 .logConfiguration(buildLogConfiguration(userName, "hue"))
                 .build()
@@ -217,7 +217,7 @@ class TaskDeploymentService {
                                 "--disable-infobars",
                                 "--disable-features=TranslateUI",
                                 "--disk-cache-dir=/dev/null",
-                                "--test-type https://localhost:8000 https://localhost:7000 https://localhost:6000",
+                                "--test-type https://localhost:8000 https://localhost:7000 http://localhost:8888",
                                 "--start-fullscreen",
                                 "--ignore-certificate-errors",
                                 "--enable-auto-reload",
