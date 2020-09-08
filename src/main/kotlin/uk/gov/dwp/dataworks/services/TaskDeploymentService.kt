@@ -141,11 +141,25 @@ class TaskDeploymentService {
                 .containerName("jupyterHub")
                 .condition(ContainerCondition.HEALTHY)
                 .build()
+        val rstudioOssContainerDependency = ContainerDependency.builder()
+                .containerName("rstudio-oss")
+                .condition(ContainerCondition.START)
+                .build()
         val jupyterhubHealthCheck = HealthCheck.builder()
                 .command("CMD", "wget", "-O-", "-S", "--no-check-certificate", "-q", "https://localhost:8000/hub/health")
                 .interval(12)
                 .timeout(12)
                 .startPeriod(20)
+                .build()
+        val rstudioOss = ContainerDefinition.builder()
+                .name("rstudio-oss")
+                .image("$ecrEndpoint/aws-analytical-env/rstudio-oss")
+                .cpu(jupyterCpu)
+                .memory(jupyterMemory)
+                .essential(true)
+                .portMappings(PortMapping.builder().containerPort(7000).hostPort(7000).build())
+                .environment(pairsToKeyValuePairs("USER" to userName, "EMR_HOST_NAME" to emrHostname, "S3_BUCKET" to jupyterS3Bucket.substringAfterLast(":"), "KMS_HOME" to kmsHome, "KMS_SHARED" to kmsShared, "DISABLE_AUTH" to "true"))
+                .logConfiguration(buildLogConfiguration(userName, "rstudio-oss"))
                 .build()
         val jupyterHub = ContainerDefinition.builder()
                 .name("jupyterHub")
@@ -189,8 +203,8 @@ class TaskDeploymentService {
                                 "--disable-infobars",
                                 "--disable-features=TranslateUI",
                                 "--disk-cache-dir=/dev/null",
-                                "--test-type https://localhost:8000",
-                                "--kiosk",
+                                "--test-type https://localhost:8000 https://localhost:7000",
+                                "--start-fullscreen",
                                 "--ignore-certificate-errors",
                                 "--enable-auto-reload",
                                 "--connectivity-check-url=https://localhost:8000",
@@ -198,7 +212,7 @@ class TaskDeploymentService {
                         "VNC_SCREEN_SIZE" to screenSize.toList().joinToString("x")))
                 .logConfiguration(buildLogConfiguration(userName, "headless_chrome"))
                 .healthCheck(headlessChromeHealthCheck)
-                .dependsOn(jupyterhubContainerDependency)
+                .dependsOn(jupyterhubContainerDependency, rstudioOssContainerDependency)
                 .build()
 
         val guacdContainerDependency = ContainerDependency.builder()
@@ -242,7 +256,7 @@ class TaskDeploymentService {
                 .dependsOn(jupyterhubContainerDependency, guacdContainerDependency)
                 .build()
 
-        return listOf(jupyterHub, headlessChrome, guacd, guacamole)
+        return listOf(jupyterHub, headlessChrome, guacd, guacamole, rstudioOss)
     }
 
     private fun pairsToKeyValuePairs(vararg pairs: Pair<String, String>): Collection<KeyValuePair> {
