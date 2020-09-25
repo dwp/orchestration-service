@@ -39,7 +39,7 @@ jobs:
           output=""
 
           for d in $(find ./terraform/* -type d) ;do
-            section=$(tflint -f json --force --disable-rule=aws_cloudwatch_log_group_invalid_name --config=./terraform/.tflint.hcl $d |jq -c '.issues[] | "_ISSUE FOUND:_ (\(.rule.name)) in \(.range.filename) line \(.range.start.line) - \(.range.end.line)¡"')
+            section=$(tflint -f json --force --disable-rule=aws_cloudwatch_log_group_invalid_name --config=./terraform/.tflint.hcl $d |jq -c '.issues[] | "ISSUE FOUND: (\(.rule.name)) in \(.range.filename) line \(.range.start.line) - \(.range.end.line)¡"')
             output+=$(if [ ${#section} -gt 1 ] ; then echo "***ISSUE(S) FOUND IN ${d}***:¡${section}¢"; fi);
           done
 
@@ -47,18 +47,16 @@ jobs:
 
           IFS='¢' read -r -a array <<< "$output"
 
-          mkdir ./tmp
-
           for i in "${array[@]}"
             do
               IFS='¡' read -r -a comment_sections <<< "$i"
-              echo "${comment_sections[0]}" >> ./tmp/comment.md
-              echo "'''" >> ./tmp/${file_name}.md
+              echo "${comment_sections[0]}" >> .github/workflows/comment.md
+              echo "\`\`\`" >> .github/workflows/comment.md
               for p in "${comment_sections[@]:1}"
                 do
-                  echo $p >> ./tmp/comment.md
+                  echo $p >> .github/workflows/comment.md
                 done
-              echo -e "''' \n" >> ./tmp/comment.md
+              echo -e "\`\`\` \n" >> .github/workflows/comment.md
             done
 
       - name: Add checkout commands
@@ -66,7 +64,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          filename: ./tmp/comment.md
+          filename: comment.md
 
       - name: build-docker-image
         run: |
