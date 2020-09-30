@@ -250,7 +250,7 @@ class TaskDeploymentService {
                 .name("headless_chrome")
                 .image("$ecrEndpoint/aws-analytical-env/headless-chrome")
                 .cpu(512)
-                .memory(1024)
+                .memory(1792)
                 .essential(true)
                 .portMappings(PortMapping.builder().containerPort(5900).hostPort(5900).build())
                 .environment(pairsToKeyValuePairs(
@@ -304,7 +304,7 @@ class TaskDeploymentService {
                 .name("guacamole")
                 .image("$ecrEndpoint/aws-analytical-env/guacamole")
                 .cpu(256)
-                .memory(512)
+                .memory(896)
                 .essential(true)
                 .environment(pairsToKeyValuePairs(
                         "GUACD_HOSTNAME" to "localhost",

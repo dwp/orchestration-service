@@ -12,7 +12,7 @@ import kotlin.reflect.full.declaredMemberProperties
 
 data class DeployRequest @JsonCreator constructor(
         val jupyterCpu: Int = 256,
-        val jupyterMemory: Int = 512,
+        val jupyterMemory: Int = 896,
         val additionalPermissions: List<String> = emptyList()
 )
 
