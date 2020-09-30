@@ -115,6 +115,7 @@ class TaskDeploymentService {
 
             val userContainerProperties = UserContainerProperties(
                     userName,
+                    cognitoGroups,
                     emrClusterHostname,
                     jupyterCpu,
                     jupyterMemory,
@@ -328,7 +329,8 @@ class TaskDeploymentService {
                         "KMS_HOME" to containerProperties.kmsHome,
                         "KMS_SHARED" to containerProperties.kmsShared,
                         "S3_BUCKET" to containerProperties.userS3Bucket.substringAfterLast(":"),
-                        "USER" to containerProperties.userName
+                        "USER" to containerProperties.userName,
+                        "TEAM" to containerProperties.cognitoGroups[0]
                 ))
                 .linuxParameters(
                         LinuxParameters.builder()

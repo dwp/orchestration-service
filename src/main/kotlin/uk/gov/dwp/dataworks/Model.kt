@@ -55,6 +55,7 @@ data class UserTask(val correlationId: String,
 
 data class UserContainerProperties(
         val userName: String,
+        val cognitoGroups: List<String>,
         val emrHostname: String,
         val jupyterCpu: Int,
         val jupyterMemory: Int,
