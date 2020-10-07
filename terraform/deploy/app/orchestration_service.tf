@@ -198,6 +198,7 @@ module "ecs-user-host" {
   emr_sg_id          = data.terraform_remote_state.aws_analytical_env_app.outputs.emr_sg_id
   management_account = local.account[local.management_account[local.environment]]
   pushgateway_sg_id  = data.terraform_remote_state.aws_analytical_env_app.outputs.pushgateway.lb_sg.id
+  github_proxy_vpce_sg_id = data.terraform_remote_state.aws_analytical_env_infra.outputs.internet_proxy_sg
 
   vpc = {
     id                   = data.terraform_remote_state.aws_analytical_env_infra.outputs.vpc.aws_vpc.id
