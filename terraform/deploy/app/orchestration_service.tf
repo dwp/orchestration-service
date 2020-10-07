@@ -131,8 +131,11 @@ module "ecs-fargate-task-definition" {
     {
       name  = "orchestrationService.push_gateway_cron"
       value = "*/5 * * * *"
+    },
+    {
+      name  = "orchestrationService.github_proxy_url"
+      value = "${data.terraform_remote_state.aws_analytical_env_infra.outputs.github_proxy_dns_name}:3128"
     }
-
   ]
 }
 #
