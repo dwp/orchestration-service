@@ -171,7 +171,11 @@ class TaskDeploymentService {
         val ecrEndpoint = configurationResolver.getStringConfig(ConfigKey.ECR_ENDPOINT)
         val screenSize = 1920 to 1080
 
-        val noProxyList = "git-codecommit.${configurationResolver.getStringConfig(ConfigKey.AWS_REGION)}.amazonaws.com"
+        val noProxyList = listOf(
+            "git-codecommit.${configurationResolver.getStringConfig(ConfigKey.AWS_REGION)}.amazonaws.com",
+            "localhost",
+            "127.0.0.1"
+        ).joinToString(",")
         val proxyEnvVariables = arrayOf(
                 "HTTP_PROXY" to containerProperties.githubProxyUrl,
                 "HTTPS_PROXY" to containerProperties.githubProxyUrl,
