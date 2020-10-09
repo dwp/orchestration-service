@@ -198,7 +198,7 @@ class TaskDeploymentService {
                 .condition(ContainerCondition.START)
                 .build()
         val jupyterhubHealthCheck = HealthCheck.builder()
-                .command("CMD", "wget", "-O-", "-S", "--no-check-certificate", "-q", "https://localhost:8000/hub/health")
+                .command("CMD", "curl", "-k", "-o", "/dev/null", "https://localhost:8000/hub/health")
                 .interval(12)
                 .timeout(12)
                 .startPeriod(20)
