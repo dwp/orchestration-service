@@ -190,14 +190,14 @@ module "ecs-user-host" {
     min_size              = local.environment == "production" ? 3 : 1
     max_instance_lifetime = 604800
   }
-  common_tags        = merge(local.common_tags, { Name = "${var.name_prefix}-user-host" })
-  instance_type      = "m5.2xlarge"
-  name_prefix        = "${var.name_prefix}-user-host"
-  frontend_alb_sg_id = data.terraform_remote_state.aws_analytical_env_infra.outputs.alb_sg.id
-  guacamole_port     = local.guacamole_port
-  emr_sg_id          = data.terraform_remote_state.aws_analytical_env_app.outputs.emr_sg_id
-  management_account = local.account[local.management_account[local.environment]]
-  pushgateway_sg_id  = data.terraform_remote_state.aws_analytical_env_app.outputs.pushgateway.lb_sg.id
+  common_tags             = merge(local.common_tags, { Name = "${var.name_prefix}-user-host" })
+  instance_type           = "m5.2xlarge"
+  name_prefix             = "${var.name_prefix}-user-host"
+  frontend_alb_sg_id      = data.terraform_remote_state.aws_analytical_env_infra.outputs.alb_sg.id
+  guacamole_port          = local.guacamole_port
+  emr_sg_id               = data.terraform_remote_state.aws_analytical_env_app.outputs.emr_sg_id
+  management_account      = local.account[local.management_account[local.environment]]
+  pushgateway_sg_id       = data.terraform_remote_state.aws_analytical_env_app.outputs.pushgateway.lb_sg.id
   github_proxy_vpce_sg_id = data.terraform_remote_state.aws_analytical_env_infra.outputs.internet_proxy_sg
 
   vpc = {
