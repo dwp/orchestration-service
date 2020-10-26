@@ -286,3 +286,11 @@ module "guacamole_invalid_user_desktop_alarm" {
   statistic           = "Sum"
   comparison_operator = "GreaterThanThreshold"
 }
+
+resource "aws_iam_role" "test" {
+  assume_role_policy = "lalal"
+  dynamic "tags" {
+    for_each = ""
+    content {value=""}
+  }
+}
