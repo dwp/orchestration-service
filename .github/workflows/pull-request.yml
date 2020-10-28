@@ -32,7 +32,7 @@ jobs:
         run: terraform fmt --recursive
 
       - name: lint-and-pr-comment
-        uses: dwp/resource-tag-check-github-action@v1
+        uses: dwp/resource-tag-check-github-action@2
         with:
           tags: "Name, Environment, Application, Team"
           tag-map: "common_tags"
