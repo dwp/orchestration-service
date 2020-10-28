@@ -290,3 +290,7 @@ module "guacamole_invalid_user_desktop_alarm" {
   statistic           = "Sum"
   comparison_operator = "GreaterThanThreshold"
 }
+
+resource "aws_iam_role" "no_tags" {
+  assume_role_policy = "test"
+}
