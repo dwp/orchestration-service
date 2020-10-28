@@ -111,7 +111,7 @@ locals {
   container_image = "${local.account[local.management_account[local.environment]]}.dkr.ecr.${var.region}.amazonaws.com/orchestration-service"
   data_science_git_repo = "Data_Science-${local.environment}"
 
-  github_url = "{{ucfs.github.vpc.owner}}"
+  github_url = "https://{{ucfs.github.fqdn}}"
 
   root_dns_prefix = {
     development = "dev"
