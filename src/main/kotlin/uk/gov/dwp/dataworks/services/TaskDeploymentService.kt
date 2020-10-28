@@ -356,7 +356,7 @@ class TaskDeploymentService {
                         "KEYSTORE_DATA" to authService.getB64KeyStoreData(),
                         "VALIDATE_ISSUER" to "true",
                         "ISSUER" to authService.issuerUrl,
-                        "CLIENT_PARAMS" to "hostname=localhost,port=5900,disable-copy=true",
+                        "CLIENT_PARAMS" to "hostname=localhost,port=5900,disable-copy=false",
                         "CLIENT_USERNAME" to containerProperties.userName.substring(0, containerProperties.userName.length - 3)))
                 .portMappings(PortMapping.builder().hostPort(containerProperties.guacamolePort).containerPort(containerProperties.guacamolePort).build())
                 .logConfiguration(buildLogConfiguration(containerProperties.userName, "guacamole"))
