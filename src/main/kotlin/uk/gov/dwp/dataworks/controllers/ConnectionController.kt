@@ -105,7 +105,7 @@ class ConnectionController {
         res.sendError(HttpStatus.UNAUTHORIZED.value(), "Failed to verify JWT token")
     }
 
-    fun handleConnectionRequest(userName: String, cognitoGroups: List<String>, requestBody: DeployRequest):String {
+    fun handleConnectionRequest(token: String, userName: String, cognitoGroups: List<String>, requestBody: DeployRequest):String {
         if (activeUserTasks.contains(userName)) {
             logger.info("Redirecting user to running containers, as they exist")
         } else {
