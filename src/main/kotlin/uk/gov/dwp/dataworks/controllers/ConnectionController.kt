@@ -15,16 +15,13 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
+import uk.gov.dwp.dataworks.AttributesNotFoundException
 import uk.gov.dwp.dataworks.CleanupRequest
 import uk.gov.dwp.dataworks.DeployRequest
 import uk.gov.dwp.dataworks.ForbiddenException
 import uk.gov.dwp.dataworks.logging.DataworksLogger
-import uk.gov.dwp.dataworks.services.ActiveUserTasks
-import uk.gov.dwp.dataworks.services.AuthenticationService
-import uk.gov.dwp.dataworks.services.ConfigKey
-import uk.gov.dwp.dataworks.services.ConfigurationResolver
-import uk.gov.dwp.dataworks.services.TaskDeploymentService
-import uk.gov.dwp.dataworks.services.TaskDestroyService
+import uk.gov.dwp.dataworks.services.*
+import java.net.http.HttpResponse
 import javax.servlet.http.HttpServletResponse
 
 @RestController
@@ -44,6 +41,22 @@ class ConnectionController {
     private lateinit var configurationResolver: ConfigurationResolver
     @Autowired
     private lateinit var activeUserTasks: ActiveUserTasks
+    @Autowired
+    private lateinit var userValidationService: UserValidationService
+
+
+    @Operation(summary = "Checks JWT for necessary atributes",
+            description = "Returns 200 or 404, depending on user attributes present")
+    @ApiResponses(value = [
+        ApiResponse(responseCode = "200", description = "User attributes present"),
+        ApiResponse(responseCode = "404", description = "User attribute(s) missing")
+    ])
+    @PostMapping("/verify-user")
+    @ResponseStatus(HttpStatus.OK)
+    fun verifyUser(@RequestHeader("Authorisation") token: String){
+        if(!userValidationService.validateUser(token))
+        throw AttributesNotFoundException("User attribute(s) missing")
+    }
 
     @Operation(summary = "Connect to Analytical Environment",
             description = "Provisions the Analytical Environment for a user and returns the required information to connect")
