@@ -55,7 +55,7 @@ class ConnectionController {
     @ResponseStatus(HttpStatus.OK)
     fun connect(@RequestHeader("Authorisation") token: String, @RequestBody requestBody: DeployRequest): String {
         val jwtObject = authService.validate(token)
-        return handleConnectionRequest(jwtObject.userName, jwtObject.cognitoGroup, requestBody)
+        return handleConnectionRequest(token, jwtObject.userName, jwtObject.cognitoGroup, requestBody)
     }
 
     @Operation(summary = "Requests the user containers",
@@ -65,10 +65,10 @@ class ConnectionController {
         ApiResponse(responseCode = "400", description = "Failure, bad request")
     ])
     @PostMapping("/debug/deploy")
-    fun launchTask(@RequestHeader("Authorisation") userName: String, @RequestHeader("cognitoGroups") cognitoGroups: List<String>, @RequestBody requestBody: DeployRequest): String {
+    fun launchTask(@RequestHeader("Authorisation") token: String, @RequestHeader("Authorisation") userName: String, @RequestHeader("cognitoGroups") cognitoGroups: List<String>, @RequestBody requestBody: DeployRequest): String {
         if (configurationResolver.getStringConfig(ConfigKey.DEBUG) != "true" )
             throw ForbiddenException("Debug routes not enabled")
-        return handleConnectionRequest(userName,cognitoGroups, requestBody)
+        return handleConnectionRequest(token, userName, cognitoGroups, requestBody)
     }
 
     @PostMapping("/debug/destroy")
@@ -110,6 +110,7 @@ class ConnectionController {
             logger.info("Redirecting user to running containers, as they exist")
         } else {
             taskDeploymentService.runContainers(
+                    token,
                     userName,
                     cognitoGroups,
                     requestBody.jupyterCpu,
