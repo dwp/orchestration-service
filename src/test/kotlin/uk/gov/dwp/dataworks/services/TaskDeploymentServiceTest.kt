@@ -26,28 +26,28 @@ import software.amazon.awssdk.services.elasticloadbalancingv2.model.TargetTypeEn
 @RunWith(SpringRunner::class)
 @ContextConfiguration(classes = [Application::class, TaskDeploymentServiceTest.AwsCommunicatorConfig::class])
 @SpringBootTest(properties = ["orchestrationService.cognito_user_pool_id=pool_1",
-    "orchestrationService.aws_account_number=123456789",
-    "orchestrationService.aws_region=eu-west-2",
-    "orchestrationService.user_container_port=1234",
-    "orchestrationService.load_balancer_port=1818",
-    "orchestrationService.load_balancer_name=lbName",
-    "orchestrationService.user_task_subnets=testSubnets",
-    "orchestrationService.user_task_execution_role_arn=taskExecutionARN",
-    "orchestrationService.user_task_security_groups=testSgs",
-    "orchestrationService.user_container_url=www.com",
-    "orchestrationService.emr_cluster_hostname=test_hostname",
-    "orchestrationService.ecs_cluster_name=test_cluster",
-    "orchestrationService.container_log_group=testLog",
-    "orchestrationService.data_science_git_repo=codecommitted",
-    "orchestrationService.ecr_endpoint=endpoint",
-    "orchestrationService.debug=false",
-    "orchestrationService.jupyterhub_bucket_arn=testArn",
-    "orchestrationService.push_gateway_host=testlb",
-    "orchestrationService.push_gateway_cron=*/5 * * * *",
-    "orchestrationService.github_proxy_url=proxy.tld:3128",
-    "orchestrationService.github_url=https://github.com",
-    "TAGS={}",
-    "spring.main.allow-bean-definition-overriding=true"])
+                              "orchestrationService.aws_account_number=123456789",
+                              "orchestrationService.aws_region=eu-west-2",
+                              "orchestrationService.user_container_port=1234",
+                              "orchestrationService.load_balancer_port=1818",
+                              "orchestrationService.load_balancer_name=lbName",
+                              "orchestrationService.user_task_subnets=testSubnets",
+                              "orchestrationService.user_task_execution_role_arn=taskExecutionARN",
+                              "orchestrationService.user_task_security_groups=testSgs",
+                              "orchestrationService.user_container_url=www.com",
+                              "orchestrationService.emr_cluster_hostname=test_hostname",
+                              "orchestrationService.ecs_cluster_name=test_cluster",
+                              "orchestrationService.container_log_group=testLog",
+                              "orchestrationService.data_science_git_repo=codecommitted",
+                              "orchestrationService.ecr_endpoint=endpoint",
+                              "orchestrationService.debug=false",
+                              "orchestrationService.jupyterhub_bucket_arn=testArn",
+                              "orchestrationService.push_gateway_host=testlb",
+                              "orchestrationService.push_gateway_cron=*/5 * * * *",
+                              "orchestrationService.github_proxy_url=proxy.tld:3128",
+                              "orchestrationService.github_url=https://github.com",
+                              "TAGS={}",
+                              "spring.main.allow-bean-definition-overriding=true"])
 class TaskDeploymentServiceTest {
 
     @Autowired
@@ -101,10 +101,10 @@ class TaskDeploymentServiceTest {
                 .environment()
         assertThat(chromeEnvs.first { k -> k.name() == "CHROME_OPTS" }
                 .value()).contains(" https://localhost:8000 ",
-                " https://localhost:7000 ",
-                " https://localhost:8888 ",
-                " https://github.com ",
-                " https://azkaban.workflow-manager.dataworks.dwp.gov.uk?action=login&cognitoToken=abcde ")
+                                   " https://localhost:7000 ",
+                                   " https://localhost:8888 ",
+                                   " https://github.com ",
+                                   " https://azkaban.workflow-manager.dataworks.dwp.gov.uk?action=login&cognitoToken=abcde ")
 
     }
 
@@ -117,6 +117,12 @@ class TaskDeploymentServiceTest {
                 on { getUsernameFromJwt(any()) }.thenReturn("testUser")
             }
         }
+
+        @Bean
+        fun authService() : AuthenticationService {
+            return mock<AuthenticationService>{}
+        }
+
         @Bean
         @Primary
         fun awsCommunicator(lb : LoadBalancer, l : Listener, tg : TargetGroup, p : Policy, r : Role): AwsCommunicator {

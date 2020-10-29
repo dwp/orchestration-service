@@ -2,7 +2,10 @@ package uk.gov.dwp.dataworks.controllers
 
 import com.auth0.jwt.exceptions.JWTVerificationException
 import com.auth0.jwt.interfaces.DecodedJWT
-import com.nhaarman.mockitokotlin2.*
+import com.nhaarman.mockitokotlin2.mock
+import com.nhaarman.mockitokotlin2.whenever
+import com.nhaarman.mockitokotlin2.any
+import com.nhaarman.mockitokotlin2.doReturn
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -17,7 +20,14 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import uk.gov.dwp.dataworks.JWTObject
-import uk.gov.dwp.dataworks.services.*
+import uk.gov.dwp.dataworks.services.ActiveUserTasks
+import uk.gov.dwp.dataworks.services.AuthenticationService
+import uk.gov.dwp.dataworks.services.ConfigKey
+import uk.gov.dwp.dataworks.services.ConfigurationResolver
+import uk.gov.dwp.dataworks.services.TaskDeploymentService
+import uk.gov.dwp.dataworks.services.TaskDestroyService
+import uk.gov.dwp.dataworks.services.JwtParsingService
+import uk.gov.dwp.dataworks.services.UserValidationService
 
 @RunWith(SpringRunner::class)
 @WebMvcTest(ConnectionController::class, ConfigurationResolver::class)
