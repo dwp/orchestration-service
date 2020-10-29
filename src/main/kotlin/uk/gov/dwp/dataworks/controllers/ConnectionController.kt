@@ -21,7 +21,6 @@ import uk.gov.dwp.dataworks.DeployRequest
 import uk.gov.dwp.dataworks.ForbiddenException
 import uk.gov.dwp.dataworks.logging.DataworksLogger
 import uk.gov.dwp.dataworks.services.*
-import java.net.http.HttpResponse
 import javax.servlet.http.HttpServletResponse
 
 @RestController
@@ -54,7 +53,7 @@ class ConnectionController {
     @PostMapping("/verify-user")
     @ResponseStatus(HttpStatus.OK)
     fun verifyUser(@RequestHeader("Authorisation") token: String){
-        if(!userValidationService.validateUser(token))
+        if(!userValidationService.checkAttributes(token))
         throw AttributesNotFoundException("User attribute(s) missing")
     }
 
@@ -68,7 +67,8 @@ class ConnectionController {
     @ResponseStatus(HttpStatus.OK)
     fun connect(@RequestHeader("Authorisation") token: String, @RequestBody requestBody: DeployRequest): String {
         val jwtObject = authService.validate(token)
-        return handleConnectionRequest(token, jwtObject.userName, jwtObject.cognitoGroup, requestBody)
+        return handleConnectionRequest(token, jwtObject.username, jwtObject.cognitoGroups, requestBody)
+
     }
 
     @Operation(summary = "Requests the user containers",
@@ -102,7 +102,7 @@ class ConnectionController {
     @ResponseStatus(HttpStatus.OK)
     fun disconnect(@RequestHeader("Authorisation") token: String) {
         val jwtObject = authService.validate(token)
-        taskDestroyService.destroyServices(jwtObject.userName)
+        taskDestroyService.destroyServices(jwtObject.username)
     }
 
     @PostMapping("/cleanup")

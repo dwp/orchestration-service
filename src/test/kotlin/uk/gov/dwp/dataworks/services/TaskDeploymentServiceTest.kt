@@ -5,6 +5,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mock
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Bean
@@ -22,6 +23,7 @@ import software.amazon.awssdk.services.iam.model.Role
 import uk.gov.dwp.dataworks.Application
 import uk.gov.dwp.dataworks.aws.AwsCommunicator
 import software.amazon.awssdk.services.elasticloadbalancingv2.model.TargetTypeEnum
+import uk.gov.dwp.dataworks.JWTObject
 
 @RunWith(SpringRunner::class)
 @ContextConfiguration(classes = [Application::class, TaskDeploymentServiceTest.AwsCommunicatorConfig::class])
@@ -111,12 +113,12 @@ class TaskDeploymentServiceTest {
     @Configuration
     class AwsCommunicatorConfig {
 
-        @Bean
-        fun authService() : AuthenticationService {
-            return mock<AuthenticationService> {
-                on { userNameFromJwt(any()) }.thenReturn("testUser")
-            }
-        }
+//        @Bean
+//        fun authService() : AuthenticationService {
+//            return mock<AuthenticationService> {
+//                on { userNameFromJwt(any()) }.thenReturn("testUser")
+//            }
+//        }
         @Bean
         @Primary
         fun awsCommunicator(lb : LoadBalancer, l : Listener, tg : TargetGroup, p : Policy, r : Role): AwsCommunicator {

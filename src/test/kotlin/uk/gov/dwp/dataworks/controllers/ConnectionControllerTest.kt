@@ -19,12 +19,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import uk.gov.dwp.dataworks.JWTObject
-import uk.gov.dwp.dataworks.services.ActiveUserTasks
-import uk.gov.dwp.dataworks.services.AuthenticationService
-import uk.gov.dwp.dataworks.services.ConfigKey
-import uk.gov.dwp.dataworks.services.ConfigurationResolver
-import uk.gov.dwp.dataworks.services.TaskDeploymentService
-import uk.gov.dwp.dataworks.services.TaskDestroyService
+import uk.gov.dwp.dataworks.services.*
 
 @RunWith(SpringRunner::class)
 @WebMvcTest(ConnectionController::class, ConfigurationResolver::class)
@@ -40,6 +35,10 @@ class ConnectionControllerTest {
     private lateinit var taskDestroyService: TaskDestroyService
     @MockBean
     private lateinit var activeUserTasks: ActiveUserTasks
+    @MockBean
+    private lateinit var jwtParsingService: JwtParsingService
+    @MockBean
+    private lateinit var userValidationService: UserValidationService
 
     @Before
     fun setup() {
