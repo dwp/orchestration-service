@@ -2,9 +2,7 @@ package uk.gov.dwp.dataworks.controllers
 
 import com.auth0.jwt.exceptions.JWTVerificationException
 import com.auth0.jwt.interfaces.DecodedJWT
-import com.nhaarman.mockitokotlin2.any
-import com.nhaarman.mockitokotlin2.mock
-import com.nhaarman.mockitokotlin2.whenever
+import com.nhaarman.mockitokotlin2.*
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -134,6 +132,24 @@ class ConnectionControllerTest {
         mvc.perform(post("/cleanup")
                 .header("content-type", "application/json")
                 .content("{\"activeUsers\": [\"testuser1\", \"testuser2\"]}"))
+                .andExpect(status().isOk)
+    }
+
+    @Test
+    fun `404 returned when calling verify-user endpoint with invalid jwt`(){
+        whenever(userValidationService.checkAttributes(any())).doReturn(false)
+        mvc.perform(post("/verify-user")
+                .header("content-type", "application/json")
+                .header("Authorisation", "testBadToken"))
+                .andExpect(status().isNotFound)
+    }
+
+    @Test
+    fun `200 returned when calling verify-user endpoint with invalid jwt`(){
+        whenever(userValidationService.checkAttributes(any())).doReturn(true)
+        mvc.perform(post("/verify-user")
+                .header("content-type", "application/json")
+                .header("Authorisation", "testBadToken"))
                 .andExpect(status().isOk)
     }
 }

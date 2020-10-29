@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.CrossOrigin
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.PostMapping
@@ -51,10 +52,9 @@ class ConnectionController {
         ApiResponse(responseCode = "404", description = "User attribute(s) missing")
     ])
     @PostMapping("/verify-user")
-    @ResponseStatus(HttpStatus.OK)
-    fun verifyUser(@RequestHeader("Authorisation") token: String){
-        if(!userValidationService.checkAttributes(token))
-        throw AttributesNotFoundException("User attribute(s) missing")
+    fun verifyUser(@RequestHeader("Authorisation") token: String): ResponseEntity<HttpStatus> {
+        if(userValidationService.checkAttributes(token)) return ResponseEntity(HttpStatus.OK)
+        else throw AttributesNotFoundException("User attribute(s) not found in JWT")
     }
 
     @Operation(summary = "Connect to Analytical Environment",
