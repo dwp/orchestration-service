@@ -9,7 +9,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.ArgumentMatchers.anyString
 import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.springframework.test.context.junit4.SpringRunner
@@ -38,27 +37,27 @@ class UserValidationServiceTest {
     fun `returns false when parsing service doesn't find enabled group or user kms`() {
         whenever(awsCommunicator.checkForExistingEnabledKey("group1-shared")).doReturn(false)
         whenever(awsCommunicator.checkForExistingEnabledKey("testuser123-home")).doReturn(false)
-        assertFalse(userValidationService.checkAttributes("fake_token"))
+        assertFalse(userValidationService.checkJwtForAttributes("fake_token"))
     }
 
     @Test
     fun `returns false when parsing service doesn't find enabled group kms and finds enabled user kms`() {
         whenever(awsCommunicator.checkForExistingEnabledKey("testuser123-home")).doReturn(true)
         whenever(awsCommunicator.checkForExistingEnabledKey("group1-shared")).doReturn(false)
-        assertFalse(userValidationService.checkAttributes("fake_token"))
+        assertFalse(userValidationService.checkJwtForAttributes("fake_token"))
     }
 
     @Test
     fun `returns false when parsing service doesn't find enabled kms and finds group`() {
         whenever(awsCommunicator.checkForExistingEnabledKey("testuser123-home")).doReturn(false)
         whenever(awsCommunicator.checkForExistingEnabledKey("group1-shared")).doReturn(true)
-        assertFalse(userValidationService.checkAttributes("fake_token"))
+        assertFalse(userValidationService.checkJwtForAttributes("fake_token"))
     }
 
     @Test
     fun `returns true when parsing service finds enabled group and user kms`() {
         whenever(awsCommunicator.checkForExistingEnabledKey("testuser123-home")).doReturn(true)
         whenever(awsCommunicator.checkForExistingEnabledKey("group1-shared")).doReturn(true)
-        assertTrue(userValidationService.checkAttributes("fake_token"))
+        assertTrue(userValidationService.checkJwtForAttributes("fake_token"))
     }
 }

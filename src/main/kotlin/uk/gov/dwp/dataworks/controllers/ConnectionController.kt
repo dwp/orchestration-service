@@ -59,7 +59,7 @@ class ConnectionController {
     ])
     @PostMapping("/verify-user")
     fun verifyUser(@RequestHeader("Authorisation") token: String): ResponseEntity<HttpStatus> {
-        if(userValidationService.checkAttributes(token)) return ResponseEntity(HttpStatus.OK)
+        if(userValidationService.checkJwtForAttributes(token)) return ResponseEntity(HttpStatus.OK)
         else throw AttributesNotFoundException("User attribute(s) not found in JWT")
     }
 

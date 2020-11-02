@@ -17,12 +17,12 @@ class UserValidationService {
     @Autowired
     private lateinit var jwtParsingService: JwtParsingService
 
-    fun checkAttributes(jwt: String): Boolean {
+    fun checkJwtForAttributes(jwt: String): Boolean {
         val jwtObject= jwtParsingService.parseToken(jwt)
-        return checkJwtForGroupKms(jwtObject.cognitoGroups) && awsCommunicator.checkForExistingEnabledKey("${jwtObject.username}-home")
+        return checkForGroupKms(jwtObject.cognitoGroups) && awsCommunicator.checkForExistingEnabledKey("${jwtObject.username}-home")
     }
 
-    fun checkJwtForGroupKms(cognitoGroups: List<String>): Boolean {
+    fun checkForGroupKms(cognitoGroups: List<String>): Boolean {
         if (cognitoGroups.size > 0) return awsCommunicator.checkForExistingEnabledKey("${cognitoGroups.first()}-shared")
             return false
     }

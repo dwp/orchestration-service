@@ -25,7 +25,7 @@ class JwtParsingService {
         )
     }
 
-    fun getCognitoGroupsFromJwt(decodedJwt: DecodedJWT): MutableList<String> {
+    fun getCognitoGroupsFromJwt(decodedJwt: DecodedJWT): List<String> {
         return decodedJwt.getClaim("cognito:groups").asList(String::class.java)
                 ?: throw IllegalArgumentException("No cognito groups found in JWT token")
     }
@@ -43,6 +43,6 @@ class JwtParsingService {
         // TargetGroupNames, IAMRoleNames etc are limited to
         // 32 chars (which is the size of sub!).
 
-        return listOf(userName, subPrefix).joinToString("")
+        return userName + subPrefix
     }
 }
