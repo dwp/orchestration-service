@@ -155,11 +155,11 @@ class ConnectionControllerTest {
     }
 
     @Test
-    fun `200 returned when calling verify-user endpoint with invalid jwt`(){
+    fun `200 returned when calling verify-user endpoint with valid jwt`(){
         whenever(userValidationService.checkAttributes(any())).doReturn(true)
         mvc.perform(post("/verify-user")
                 .header("content-type", "application/json")
-                .header("Authorisation", "testBadToken"))
+                .header("Authorisation", "testGoodToken"))
                 .andExpect(status().isOk)
     }
 }

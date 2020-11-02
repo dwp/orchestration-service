@@ -19,19 +19,11 @@ class UserValidationService {
 
     fun checkAttributes(jwt: String): Boolean {
         val jwtObject= jwtParsingService.parseToken(jwt)
-        return checkJwtForGroup(jwtObject.username, jwtObject.cognitoGroups) && checkForEnabledKms(jwtObject.username)
+        return checkJwtForGroupKms(jwtObject.cognitoGroups) && awsCommunicator.checkForExistingEnabledKey("${jwtObject.username}-home")
     }
 
-    fun checkForEnabledKms(userName: String): Boolean {
-        return awsCommunicator.checkForExistingEnabledKey(userName)
-    }
-
-    fun checkJwtForGroup(userName: String, cognitoGroups: List<String>): Boolean {
-        for (i in cognitoGroups){
-            if(userName in i){
-                return true
-            }
-        }
-        return false
+    fun checkJwtForGroupKms(cognitoGroups: List<String>): Boolean {
+        if (cognitoGroups.size > 0) return awsCommunicator.checkForExistingEnabledKey("${cognitoGroups.first()}-shared")
+            return false
     }
 }

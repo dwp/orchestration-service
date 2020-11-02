@@ -51,7 +51,7 @@ class ConnectionController {
     private lateinit var userValidationService: UserValidationService
 
 
-    @Operation(summary = "Checks JWT for necessary atributes",
+    @Operation(summary = "Checks JWT for necessary attributes",
             description = "Returns 200 or 404, depending on user attributes present")
     @ApiResponses(value = [
         ApiResponse(responseCode = "200", description = "User attributes present"),
