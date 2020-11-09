@@ -233,7 +233,7 @@ class TaskDeploymentService {
                         "S3_BUCKET" to containerProperties.userS3Bucket.substringAfterLast(":"),
                         "KMS_HOME" to containerProperties.kmsHome,
                         "KMS_SHARED" to containerProperties.kmsShared,
-                        "GITHUB_URL" to containerProperties.githubProxyUrl,
+                        "GITHUB_URL" to containerProperties.githubUrl,
                         "DISABLE_AUTH" to "true"))
                 .volumesFrom(VolumeFrom.builder().sourceContainer("s3fs").build())
                 .logConfiguration(buildLogConfiguration(containerProperties.userName, "hue"))
