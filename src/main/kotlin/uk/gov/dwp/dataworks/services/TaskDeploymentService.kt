@@ -179,7 +179,8 @@ class TaskDeploymentService {
     private fun buildContainerDefinitions(containerProperties: UserContainerProperties): Collection<ContainerDefinition> {
         val ecrEndpoint = configurationResolver.getStringConfig(ConfigKey.ECR_ENDPOINT)
         val screenSize = 1920 to 1080
-        val tabs = mutableMapOf<Int,String>();
+        val tabs = mutableMapOf<Int,String>()
+        val sshKeyPair = this.generateSshKeyPair()
 
         val noProxyList = listOf(
             "git-codecommit.${configurationResolver.getStringConfig(ConfigKey.AWS_REGION)}.amazonaws.com",
@@ -344,6 +345,7 @@ class TaskDeploymentService {
                                 "--connectivity-check-url=https://localhost:8000",
                                 "--window-size=${screenSize.toList().joinToString(",")}").joinToString(" "),
                         "VNC_SCREEN_SIZE" to screenSize.toList().joinToString("x"),
+                        "SFTP_PUBLIC_KEY" to sshKeyPair.public,
                         *proxyEnvVariables))
                 .logConfiguration(buildLogConfiguration(containerProperties.userName, "headless_chrome"))
                 .volumesFrom(VolumeFrom.builder().sourceContainer("s3fs").build())
@@ -382,7 +384,17 @@ class TaskDeploymentService {
                         "KEYSTORE_DATA" to authService.getB64KeyStoreData(),
                         "VALIDATE_ISSUER" to "true",
                         "ISSUER" to authService.issuerUrl,
-                        "CLIENT_PARAMS" to "hostname=localhost,port=5900,disable-copy=true",
+                        "CLIENT_PARAMS" to arrayOf(
+                            "hostname=localhost",
+                            "port=5900",
+                            "disable-copy=true",
+                            "enable-sftp=true",
+                            "sftp-port=8022",
+                            "sftp-username=alpine",
+                            "sftp-root-directory=/mnt/s3fs",
+                            "sftp-directory=/mnt/s3fs/s3-home"
+                        ).joinToString(","),
+                        "SFTP_PRIVATE_KEY_B64" to Base64.getEncoder().encodeToString(sshKeyPair.private.toByteArray()),
                         "CLIENT_USERNAME" to containerProperties.userName.substring(0, containerProperties.userName.length - 3)))
                 .portMappings(PortMapping.builder().hostPort(containerProperties.guacamolePort).containerPort(containerProperties.guacamolePort).build())
                 .logConfiguration(buildLogConfiguration(containerProperties.userName, "guacamole"))
