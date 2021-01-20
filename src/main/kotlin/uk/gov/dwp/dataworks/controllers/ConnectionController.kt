@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.CrossOrigin
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.PostMapping
@@ -19,12 +20,13 @@ import uk.gov.dwp.dataworks.CleanupRequest
 import uk.gov.dwp.dataworks.DeployRequest
 import uk.gov.dwp.dataworks.ForbiddenException
 import uk.gov.dwp.dataworks.logging.DataworksLogger
-import uk.gov.dwp.dataworks.services.ActiveUserTasks
 import uk.gov.dwp.dataworks.services.AuthenticationService
-import uk.gov.dwp.dataworks.services.ConfigKey
-import uk.gov.dwp.dataworks.services.ConfigurationResolver
 import uk.gov.dwp.dataworks.services.TaskDeploymentService
 import uk.gov.dwp.dataworks.services.TaskDestroyService
+import uk.gov.dwp.dataworks.services.ConfigurationResolver
+import uk.gov.dwp.dataworks.services.ActiveUserTasks
+import uk.gov.dwp.dataworks.services.UserValidationService
+import uk.gov.dwp.dataworks.services.ConfigKey
 import javax.servlet.http.HttpServletResponse
 
 @RestController
@@ -44,6 +46,21 @@ class ConnectionController {
     private lateinit var configurationResolver: ConfigurationResolver
     @Autowired
     private lateinit var activeUserTasks: ActiveUserTasks
+    @Autowired
+    private lateinit var userValidationService: UserValidationService
+
+
+    @Operation(summary = "Checks JWT for necessary attributes",
+            description = "Returns 200 or 204, depending on user attributes present")
+    @ApiResponses(value = [
+        ApiResponse(responseCode = "200", description = "User attributes present"),
+        ApiResponse(responseCode = "204", description = "User attribute(s) missing")
+    ])
+    @PostMapping("/verify-user")
+    fun verifyUser(@RequestHeader("Authorisation") token: String): ResponseEntity<Nothing> {
+        if(userValidationService.checkJwtForAttributes(token)) return ResponseEntity(HttpStatus.OK)
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null)
+    }
 
     @Operation(summary = "Connect to Analytical Environment",
             description = "Provisions the Analytical Environment for a user and returns the required information to connect")
@@ -55,7 +72,8 @@ class ConnectionController {
     @ResponseStatus(HttpStatus.OK)
     fun connect(@RequestHeader("Authorisation") token: String, @RequestBody requestBody: DeployRequest): String {
         val jwtObject = authService.validate(token)
-        return handleConnectionRequest(jwtObject.userName, jwtObject.cognitoGroup, requestBody)
+        return handleConnectionRequest(token, jwtObject.username, jwtObject.cognitoGroups, requestBody)
+
     }
 
     @Operation(summary = "Requests the user containers",
@@ -65,10 +83,10 @@ class ConnectionController {
         ApiResponse(responseCode = "400", description = "Failure, bad request")
     ])
     @PostMapping("/debug/deploy")
-    fun launchTask(@RequestHeader("Authorisation") userName: String, @RequestHeader("cognitoGroups") cognitoGroups: List<String>, @RequestBody requestBody: DeployRequest): String {
+    fun launchTask(@RequestHeader("Authorisation") token: String, @RequestHeader("Authorisation") userName: String, @RequestHeader("cognitoGroups") cognitoGroups: List<String>, @RequestBody requestBody: DeployRequest): String {
         if (configurationResolver.getStringConfig(ConfigKey.DEBUG) != "true" )
             throw ForbiddenException("Debug routes not enabled")
-        return handleConnectionRequest(userName,cognitoGroups, requestBody)
+        return handleConnectionRequest(token, userName, cognitoGroups, requestBody)
     }
 
     @PostMapping("/debug/destroy")
@@ -89,7 +107,7 @@ class ConnectionController {
     @ResponseStatus(HttpStatus.OK)
     fun disconnect(@RequestHeader("Authorisation") token: String) {
         val jwtObject = authService.validate(token)
-        taskDestroyService.destroyServices(jwtObject.userName)
+        taskDestroyService.destroyServices(jwtObject.username)
     }
 
     @PostMapping("/cleanup")
@@ -105,11 +123,12 @@ class ConnectionController {
         res.sendError(HttpStatus.UNAUTHORIZED.value(), "Failed to verify JWT token")
     }
 
-    fun handleConnectionRequest(userName: String, cognitoGroups: List<String>, requestBody: DeployRequest):String {
+    fun handleConnectionRequest(token: String, userName: String, cognitoGroups: List<String>, requestBody: DeployRequest):String {
         if (activeUserTasks.contains(userName)) {
             logger.info("Redirecting user to running containers, as they exist")
         } else {
             taskDeploymentService.runContainers(
+                    token,
                     userName,
                     cognitoGroups,
                     requestBody.jupyterCpu,

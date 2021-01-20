@@ -31,3 +31,4 @@ class NetworkConfigurationMissingException(message: String): Exception(message)
 
 @ResponseStatus(HttpStatus.FORBIDDEN)
 class ForbiddenException(message: String): Exception(message)
+

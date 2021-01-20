@@ -10,10 +10,16 @@ import org.springframework.stereotype.Service
 import software.amazon.awssdk.services.ecs.model.*
 import software.amazon.awssdk.services.elasticloadbalancingv2.model.TargetTypeEnum
 import software.amazon.awssdk.services.iam.model.Policy
+import uk.gov.dwp.dataworks.TextSSHKeyPair
 import uk.gov.dwp.dataworks.UserContainerProperties
 import uk.gov.dwp.dataworks.aws.AwsCommunicator
 import uk.gov.dwp.dataworks.aws.AwsParsing
 import uk.gov.dwp.dataworks.logging.DataworksLogger
+import java.io.ByteArrayOutputStream
+import java.io.DataOutputStream
+import java.security.KeyPairGenerator
+import java.security.interfaces.RSAPublicKey
+import java.util.Base64
 import java.util.UUID
 
 @Service
@@ -49,7 +55,7 @@ class TaskDeploymentService {
         val logger: DataworksLogger = DataworksLogger(LoggerFactory.getLogger(TaskDeploymentService::class.java))
     }
 
-    fun runContainers(userName: String, cognitoGroups: List<String>, jupyterCpu: Int, jupyterMemory: Int, additionalPermissions: List<String>) {
+    fun runContainers(cognitoToken: String, userName: String, cognitoGroups: List<String>, jupyterCpu: Int, jupyterMemory: Int, additionalPermissions: List<String>) {
         val correlationId = "$userName-${UUID.randomUUID()}"
         // Retrieve required params from environment
         val containerPort = Integer.parseInt(configurationResolver.getStringConfig(ConfigKey.USER_CONTAINER_PORT))
@@ -115,6 +121,7 @@ class TaskDeploymentService {
                     .build()
 
             val userContainerProperties = UserContainerProperties(
+                    cognitoToken,
                     userName,
                     cognitoGroups,
                     emrClusterHostname,
@@ -128,7 +135,9 @@ class TaskDeploymentService {
                     pushHost,
                     pushCron,
                     s3fsVolume.name(),
-                    githubProxyUrl
+                    githubProxyUrl,
+                    configurationResolver.getStringConfig(ConfigKey.GITHUB_URL).replaceFirst(Regex("^http[s]?://"),""),
+                    configurationResolver.getStringConfig(ConfigKey.LIVY_PROXY_URL)
             )
 
             val containerDefinitions = buildContainerDefinitions(userContainerProperties)
@@ -170,6 +179,8 @@ class TaskDeploymentService {
     private fun buildContainerDefinitions(containerProperties: UserContainerProperties): Collection<ContainerDefinition> {
         val ecrEndpoint = configurationResolver.getStringConfig(ConfigKey.ECR_ENDPOINT)
         val screenSize = 1920 to 1080
+        val tabs = mutableMapOf<Int,String>()
+        val sshKeyPair = this.generateSshKeyPair()
 
         val noProxyList = listOf(
             "git-codecommit.${configurationResolver.getStringConfig(ConfigKey.AWS_REGION)}.amazonaws.com",
@@ -230,11 +241,14 @@ class TaskDeploymentService {
                         "S3_BUCKET" to containerProperties.userS3Bucket.substringAfterLast(":"),
                         "KMS_HOME" to containerProperties.kmsHome,
                         "KMS_SHARED" to containerProperties.kmsShared,
+                        "GITHUB_URL" to containerProperties.githubUrl,
                         "DISABLE_AUTH" to "true"))
                 .volumesFrom(VolumeFrom.builder().sourceContainer("s3fs").build())
                 .logConfiguration(buildLogConfiguration(containerProperties.userName, "hue"))
                 .dependsOn(s3fsContainerDependency)
                 .build()
+
+        tabs.put(30, "https://localhost:8888")
 
         val rstudioOss = ContainerDefinition.builder()
                 .name("rstudio-oss")
@@ -245,14 +259,18 @@ class TaskDeploymentService {
                 .portMappings(PortMapping.builder().containerPort(7000).hostPort(7000).build())
                 .environment(pairsToKeyValuePairs(
                         "USER" to containerProperties.userName,
-                        "EMR_HOST_NAME" to containerProperties.emrHostname,
+                        "EMR_URL" to (containerProperties.livyProxyUrl ?: "http://${containerProperties.emrHostname}:8998"),
                         "DISABLE_AUTH" to "true",
+                        "GITHUB_URL" to containerProperties.githubUrl,
+                        "JWT_TOKEN" to containerProperties.cognitoToken,
                         *proxyEnvVariables
                 ))
                 .volumesFrom(VolumeFrom.builder().sourceContainer("s3fs").build())
                 .logConfiguration(buildLogConfiguration(containerProperties.userName, "rstudio-oss"))
                 .dependsOn(s3fsContainerDependency)
                 .build()
+
+        tabs.put(20, "https://localhost:7000")
 
         val jupyterhubHealthCheck = HealthCheck.builder()
                 .command("CMD", "curl", "-k", "-o", "/dev/null", "https://localhost:8000/hub/health")
@@ -270,10 +288,12 @@ class TaskDeploymentService {
                 .portMappings(PortMapping.builder().containerPort(8000).hostPort(8000).build())
                 .environment(pairsToKeyValuePairs(
                         "USER" to containerProperties.userName,
-                        "EMR_HOST_NAME" to containerProperties.emrHostname,
+                        "EMR_URL" to (containerProperties.livyProxyUrl ?: "http://${containerProperties.emrHostname}:8998"),
                         "GIT_REPO" to containerProperties.gitRepo,
                         "PUSH_HOST" to containerProperties.pushHost,
                         "PUSH_CRON" to containerProperties.pushCron,
+                        "GITHUB_URL" to containerProperties.githubUrl,
+                        "JWT_TOKEN" to containerProperties.cognitoToken,
                         *proxyEnvVariables
                 ))
                 .volumesFrom(VolumeFrom.builder().sourceContainer("s3fs").build())
@@ -281,6 +301,8 @@ class TaskDeploymentService {
                 .healthCheck(jupyterhubHealthCheck)
                 .dependsOn(s3fsContainerDependency)
                 .build()
+
+        tabs.put(10, "https://localhost:8000")
 
         val headlessChromeHealthCheck = HealthCheck.builder()
                 .command("CMD-SHELL", "supervisorctl", "status", "|", "awk", "'BEGIN {c=0} $2 == \"RUNNING\" {c++} END {exit c != 3}'")
@@ -290,6 +312,10 @@ class TaskDeploymentService {
                 .build()
 
         val linuxParameters: LinuxParameters = LinuxParameters.builder().sharedMemorySize(2048).build()
+
+        tabs.put(40,configurationResolver.getStringConfig(ConfigKey.GITHUB_URL))
+        
+        tabs.put(50, "https://azkaban.workflow-manager.dataworks.dwp.gov.uk?action=login&cognitoToken=" + containerProperties.cognitoToken)
 
         val headlessChrome = ContainerDefinition.builder()
                 .name("headless_chrome")
@@ -312,15 +338,17 @@ class TaskDeploymentService {
                                 "--disable-infobars",
                                 "--disable-features=TranslateUI",
                                 "--disk-cache-dir=/dev/null",
-                                "--test-type https://localhost:8000 https://localhost:7000",
-                                "--host-rules=\"MAP * 127.0.0.1, MAP * localhost, EXCLUDE github.ucds.io, EXCLUDE git.ucd.gpn.gov.uk\"",
+                                "--test-type ${tabs.toSortedMap().values.joinToString(" ")}",
+                                "--host-rules=\"MAP * 127.0.0.1, MAP * localhost, EXCLUDE github.ucds.io, EXCLUDE git.ucd.gpn.gov.uk, EXCLUDE azkaban.workflow-manager.dataworks.dwp.gov.uk\"",
                                 "--ignore-certificate-errors",
                                 "--enable-auto-reload",
                                 "--connectivity-check-url=https://localhost:8000",
                                 "--window-size=${screenSize.toList().joinToString(",")}").joinToString(" "),
                         "VNC_SCREEN_SIZE" to screenSize.toList().joinToString("x"),
+                        "SFTP_PUBLIC_KEY" to sshKeyPair.public,
                         *proxyEnvVariables))
                 .logConfiguration(buildLogConfiguration(containerProperties.userName, "headless_chrome"))
+                .volumesFrom(VolumeFrom.builder().sourceContainer("s3fs").build())
                 .healthCheck(headlessChromeHealthCheck)
                 .dependsOn(jupyterhubContainerDependency, rstudioOssContainerDependency, hueContainerDependency)
                 .build()
@@ -356,7 +384,17 @@ class TaskDeploymentService {
                         "KEYSTORE_DATA" to authService.getB64KeyStoreData(),
                         "VALIDATE_ISSUER" to "true",
                         "ISSUER" to authService.issuerUrl,
-                        "CLIENT_PARAMS" to "hostname=localhost,port=5900,disable-copy=false",
+                        "CLIENT_PARAMS" to arrayOf(
+                            "hostname=localhost",
+                            "port=5900",
+                            "disable-copy=false",
+                            "enable-sftp=true",
+                            "sftp-port=8022",
+                            "sftp-username=alpine",
+                            "sftp-root-directory=/mnt/s3fs",
+                            "sftp-directory=/mnt/s3fs/s3-home"
+                        ).joinToString(","),
+                        "SFTP_PRIVATE_KEY_B64" to Base64.getEncoder().encodeToString(sshKeyPair.private.toByteArray()),
                         "CLIENT_USERNAME" to containerProperties.userName.substring(0, containerProperties.userName.length - 3)))
                 .portMappings(PortMapping.builder().hostPort(containerProperties.guacamolePort).containerPort(containerProperties.guacamolePort).build())
                 .logConfiguration(buildLogConfiguration(containerProperties.userName, "guacamole"))
@@ -414,5 +452,35 @@ class TaskDeploymentService {
                 .map { awsCommunicator.getKmsKeyArn("arn:aws:kms:${configurationResolver.getStringConfig(ConfigKey.AWS_REGION)}:$accountId:alias/$it-shared") }
                 .plus(listOf("$jupyterS3Arn/*", awsCommunicator.getKmsKeyArn("arn:aws:kms:${configurationResolver.getStringConfig(ConfigKey.AWS_REGION)}:$accountId:alias/$userName-home")))
         return mapOf(Pair("jupyters3accessdocument", folderAccess), Pair("jupyterkmsaccessdocument", folderAccess), Pair("jupyters3list", listOf(jupyterS3Arn)))
+    }
+
+    fun generateSshKeyPair(): TextSSHKeyPair {
+        val generator = KeyPairGenerator.getInstance("RSA")
+        generator.initialize(4096)
+        val keypair = generator.genKeyPair()
+        val public = keypair.public as RSAPublicKey
+
+        val sshRsaByteStream = ByteArrayOutputStream()
+        val dos = DataOutputStream(sshRsaByteStream)
+
+        dos.writeInt("ssh-rsa".toByteArray().size)
+        dos.write("ssh-rsa".toByteArray())
+
+        val e = public.publicExponent
+        dos.writeInt(e.toByteArray().size)
+        dos.write(e.toByteArray())
+
+        val m = public.modulus
+        dos.writeInt(m.toByteArray().size)
+        dos.write(m.toByteArray())
+
+        val sshPublicKeyEncoded = Base64.getEncoder().encodeToString(sshRsaByteStream.toByteArray())
+
+        val textPublicKey = "ssh-rsa $sshPublicKeyEncoded"
+        val textPrivateKey = "-----BEGIN RSA PRIVATE KEY-----\n" +
+            Base64.getEncoder().encodeToString(keypair.private.encoded).chunked(64).joinToString("\n") +
+            "\n-----END RSA PRIVATE KEY-----\n"
+        return TextSSHKeyPair(textPrivateKey, textPublicKey)
+
     }
 }

@@ -53,6 +53,10 @@ module "ecs-fargate-task-definition" {
       value = data.terraform_remote_state.aws_analytical_env_app.outputs.emr_hostname
     },
     {
+      name  = "orchestrationService.livy_proxy_url"
+      value = "https://${data.terraform_remote_state.aws_analytical_env_app.outputs.livy_proxy.fqdn}"
+    },
+    {
       name  = "orchestrationService.user_container_url"
       value = data.terraform_remote_state.aws_analytical_env_infra.outputs.alb_fqdn
     },
@@ -135,6 +139,10 @@ module "ecs-fargate-task-definition" {
     {
       name  = "orchestrationService.github_proxy_url"
       value = "${data.terraform_remote_state.aws_analytical_env_infra.outputs.github_proxy_dns_name}:3128"
+    },
+    {
+      name  = "orchestrationService.github_url"
+      value = local.github_url
     }
   ]
 }
@@ -196,6 +204,7 @@ module "ecs-user-host" {
   frontend_alb_sg_id      = data.terraform_remote_state.aws_analytical_env_infra.outputs.alb_sg.id
   guacamole_port          = local.guacamole_port
   emr_sg_id               = data.terraform_remote_state.aws_analytical_env_app.outputs.emr_sg_id
+  livy_proxy_sg_id        = data.terraform_remote_state.aws_analytical_env_app.outputs.livy_proxy.lb_sg.id
   management_account      = local.account[local.management_account[local.environment]]
   pushgateway_sg_id       = data.terraform_remote_state.aws_analytical_env_app.outputs.pushgateway.lb_sg.id
   github_proxy_vpce_sg_id = data.terraform_remote_state.aws_analytical_env_infra.outputs.internet_proxy_sg

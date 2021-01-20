@@ -20,7 +20,8 @@ data class CleanupRequest(
         val activeUsers: List<String>
 )
 
-data class JWTObject(val verifiedJWT: DecodedJWT, val userName: String, val cognitoGroup: List<String>)
+data class JWTObject(val decodedJWT: DecodedJWT, val username: String, val cognitoGroups: List<String>)
+
 
 data class UserTask(val correlationId: String,
                     val userName: String,
@@ -54,6 +55,7 @@ data class UserTask(val correlationId: String,
 }
 
 data class UserContainerProperties(
+        val cognitoToken: String,
         val userName: String,
         val cognitoGroups: List<String>,
         val emrHostname: String,
@@ -67,7 +69,14 @@ data class UserContainerProperties(
         val pushHost: String,
         val pushCron: String,
         val s3fsVolumeName: String,
-        val githubProxyUrl: String
+        val githubProxyUrl: String,
+        val githubUrl: String,
+        val livyProxyUrl: String?,
+)
+
+data class TextSSHKeyPair(
+    val private: String,
+    val public: String
 )
 
 @JsonNaming(PropertyNamingStrategy.UpperCamelCaseStrategy::class)
