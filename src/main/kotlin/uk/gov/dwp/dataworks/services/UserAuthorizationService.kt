@@ -38,15 +38,19 @@ class UserAuthorizationService {
 
     @PostConstruct
     private fun initialisePermissionsTable() {
-        awsCommunicator.rdsExecuteStatement(
-            """
+        try {
+            awsCommunicator.rdsExecuteStatement(
+                """
             INSERT IGNORE INTO
                 `ToolingPermission`
              VALUES
-                ${ToolingPermission.values().joinToString(",") { """(DEFAULT, "$it")""" }}
+                ${ToolingPermission.values().joinToString(",") { """(DEFAULT, "${it.permissionName}")""" }}
             """.trimIndent()
-        )
-        logger.info("Initialised ToolingPermission table")
+            )
+            logger.info("Initialised ToolingPermission table")
+        } catch (e: RdsDataException){
+            logger.error("Failed to initialize ToolingPermission table", e)
+        }
     }
 
     private fun isPermissionOverridden(permission: ToolingPermission): Boolean {
@@ -102,6 +106,7 @@ class UserAuthorizationService {
             val validAllowRecords = result.records()
                 .filter {
                     it[0].stringValue() == Effect.ALLOW.action
+                            && !it[1].isNull
                             && LocalDateTime.parse(it[1].stringValue(), mySQLTimestampFormatter) > LocalDateTime.now()
                 }
 
@@ -112,6 +117,7 @@ class UserAuthorizationService {
 
             return true
         } catch (e: RdsDataException) {
+            logger.error("Failed to check permission `${permission.permissionName}` for user `$username`", e)
             return false
         }
     }
