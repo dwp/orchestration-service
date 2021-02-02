@@ -552,17 +552,17 @@ class AwsCommunicator {
 
 
     fun rdsExecuteStatement(sql: String, parameters: Collection<SqlParameter>? = null): ExecuteStatementResponse {
-        try{
-            val executeStatementRequest = ExecuteStatementRequest
-                .builder()
-                .secretArn(configurationResolver.getStringConfig(ConfigKey.RDS_CREDENTIALS_SECRET_ARN))
-                .resourceArn(configurationResolver.getStringConfig(ConfigKey.RDS_CLUSTER_ARN))
-                .database(configurationResolver.getStringConfig(ConfigKey.RDS_DATABASE_NAME))
-                .parameters(parameters)
-                .sql(sql)
-
-            return awsClients.rdsDataClient.executeStatement(executeStatementRequest.build())
-        } catch (e: SystemArgumentException){
+        try {
+            return awsClients.rdsDataClient.executeStatement(
+                ExecuteStatementRequest.builder()
+                    .secretArn(configurationResolver.getStringConfig(ConfigKey.RDS_CREDENTIALS_SECRET_ARN))
+                    .resourceArn(configurationResolver.getStringConfig(ConfigKey.RDS_CLUSTER_ARN))
+                    .database(configurationResolver.getStringConfig(ConfigKey.RDS_DATABASE_NAME))
+                    .parameters(parameters)
+                    .sql(sql)
+                    .build()
+            )
+        } catch (e: SystemArgumentException) {
             logger.error("RDS database not configured")
             throw RdsDataException.builder().message("Not configured").cause(e).build()
         }
