@@ -13,7 +13,8 @@ import java.time.format.DateTimeFormatter
 import javax.annotation.PostConstruct
 
 enum class ToolingPermission(val permissionName: String) {
-    FILE_TRANSFER("file_transfer"),
+    FILE_TRANSFER_DOWNLOAD("file_transfer_download"),
+    FILE_TRANSFER_UPLOAD("file_transfer_upload"),
     CLIPBOARD_OUT("clipboard_out")
 }
 
@@ -106,7 +107,7 @@ class UserAuthorizationService {
             val validAllowRecords = result.records()
                 .filter {
                     it[0].stringValue() == Effect.ALLOW.action
-                            && !it[1].isNull
+                            && it[1] != null && it[1].stringValue() != null
                             && LocalDateTime.parse(it[1].stringValue(), mySQLTimestampFormatter) > LocalDateTime.now()
                 }
 

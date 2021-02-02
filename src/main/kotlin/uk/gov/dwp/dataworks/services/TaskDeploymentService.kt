@@ -186,8 +186,11 @@ class TaskDeploymentService {
         val screenSize = 1920 to 1080
         val tabs = mutableMapOf<Int, String>()
         val sshKeyPair = this.generateSshKeyPair()
-        val hasFileTransferPermission = authorizationService
-            .hasUserToolingPermission(containerProperties.userName, ToolingPermission.FILE_TRANSFER)
+        val hasFileTransferDownloadPermission = authorizationService
+            .hasUserToolingPermission(containerProperties.userName, ToolingPermission.FILE_TRANSFER_DOWNLOAD)
+        val hasFileTransferUploadPermission = authorizationService
+            .hasUserToolingPermission(containerProperties.userName, ToolingPermission.FILE_TRANSFER_UPLOAD)
+        val hasFileTransferPermission = hasFileTransferDownloadPermission || hasFileTransferUploadPermission
         val hasClipboardOutPermission = authorizationService
             .hasUserToolingPermission(containerProperties.userName, ToolingPermission.CLIPBOARD_OUT)
 
@@ -407,7 +410,9 @@ class TaskDeploymentService {
                         "sftp-port=8022",
                         "sftp-username=alpine",
                         "sftp-root-directory=/mnt/s3fs",
-                        "sftp-directory=/mnt/s3fs/s3-home"
+                        "sftp-directory=/mnt/s3fs/s3-home",
+                        "sftp-disable-download=${if(!hasFileTransferDownloadPermission) "true" else "false"}",
+                        "sftp-disable-upload=${if(!hasFileTransferUploadPermission) "true" else "false"}"
                     ).joinToString(","),
                     if (hasFileTransferPermission) "SFTP_PRIVATE_KEY_B64" to Base64.getEncoder()
                         .encodeToString(sshKeyPair.private.toByteArray()) else null,

@@ -133,7 +133,7 @@ class TaskDeploymentServiceTest {
         whenever(
             userAuthorizationService.hasUserToolingPermission(
                 "username",
-                ToolingPermission.FILE_TRANSFER
+                ToolingPermission.FILE_TRANSFER_DOWNLOAD
             )
         ).doReturn(true)
 
@@ -180,6 +180,30 @@ class TaskDeploymentServiceTest {
         val vncOpts = taskDef.containerDefinitions().first { it.name() == "headless_chrome" }.environment()
             .first { it.name() == "VNC_OPTS" }
         assertThat(vncOpts.value()).doesNotContain("-noclipboard")
+
+    }
+
+    @Test
+    fun `Disables upload and download if user doesn't have permission`(){
+        reset(userAuthorizationService)
+        whenever(
+            userAuthorizationService.hasUserToolingPermission(
+                eq("username"),
+                any()
+            )
+        ).then { it.arguments[1] == ToolingPermission.FILE_TRANSFER_DOWNLOAD }
+
+        taskDeploymentService.runContainers("abcde", "username", listOf("team"), 100, 200, emptyList())
+        val captor = argumentCaptor<TaskDefinition>()
+        verify(awsCommunicator).registerTaskDefinition(any(), captor.capture(), any())
+        val taskDef = captor.firstValue
+        assertThat(taskDef).isNotNull
+
+        val guacamoleClientParams = taskDef.containerDefinitions().first { it.name() == "guacamole" }.environment()
+            .first { it.name() == "CLIENT_PARAMS" }.value()
+
+        assertThat(guacamoleClientParams).contains("sftp-disable-download=false")
+        assertThat(guacamoleClientParams).contains("sftp-disable-upload=true")
 
     }
 
