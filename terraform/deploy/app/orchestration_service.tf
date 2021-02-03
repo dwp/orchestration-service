@@ -160,7 +160,7 @@ module "ecs-fargate-task-definition" {
     },
     {
       name  = "orchestrationService.tooling_permission_overrides"
-      value = "file_transfer"
+      value = "file_transfer_download,file_transfer_upload"
     },
   ]
 }
