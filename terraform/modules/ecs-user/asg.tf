@@ -100,7 +100,7 @@ EOF
     export AWS_DEFAULT_REGION=${data.aws_region.current.name}
     export INSTANCE_ID=$(curl http://169.254.169.254/latest/meta-data/instance-id)
     UUID=$(dbus-uuidgen | cut -c 1-8)
-    export HOSTNAME=${var.name_prefix}-user-host-provider-$UUID
+    export HOSTNAME=${var.name_prefix}-user-host-$UUID
     hostnamectl set-hostname $HOSTNAME
     aws ec2 create-tags --resources $INSTANCE_ID --tags Key=Name,Value=$HOSTNAME
 EOF
