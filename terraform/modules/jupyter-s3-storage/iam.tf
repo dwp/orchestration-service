@@ -109,6 +109,23 @@ data "aws_iam_policy_document" "jupyter_bucket_kms_key" {
   }
 
   statement {
+    sid    = "EnableKeyUsagePermissionsRoot"
+    effect = "Allow"
+
+    principals {
+      type        = "AWS"
+      identifiers = ["arn:aws::${var.account}:iam:root"]
+    }
+
+    actions = [
+      "kms:Encrypt",
+      "kms:ReEncrypt"
+    ]
+
+    resources = ["*"]
+  }
+
+  statement {
     sid    = "EnableAWSConfigManagerScanForSecurityHub"
     effect = "Allow"
 
