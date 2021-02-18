@@ -114,12 +114,11 @@ data "aws_iam_policy_document" "jupyter_bucket_kms_key" {
 
     principals {
       type        = "AWS"
-      identifiers = ["arn:aws::${var.account}:iam:root"]
+      identifiers = ["arn:aws:iam::${var.account}:root"]
     }
 
     actions = [
-      "kms:Encrypt",
-      "kms:ReEncrypt"
+      "kms:*"
     ]
 
     resources = ["*"]
