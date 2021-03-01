@@ -9,6 +9,8 @@ jobs:
       params:
         DEPLOY_PATH: app
     - .: (( inject meta.plan.terraform-output ))
+      params:
+        TF_WORKSPACE: integration
     - .: (( inject meta.plan.cycle-old-user-host-instances ))
       config:
         params:
