@@ -188,7 +188,8 @@ class TaskDeploymentService {
 
     private fun buildContainerDefinitions(containerProperties: UserContainerProperties): Collection<ContainerDefinition> {
         val ecrEndpoint = configurationResolver.getStringConfig(ConfigKey.ECR_ENDPOINT)
-        val screenSize = 1920 to 1080
+        // Many Surface users have low resolution screens with browser windows 1368x872 3:2 aspect
+        val screenSize = 1200 to 800
         val tabs = mutableMapOf<Int, String>()
         val sshKeyPair = this.generateSshKeyPair()
         val hasFileTransferDownloadPermission = authorizationService
