@@ -283,6 +283,7 @@ class TaskDeploymentService {
                         "DISABLE_AUTH" to "true",
                         "GITHUB_URL" to containerProperties.githubUrl,
                         "JWT_TOKEN" to containerProperties.cognitoToken,
+                        "S3_HOME_PATH" to "s3://${containerProperties.userS3Bucket.substringAfterLast(":")}/user/${containerProperties.userName}"
                         *proxyEnvVariables
                 ))
                 .volumesFrom(VolumeFrom.builder().sourceContainer("s3fs").build())
