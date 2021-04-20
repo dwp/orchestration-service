@@ -346,4 +346,3 @@ variable "sftp_user" {
     production  = "alpine"
   }
 }
-}
