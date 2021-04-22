@@ -114,6 +114,7 @@ class ConnectionController {
     @ResponseStatus(HttpStatus.OK)
     fun cleanup(@RequestBody request: CleanupRequest) {
         taskDestroyService.cleanupDestroy(request.activeUsers)
+        taskDestroyService.cleanupUnusedIamRoles()
     }
 
     @ExceptionHandler(JWTVerificationException::class, SigningKeyNotFoundException::class)

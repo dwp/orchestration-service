@@ -44,8 +44,6 @@ class TaskDestroyService {
                 { awsCommunicator.detachIamPolicyFromRole(userTasks.correlationId, userTasks.iamRoleName!!, userTasks.iamPolicyTaskArn!!) },
             tryDeleteResource("iam_policy", userTasks.iamPolicyTaskArn)
                 { awsCommunicator.deleteIamPolicy(userTasks.correlationId, userTasks.iamPolicyTaskArn!!) },
-            tryDeleteResource("iam_role", userTasks.iamRoleName)
-                { awsCommunicator.deleteIamRole(userTasks.correlationId, userTasks.iamRoleName!!) }
         )
 
         if (destroyAttempts.none { !it }) {
@@ -79,6 +77,15 @@ class TaskDestroyService {
     fun cleanupDestroy(activeUsers: List<String>){
         activeUsers.forEach { user ->
             destroyServices(user)
+        }
+    }
+
+    fun cleanupUnusedIamRoles() {
+        try {
+            awsCommunicator.destroyUnusedIamRoles()
+            logger.info("Successfully destroyed unused iam roles")
+        } catch (e: Exception) {
+            logger.error("Failed to destroy unused iam roles", e)
         }
     }
 }

@@ -42,6 +42,10 @@ import software.amazon.awssdk.services.iam.model.CreateRoleRequest
 import software.amazon.awssdk.services.iam.model.DeletePolicyRequest
 import software.amazon.awssdk.services.iam.model.DeleteRoleRequest
 import software.amazon.awssdk.services.iam.model.DetachRolePolicyRequest
+import software.amazon.awssdk.services.iam.model.GetRoleRequest
+import software.amazon.awssdk.services.iam.model.IamException
+import software.amazon.awssdk.services.iam.model.ListAttachedRolePoliciesRequest
+import software.amazon.awssdk.services.iam.model.ListRolesRequest
 import software.amazon.awssdk.services.iam.model.NoSuchEntityException
 import software.amazon.awssdk.services.iam.model.Policy
 import software.amazon.awssdk.services.iam.model.Role
@@ -60,6 +64,9 @@ import uk.gov.dwp.dataworks.logging.DataworksLogger
 import uk.gov.dwp.dataworks.services.ActiveUserTasks
 import uk.gov.dwp.dataworks.services.ConfigKey
 import uk.gov.dwp.dataworks.services.ConfigurationResolver
+import java.time.Duration
+import java.time.Instant
+import java.time.LocalDate
 import software.amazon.awssdk.services.ecs.model.LoadBalancer as EcsLoadBalancer
 
 /**
@@ -391,17 +398,22 @@ class AwsCommunicator {
     fun createIamRole(correlationId: String, userName: String, assumeRolePolicy: String): Role {
         val roleName = "orchestration-service-user-$userName-role"
         val role = awsClients.iamClient.createRole(
-                CreateRoleRequest.builder()
-                        .assumeRolePolicyDocument(assumeRolePolicy)
-                        .roleName(roleName).build())
-                .role()
-        logger.info("Created iam role",
-                "correlation_id" to correlationId,
-                "role_arn" to role.arn(),
-                "role_path" to role.path(),
-                "role_name" to role.roleName(),
-                "role_id" to role.roleId(),
-                "created_date" to role.createDate().toString())
+            CreateRoleRequest.builder()
+                .assumeRolePolicyDocument(assumeRolePolicy)
+                .roleName(roleName)
+                .path("/app/os/").build()
+        )
+            .role()
+
+        logger.info(
+            "Created iam role",
+            "correlation_id" to correlationId,
+            "role_arn" to role.arn(),
+            "role_path" to role.path(),
+            "role_name" to role.roleName(),
+            "role_id" to role.roleId(),
+            "created_date" to role.createDate().toString()
+        )
         updateDynamoDeploymentEntry(userName, "iamRoleName" to role.roleName())
         return role
     }
@@ -447,6 +459,83 @@ class AwsCommunicator {
             "role_name" to roleName,
             "policy_arn" to policyArn)
         }
+    }
+
+    /**
+     * Retrieves role details for the user [userName]. If the role does not exist
+     * this method returns null.
+     */
+    fun getIamRole(correlationId: String, userName: String): Role? {
+        val roleName = "orchestration-service-user-$userName-role"
+
+        return try {
+            val role = awsClients.iamClient.getRole(GetRoleRequest.builder()
+                .roleName(roleName)
+                .build()).role()
+            logger.info("Role already exists for $userName",
+                "correlation_id" to correlationId,
+                "role_arn" to role.arn(),
+                "role_path" to role.path(),
+                "role_name" to role.roleName(),
+                "role_id" to role.roleId(),
+                "created_date" to role.createDate().toString())
+            updateDynamoDeploymentEntry(userName, "iamRoleName" to role.roleName())
+            role
+        } catch (e: IamException) {
+            logger.info("Role does not exist for $userName",
+                "correlation_id" to correlationId,
+                        "user" to userName,
+                        "exception" to e.localizedMessage)
+            null
+        }
+
+    }
+
+    /**
+     * Detaches policies from and destroys IAM Roles that have not
+     * been used for longer than 1 month.
+     */
+    fun destroyUnusedIamRoles() {
+        val response = awsClients.iamClient.listRoles(
+            ListRolesRequest.builder()
+                .pathPrefix("/app/os/").build()
+        )
+
+        if (response.hasRoles()) {
+            logger.info(
+                "Found orchestration-service user roles",
+                "roles" to response.roles().joinToString(",") {
+                    "<role:${it.roleName()},age(days):${
+                        if (it.roleLastUsed() != null)
+                            Duration.between(
+                                Instant.now(),
+                                it.roleLastUsed().lastUsedDate()
+                            ).toDays()
+                        else "N/A"
+                    }"
+                })
+        } else {
+            logger.warn("No orchestration-service user roles found")
+            return
+        }
+
+        response.roles().filter {
+            it.roleLastUsed() == null || LocalDate.from(it.roleLastUsed().lastUsedDate()) < LocalDate.now()
+                .minusMonths(1)
+        }.forEach { role ->
+            logger.info("Deleting role ${role.roleName()}")
+            val existingPolicies = awsClients.iamClient.listAttachedRolePolicies(
+                ListAttachedRolePoliciesRequest.builder().roleName(role.roleName()).build()
+            ).attachedPolicies()
+
+            existingPolicies.forEach { policy ->
+                awsClients.iamClient.detachRolePolicy(
+                    DetachRolePolicyRequest.builder().roleName(role.roleName()).policyArn(policy.policyArn()).build()
+                )
+            }
+            awsClients.iamClient.deleteRole(DeleteRoleRequest.builder().roleName(role.roleName()).build())
+        }
+
     }
 
     /**
