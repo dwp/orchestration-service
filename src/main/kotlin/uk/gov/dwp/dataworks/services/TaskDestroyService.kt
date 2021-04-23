@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import uk.gov.dwp.dataworks.aws.AwsCommunicator
 import uk.gov.dwp.dataworks.logging.DataworksLogger
+import java.time.LocalDateTime
 
 @Service
 class TaskDestroyService {
@@ -74,18 +75,19 @@ class TaskDestroyService {
         }
     }
 
-    fun cleanupDestroy(activeUsers: List<String>){
+    fun cleanupUserTasks(activeUsers: List<String>){
         activeUsers.forEach { user ->
             destroyServices(user)
         }
     }
 
     fun cleanupUnusedIamRoles() {
+        val correlationId = "cleanup-${LocalDateTime.now()}"
         try {
-            awsCommunicator.destroyUnusedIamRoles()
-            logger.info("Successfully destroyed unused iam roles")
+            awsCommunicator.deleteUnusedIamRoles(correlationId)
+            logger.info("Successfully destroyed unused iam roles", "correlationId" to correlationId)
         } catch (e: Exception) {
-            logger.error("Failed to destroy unused iam roles", e)
+            logger.error("Failed to destroy unused iam roles", e, "correlationId" to correlationId)
         }
     }
 }

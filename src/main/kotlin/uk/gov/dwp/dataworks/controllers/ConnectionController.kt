@@ -113,7 +113,7 @@ class ConnectionController {
     @PostMapping("/cleanup")
     @ResponseStatus(HttpStatus.OK)
     fun cleanup(@RequestBody request: CleanupRequest) {
-        taskDestroyService.cleanupDestroy(request.activeUsers)
+        taskDestroyService.cleanupUserTasks(request.activeUsers)
         taskDestroyService.cleanupUnusedIamRoles()
     }
 

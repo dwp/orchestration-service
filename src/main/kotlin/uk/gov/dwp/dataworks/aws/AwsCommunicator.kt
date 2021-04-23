@@ -45,7 +45,9 @@ import software.amazon.awssdk.services.iam.model.DetachRolePolicyRequest
 import software.amazon.awssdk.services.iam.model.GetRoleRequest
 import software.amazon.awssdk.services.iam.model.IamException
 import software.amazon.awssdk.services.iam.model.ListAttachedRolePoliciesRequest
+import software.amazon.awssdk.services.iam.model.ListAttachedRolePoliciesResponse
 import software.amazon.awssdk.services.iam.model.ListRolesRequest
+import software.amazon.awssdk.services.iam.model.ListRolesResponse
 import software.amazon.awssdk.services.iam.model.NoSuchEntityException
 import software.amazon.awssdk.services.iam.model.Policy
 import software.amazon.awssdk.services.iam.model.Role
@@ -67,6 +69,7 @@ import uk.gov.dwp.dataworks.services.ConfigurationResolver
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneId
 import software.amazon.awssdk.services.ecs.model.LoadBalancer as EcsLoadBalancer
 
 /**
@@ -491,28 +494,37 @@ class AwsCommunicator {
 
     }
 
+    fun listRolesWithPrefix(pathPrefix: String): ListRolesResponse{
+        return awsClients.iamClient.listRoles(
+            ListRolesRequest.builder()
+                .pathPrefix(pathPrefix).build())
+    }
+
+    fun listRolePolicies(roleName: String): ListAttachedRolePoliciesResponse {
+        return awsClients.iamClient.listAttachedRolePolicies(
+            ListAttachedRolePoliciesRequest.builder().roleName(roleName).build()
+        )
+    }
+
     /**
      * Detaches policies from and destroys IAM Roles that have not
      * been used for longer than 1 month.
      */
-    fun destroyUnusedIamRoles() {
-        val response = awsClients.iamClient.listRoles(
-            ListRolesRequest.builder()
-                .pathPrefix("/app/os/").build()
-        )
+    fun deleteUnusedIamRoles(correlationId: String) {
+        val response = listRolesWithPrefix("/app/os/")
 
         if (response.hasRoles()) {
             logger.info(
                 "Found orchestration-service user roles",
                 "roles" to response.roles().joinToString(",") {
-                    "<role:${it.roleName()},age(days):${
+                    "<role:${it.roleName()},last_used(days ago):${
                         if (it.roleLastUsed() != null)
                             Duration.between(
                                 Instant.now(),
                                 it.roleLastUsed().lastUsedDate()
                             ).toDays()
-                        else "N/A"
-                    }"
+                        else "never"
+                    }>"
                 })
         } else {
             logger.warn("No orchestration-service user roles found")
@@ -520,20 +532,20 @@ class AwsCommunicator {
         }
 
         response.roles().filter {
-            it.roleLastUsed() == null || LocalDate.from(it.roleLastUsed().lastUsedDate()) < LocalDate.now()
+            it.roleLastUsed() == null || it.roleLastUsed().lastUsedDate().atZone(ZoneId.systemDefault())
+                .toLocalDate() < LocalDate.now()
                 .minusMonths(1)
         }.forEach { role ->
-            logger.info("Deleting role ${role.roleName()}")
-            val existingPolicies = awsClients.iamClient.listAttachedRolePolicies(
-                ListAttachedRolePoliciesRequest.builder().roleName(role.roleName()).build()
-            ).attachedPolicies()
+
+            val existingPolicies = listRolePolicies(role.roleName()).attachedPolicies()
 
             existingPolicies.forEach { policy ->
-                awsClients.iamClient.detachRolePolicy(
-                    DetachRolePolicyRequest.builder().roleName(role.roleName()).policyArn(policy.policyArn()).build()
-                )
+                detachIamPolicyFromRole(correlationId, role.roleName(), policy.policyArn())
             }
-            awsClients.iamClient.deleteRole(DeleteRoleRequest.builder().roleName(role.roleName()).build())
+
+            logger.info("Deleting role ${role.roleName()}")
+            deleteIamRole(correlationId, role.roleName())
+
         }
 
     }
