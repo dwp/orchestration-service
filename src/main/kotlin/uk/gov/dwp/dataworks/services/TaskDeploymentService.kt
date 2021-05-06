@@ -271,7 +271,8 @@ class TaskDeploymentService {
                 .portMappings(PortMapping.builder().containerPort(7000).hostPort(7000).build())
                 .environment(pairsToKeyValuePairs(
                         "USER" to containerProperties.userName,
-                        "EMR_URL" to (containerProperties.livyProxyUrl ?: "http://${containerProperties.emrHostname}:8998"),
+                        "LIVY_URL" to (containerProperties.livyProxyUrl ?: "http://${containerProperties.emrHostname}:8998"),
+                        "EMR_HOST_NAME" to containerProperties.emrHostname,
                         "DISABLE_AUTH" to "true",
                         "GITHUB_URL" to containerProperties.githubUrl,
                         "JWT_TOKEN" to containerProperties.cognitoToken,
