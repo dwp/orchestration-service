@@ -46,7 +46,10 @@ variable "container_cpu" {
 }
 
 variable "container_depends_on" {
-  type        = list(string)
+  type        = list(object({
+    containerName = string
+    condition     = string
+  }))
   description = "(Optional) The dependencies defined for container startup and shutdown. A container can contain multiple dependencies. When a dependency is defined for container startup, for container shutdown it is reversed"
   default     = null
 }
