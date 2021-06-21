@@ -277,7 +277,7 @@ class TaskDeploymentService {
                 .volumesFrom(VolumeFrom.builder().sourceContainer("s3fs").build())
                 .mountPoints(MountPoint.builder().containerPath("/mnt/packages").sourceVolume(containerProperties.packagesVolumeName).build())
                 .logConfiguration(buildLogConfiguration(containerProperties.userName, "rstudio-oss"))
-                .linuxParameters(swapLinuxParameters)
+                .linuxParameters(swapLinuxParameters.copy { it.maxSwap(6144) })
                 .dependsOn(s3fsContainerDependency)
                 .build()
 
