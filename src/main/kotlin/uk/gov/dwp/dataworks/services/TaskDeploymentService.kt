@@ -244,6 +244,7 @@ class TaskDeploymentService {
         val hue = ContainerDefinition.builder()
                 .name("hue")
                 .image("$ecrEndpoint/aws-analytical-env/hue:$hueTag")
+                .memoryReservation(256)
                 .essential(true)
                 .portMappings(PortMapping.builder().containerPort(8888).hostPort(8888).build())
                 .environment(pairsToKeyValuePairs(
@@ -262,6 +263,7 @@ class TaskDeploymentService {
         val rstudioOss = ContainerDefinition.builder()
                 .name("rstudio-oss")
                 .image("$ecrEndpoint/aws-analytical-env/rstudio-oss:$rstudioOssTag")
+                .memoryReservation(1024)
                 .essential(true)
                 .portMappings(PortMapping.builder().containerPort(7000).hostPort(7000).build())
                 .environment(pairsToKeyValuePairs(
@@ -294,6 +296,7 @@ class TaskDeploymentService {
         val jupyterHub = ContainerDefinition.builder()
                 .name("jupyterHub")
                 .image("$ecrEndpoint/aws-analytical-env/jupyterhub:$jupyterHubTag")
+                .memoryReservation(512)
                 .essential(true)
                 .portMappings(PortMapping.builder().containerPort(8000).hostPort(8000).build())
                 .environment(pairsToKeyValuePairs(
