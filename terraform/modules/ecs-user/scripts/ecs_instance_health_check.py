@@ -4,6 +4,12 @@ import time
 import requests
 import boto3
 
+'''
+This code interrogates the ECS agent running on EC2 instances and for each task, compares the `DesiredStatus`
+and `KnownStatus`. If for any task, those statuses are different for a period of time defined by 
+`iteration_max` * `sleep_seconds`, the EC2 instance is marked as Unhealthy (and therefore purged from ECS).
+'''
+
 logging.basicConfig(filename='/var/log/ecs_instance_health_check.log', encoding='utf-8', level=logging.INFO)
 
 ecs_agent_url = "http://localhost:51678/v1/tasks"
@@ -13,10 +19,10 @@ sleep_seconds = 60
 
 def mark_ecs_instance_as_unhealthy():
     client = boto3.client('autoscaling', region_name=os.environ.get("REGION"))
-    # response = client.set_instance_health(
-    #     InstanceId=os.environ.get("INSTANCE_ID"),
-    #     HealthStatus="Unhealthy"
-    # )
+    response = client.set_instance_health(
+        InstanceId=os.environ.get("INSTANCE_ID"),
+        HealthStatus="Unhealthy"
+    )
 
 
 def main():
