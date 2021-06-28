@@ -141,7 +141,8 @@ EOF
     #!/bin/bash
 
     # Start long-running ECS instance health check as a background task
-    python /usr/local/src/ecs_instance_health_check.py &
+    pip3 install requests
+    python3 /usr/local/src/ecs_instance_health_check.py &
 EOF
   }
 

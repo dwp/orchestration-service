@@ -1,6 +1,7 @@
 import os
 import logging
 import time
+import socket
 import requests
 import boto3
 
@@ -10,7 +11,36 @@ and `KnownStatus`. If for any task, those statuses are different for a period of
 `iteration_max` * `sleep_seconds`, the EC2 instance is marked as Unhealthy (and therefore purged from ECS).
 '''
 
-logging.basicConfig(filename='/var/log/ecs_instance_health_check.log', encoding='utf-8', level=logging.INFO)
+
+def setup_logging(logger_level):
+    the_logger = logging.getLogger()
+    for old_handler in the_logger.handlers:
+        the_logger.removeHandler(old_handler)
+
+    new_handler = logging.FileHandler("/var/log/ecs_instance_health_check.log")
+
+    hostname = socket.gethostname()
+
+    json_format = (
+        '{ "timestamp": "%(asctime)s", "log_level": "%(levelname)s", "message": "%(message)s", '
+        f'"environment": "{os.environ.get("ENVIRONMENT", "NOT_SET")}", "application": "{os.environ.get("APPLICATION", "NOT_SET")}", '
+        f'"module": "%(module)s", "process": "%(process)s", '
+        f'"thread": "[%(thread)s]", "hostname": "{hostname}" }} '
+    )
+
+    new_handler.setFormatter(logging.Formatter(json_format))
+    the_logger.addHandler(new_handler)
+    new_level = logging.getLevelName(logger_level.upper())
+    the_logger.setLevel(new_level)
+
+    if the_logger.isEnabledFor(logging.DEBUG):
+        boto3.set_stream_logger()
+        the_logger.debug(f'Using boto3", "version": "{boto3.__version__}"')
+
+    return the_logger
+
+
+logger = setup_logging(logging.INFO)
 
 ecs_agent_url = "http://localhost:51678/v1/tasks"
 iteration_max = 3
@@ -26,7 +56,7 @@ def mark_ecs_instance_as_unhealthy():
 
 
 def main():
-    logging.info("ECS Instance health check started")
+    logger.info("ECS Instance health check started")
     tasks = {}  # Stores latest version of each ECS tasks returned by ECS agent
     while True:
         response = requests.get(ecs_agent_url)
@@ -55,10 +85,10 @@ def main():
                     return 0
                 else:
                     logging.info("{0} is healthly".format(task_arn))
-            logging.info("ECS agent is running")
+            logger.info("ECS agent is running")
             time.sleep(sleep_seconds)
         else:
-            logging.warning("ECS agent is not running")
+            logger.warning("ECS agent is not running")
             mark_ecs_instance_as_unhealthy()
             return 0
 
