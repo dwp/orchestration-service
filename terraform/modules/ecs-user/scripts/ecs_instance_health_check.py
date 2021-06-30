@@ -5,6 +5,8 @@ import socket
 import requests
 import boto3
 
+from requests.exceptions import ConnectionError
+
 '''
 This code interrogates the ECS agent running on EC2 instances and for each task, compares the `DesiredStatus`
 and `KnownStatus`. If for any task, those statuses are different for a period of time defined by 
@@ -22,20 +24,20 @@ def setup_logging(logger_level):
     hostname = socket.gethostname()
 
     json_format = (
-        '{ "timestamp": "%(asctime)s", "log_level": "%(levelname)s", "message": "%(message)s", '
-        f'"environment": "{os.environ.get("ENVIRONMENT", "NOT_SET")}", "application": "{os.environ.get("APPLICATION", "NOT_SET")}", '
-        f'"module": "%(module)s", "process": "%(process)s", '
-        f'"thread": "[%(thread)s]", "hostname": "{hostname}" }} '
-    )
+        '{{ "timestamp": "%(asctime)s", "log_level": "%(levelname)s", "message": "%(message)s", '
+        '"environment": "NOT_SET", "application": "NOT_SET", '
+        '"module": "%(module)s", "process": "%(process)s", '
+        '"thread": "[%(thread)s]", "hostname": "{hostname}" }} '
+    ).format(hostname=hostname)
 
     new_handler.setFormatter(logging.Formatter(json_format))
     the_logger.addHandler(new_handler)
-    new_level = logging.getLevelName(logger_level.upper())
+    new_level = logging.getLevelName(logger_level)
     the_logger.setLevel(new_level)
 
     if the_logger.isEnabledFor(logging.DEBUG):
         boto3.set_stream_logger()
-        the_logger.debug(f'Using boto3", "version": "{boto3.__version__}"')
+        the_logger.debug('Using boto3", "version": "%s"' % boto3.__version__)
 
     return the_logger
 
@@ -56,10 +58,17 @@ def mark_ecs_instance_as_unhealthy():
 
 
 def main():
+    time.sleep(120)
     logger.info("ECS Instance health check started")
     tasks = {}  # Stores latest version of each ECS tasks returned by ECS agent
     while True:
-        response = requests.get(ecs_agent_url)
+        try:
+            response = requests.get(ecs_agent_url)
+        except ConnectionError:
+            logger.warning("ECS agent is unreachable. Instance marked as unhealthy")
+            mark_ecs_instance_as_unhealthy()
+            return 0
+
         if response.status_code == 200:  # ECS Agent is responsive
             reponse_json = response.json()
             for task in reponse_json["Tasks"]:
@@ -72,25 +81,26 @@ def main():
                     tasks[task_arn]["count_iteration_with_unmatched_statuses"] = 0
                 else:
                     tasks[task_arn]["count_iteration_with_unmatched_statuses"] += 1
+                    logging.warning("""Task {0} DesiredStatus: {1} and
+                    KnownStatus: {2} unmatched for {3} iterations.""".format(task_arn,
+                                                                             tasks[task_arn]["desired_status"],
+                                                                             tasks[task_arn]["known_status"],
+                                                                             tasks[task_arn]["count_iteration_with_unmatched_statuses"]))
                 # Marks instance as `Unhealthy` if `DesiredStatus` and `KnownStatus`
                 # are still different after (`iteration_max` * `sleep_seconds`) seconds
                 if tasks[task_arn]["count_iteration_with_unmatched_statuses"] == iteration_max:
                     logging.warning("""Task {0} DesiredStatus: {1} and
-                    KnownStatus: {2} unmatched {3} seconds.
-                    ECS instance marked as unhealthly""".format(task_arn,
-                                                                tasks[task_arn]["desired_status"],
-                                                                tasks[task_arn]["known_status"],
-                                                                iteration_max * sleep_seconds))
+                    KnownStatus: {2} unmatched for {3} seconds.
+                    ECS instance marked as unhealthy""".format(task_arn,
+                                                               tasks[task_arn]["desired_status"],
+                                                               tasks[task_arn]["known_status"],
+                                                               iteration_max * sleep_seconds))
                     mark_ecs_instance_as_unhealthy()
                     return 0
                 else:
-                    logging.info("{0} is healthly".format(task_arn))
+                    logging.info("{0} is healthy".format(task_arn))
             logger.info("ECS agent is running")
             time.sleep(sleep_seconds)
-        else:
-            logger.warning("ECS agent is not running")
-            mark_ecs_instance_as_unhealthy()
-            return 0
 
 
 if __name__ == "__main__":

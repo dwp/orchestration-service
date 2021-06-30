@@ -141,8 +141,9 @@ EOF
     #!/bin/bash
 
     # Start long-running ECS instance health check as a background task
-    pip3 install requests
-    python3 /usr/local/src/ecs_instance_health_check.py &
+    export REGION=${data.aws_region.current.name}
+    export INSTANCE_ID=$(curl http://169.254.169.254/latest/meta-data/instance-id)
+    nohup python /usr/local/src/ecs_instance_health_check.py &
 EOF
   }
 
