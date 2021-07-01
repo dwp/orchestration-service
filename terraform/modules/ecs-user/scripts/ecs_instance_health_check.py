@@ -45,7 +45,7 @@ def setup_logging(logger_level):
 logger = setup_logging(logging.INFO)
 
 ecs_agent_url = "http://localhost:51678/v1/tasks"
-iteration_max = 3
+iteration_max = 5
 sleep_seconds = 60
 
 
@@ -65,7 +65,7 @@ def main():
         try:
             response = requests.get(ecs_agent_url)
         except ConnectionError:
-            logger.warning("ECS agent is unreachable. Instance marked as unhealthy")
+            logger.warning("ECS agent is unreachable. Instance marked as unhealthy.")
             mark_ecs_instance_as_unhealthy()
             return 0
 
@@ -74,29 +74,29 @@ def main():
             for task in reponse_json["Tasks"]:
                 task_arn = task["Arn"]
                 if task_arn not in tasks:  # Is returned task already in dictionnary?
-                    tasks[task_arn] = {"count_iteration_with_unmatched_statuses": 0}
-                tasks[task_arn]["desired_status"] = task["DesiredStatus"]
-                tasks[task_arn]["known_status"] = task["KnownStatus"]
-                if tasks[task_arn]["desired_status"] == tasks[task_arn]["known_status"]:
-                    tasks[task_arn]["count_iteration_with_unmatched_statuses"] = 0
-                else:
-                    tasks[task_arn]["count_iteration_with_unmatched_statuses"] += 1
-                    logging.warning("""Task {0} DesiredStatus: {1} and
-                    KnownStatus: {2} unmatched for {3} iterations.""".format(task_arn,
-                                                                             tasks[task_arn]["desired_status"],
-                                                                             tasks[task_arn]["known_status"],
-                                                                             tasks[task_arn]["count_iteration_with_unmatched_statuses"]))
-                # Marks instance as `Unhealthy` if `DesiredStatus` and `KnownStatus`
-                # are still different after (`iteration_max` * `sleep_seconds`) seconds
-                if tasks[task_arn]["count_iteration_with_unmatched_statuses"] == iteration_max:
-                    logging.warning("""Task {0} DesiredStatus: {1} and
-                    KnownStatus: {2} unmatched for {3} seconds.
-                    ECS instance marked as unhealthy""".format(task_arn,
-                                                               tasks[task_arn]["desired_status"],
-                                                               tasks[task_arn]["known_status"],
-                                                               iteration_max * sleep_seconds))
-                    mark_ecs_instance_as_unhealthy()
-                    return 0
+                    tasks[task_arn] = {"count_iteration_with_pending_status": 0}
+                if task["KnownStatus"] == "PENDING":
+                    tasks[task_arn]["count_iteration_with_pending_status"] += 1
+                if tasks[task_arn]["count_iteration_with_pending_status"] == iteration_max:
+                    running_tasks_on_instance = None
+                    for task in reponse_json["Tasks"]:
+                        if task["KnownStatus"] == "RUNNING":
+                            running_tasks_on_instance = True
+                            break
+                        else:
+                            running_tasks_on_instance = False
+                    if not running_tasks_on_instance:
+                        logging.warning("""Task {0} has been pending for {1} seconds
+                         and no other tasks are running  on the instance. Marking instance as unhealthy.""".format(
+                            task_arn,
+                            iteration_max * sleep_seconds))
+                        mark_ecs_instance_as_unhealthy()
+                        return 0
+                    else:
+                        logging.warning("""Task {0} has been pending for {1} seconds
+                         but other tasks are running on the instance. Ignoring.""".format(
+                            task_arn,
+                            iteration_max * sleep_seconds))
                 else:
                     logging.info("{0} is healthy".format(task_arn))
             logger.info("ECS agent is running")

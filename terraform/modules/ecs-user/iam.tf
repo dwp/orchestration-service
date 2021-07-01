@@ -107,9 +107,9 @@ data "aws_iam_policy_document" "user_host" {
   }
 
   statement {
-    sid    = "AllowSetInstanceHealth"
-    effect = "Allow"
-    actions = ["autoscaling:SetInstanceHealth"]
+    sid       = "AllowSetInstanceHealth"
+    effect    = "Allow"
+    actions   = ["autoscaling:SetInstanceHealth"]
     resources = [aws_autoscaling_group.user_host.arn]
   }
 
