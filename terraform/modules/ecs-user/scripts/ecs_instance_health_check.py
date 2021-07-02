@@ -75,8 +75,6 @@ def main():
                 task_arn = task["Arn"]
                 if task_arn not in tasks:  # Is returned task already in dictionnary?
                     tasks[task_arn] = {"count_iteration_with_pending_status": 0}
-                if task["KnownStatus"] == "PENDING":
-                    tasks[task_arn]["count_iteration_with_pending_status"] += 1
                 if tasks[task_arn]["count_iteration_with_pending_status"] == iteration_max:
                     running_tasks_on_instance = None
                     for task in reponse_json["Tasks"]:
@@ -86,19 +84,21 @@ def main():
                         else:
                             running_tasks_on_instance = False
                     if not running_tasks_on_instance:
-                        logging.warning("""Task {0} has been pending for {1} seconds
+                        logger.warning("""Task {0} has been pending for {1} seconds
                          and no other tasks are running  on the instance. Marking instance as unhealthy.""".format(
                             task_arn,
                             iteration_max * sleep_seconds))
                         mark_ecs_instance_as_unhealthy()
                         return 0
                     else:
-                        logging.warning("""Task {0} has been pending for {1} seconds
+                        logger.warning("""Task {0} has been pending for {1} seconds
                          but other tasks are running on the instance. Ignoring.""".format(
                             task_arn,
                             iteration_max * sleep_seconds))
                 else:
-                    logging.info("{0} is healthy".format(task_arn))
+                    logger.info("{0} is healthy".format(task_arn))
+                if task["KnownStatus"] == "PENDING":
+                    tasks[task_arn]["count_iteration_with_pending_status"] += 1
             logger.info("ECS agent is running")
             time.sleep(sleep_seconds)
 
