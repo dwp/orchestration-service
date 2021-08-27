@@ -3,6 +3,7 @@ jobs:
   plan:
   - get: orchestration-service
     trigger: true
+    resource: orchestration-service-branch-connor
   - .: (( inject meta.plan.terraform-bootstrap ))
     params:
       DEPLOY_PATH: app
