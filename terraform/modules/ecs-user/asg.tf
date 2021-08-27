@@ -15,6 +15,13 @@ resource "aws_autoscaling_group" "user_host" {
 
   tags = local.autoscaling_tags
 
+  instance_refresh {
+    strategy = "Rolling"
+    preferences {
+      min_healthy_percentage = 80
+    }
+  }
+
   lifecycle {
     create_before_destroy = true
   }
