@@ -1,9 +1,7 @@
 resource "aws_autoscaling_group" "user_host" {
   name                  = "${var.name_prefix}-asg"
-//  max_size              = var.auto_scaling.max_size
-//  min_size              = var.auto_scaling.min_size
-  max_size              = "0"
-  min_size              = "0"
+  max_size              = var.auto_scaling.max_size
+  min_size              = var.auto_scaling.min_size
   max_instance_lifetime = var.auto_scaling.max_instance_lifetime
 
   vpc_zone_identifier = var.vpc.aws_subnets_private[*].id
