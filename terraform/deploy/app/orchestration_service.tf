@@ -249,8 +249,8 @@ module "ecs-user-host" {
   source = "../../modules/ecs-user"
   ami_id = var.ecs_hardened_ami_id == "" ? data.aws_ami.hardened.id : var.ecs_hardened_ami_id
   auto_scaling = {
-    max_size              = local.scaling[local.environment[min]]
-    min_size              = local.scaling[local.environment[max]]
+    max_size              = local.environment == "production" ? 10 : 3
+    min_size              = local.environment == "production" ? 3 : 1
     max_instance_lifetime = 604800
   }
   common_tags             = merge(local.common_tags, { Name = "${var.name_prefix}-user-host" })
