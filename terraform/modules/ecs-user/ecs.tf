@@ -4,6 +4,11 @@ resource "random_id" "capacity_provider_suffix" {
 
 resource "aws_ecs_cluster" "user_host" {
   name               = var.name_prefix
+  capacity_providers = [aws_ecs_capacity_provider.user_host.name]
+  default_capacity_provider_strategy {
+    capacity_provider = aws_ecs_capacity_provider.user_host.name
+    weight            = 100
+  }
 
   tags = merge(var.common_tags, { Name = var.name_prefix, Persistence = "True", AutoShutdown = "False" })
 }
