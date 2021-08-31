@@ -6,7 +6,7 @@ resource "aws_autoscaling_group" "user_host" {
 
   vpc_zone_identifier = var.vpc.aws_subnets_private[*].id
 
-  protect_from_scale_in = true
+  protect_from_scale_in = false
 
   launch_template {
     id      = aws_launch_template.user_host.id
