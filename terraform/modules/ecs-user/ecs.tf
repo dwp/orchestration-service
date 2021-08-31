@@ -27,9 +27,9 @@ resource "aws_ecs_capacity_provider" "user_host" {
     }
   }
 
-//  lifecycle {
-//    ignore_changes = all
-//  }
+  lifecycle {
+    ignore_changes = all
+  }
 
   depends_on = [aws_autoscaling_group.user_host]
   tags       = merge(var.common_tags, { "Name" : "${var.name_prefix}-user-host-provider" })
