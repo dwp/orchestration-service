@@ -12,7 +12,7 @@ resource "aws_ecs_capacity_provider" "user_host" {
   name = "${var.name_prefix}-${random_id.capacity_provider_suffix.hex}"
   auto_scaling_group_provider {
     auto_scaling_group_arn         = aws_autoscaling_group.user_host.arn
-    managed_termination_protection = "ENABLED"
+    managed_termination_protection = "DISABLED"
 
     managed_scaling {
       status                    = "ENABLED"
