@@ -9,7 +9,7 @@ locals {
   ecr_endpoint   = "${local.account[local.management_account[local.environment]]}.dkr.ecr.${var.region}.amazonaws.com"
 
   ecs_user_host_instance_type = {
-    development = "m5.4xlarge"
+    development = "m5.2xlarge"
     qa          = "m5.2xlarge"
     integration = "m5.2xlarge"
     preprod     = "m5.2xlarge"
