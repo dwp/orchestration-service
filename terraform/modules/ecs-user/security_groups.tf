@@ -155,3 +155,30 @@ resource "aws_security_group_rule" "ingress_emr_livy_from_host_hue" {
   source_security_group_id = aws_security_group.user_host.id
   type                     = "ingress"
 }
+
+# Security group for ap_frontend_vpce
+resource "aws_security_group" "ap_frontend_vpce_sg" {
+  name        = "ap_frontend_vpce_sg"
+  description = "Allow HTTPS ingress from orchestration-service-user-host SG"
+  vpc_id      = var.vpc.id
+}
+
+resource "aws_security_group_rule" "ingress_from_orchestration_service_user_host_sg" {
+  description              = "Allow HTTPS ingress from orchestration-service-user-host SG"
+  from_port                = 443
+  to_port                  = 443
+  protocol                 = "tcp"
+  security_group_id        = aws_security_group.ap_frontend_vpce_sg.id
+  source_security_group_id = aws_security_group.user_host.id
+  type                     = "ingress"
+}
+
+resource "aws_security_group_rule" "egress_to_ap_frontend_vpce_sg" {
+  description              = "Allow HTTPS egress to AP frontend VPCE SG"
+  from_port                = 443
+  to_port                  = 443
+  protocol                 = "tcp"
+  security_group_id        = aws_security_group.user_host.id
+  source_security_group_id = aws_security_group.ap_frontend_vpce_sg.id
+  type                     = "egress"
+}

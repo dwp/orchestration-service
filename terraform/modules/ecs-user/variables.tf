@@ -25,6 +25,14 @@ variable "vpc" {
   })
 }
 
+variable "ap_frontend_vpce" {
+  type = string
+}
+
+variable "parent_domain_name" {
+  type = string
+}
+
 variable "auto_scaling" {
   type = object({
     min_size              = number

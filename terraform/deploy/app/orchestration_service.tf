@@ -264,6 +264,8 @@ module "ecs-user-host" {
   pushgateway_sg_id       = data.terraform_remote_state.aws_analytical_env_app.outputs.pushgateway.lb_sg.id
   github_proxy_vpce_sg_id = data.terraform_remote_state.aws_analytical_env_infra.outputs.internet_proxy_sg
   scaling                 = local.scaling[local.environment]
+  ap_frontend_vpce        = local.ap_frontend_vpce
+  parent_domain_name      = local.parent_domain_name["production"] # Returns parent_domain_name without prefix. Will only be used inside a VPC.
 
   s3_packages = {
     bucket     = data.terraform_remote_state.common.outputs.config_bucket.id
