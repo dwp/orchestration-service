@@ -155,3 +155,13 @@ resource "aws_security_group_rule" "ingress_emr_livy_from_host_hue" {
   source_security_group_id = aws_security_group.user_host.id
   type                     = "ingress"
 }
+
+resource "aws_security_group_rule" "egress_to_analytical_env_vpc_custom_vpce_sg" {
+  description              = "Allow outbound traffic to analytical_env.vpc_custom_vpce_sg"
+  protocol                 = "tcp"
+  from_port                = 443
+  to_port                  = 443
+  security_group_id        = aws_security_group.user_host.id
+  source_security_group_id = var.github_proxy_vpce_sg_id
+  type                     = "egress"
+}
