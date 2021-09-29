@@ -199,6 +199,18 @@ module "ecs-fargate-task-definition" {
       name  = "orchestrationService.tooling_permission_overrides"
       value = "file_transfer_download,file_transfer_upload"
     },
+    {
+      name  = "orchestrationService.ap_lambda_arn"
+      value = "TODO"
+    },
+    {
+      name  = "orchestrationService.ap_frontend_id"
+      value = "TODO"
+    },
+    {
+      name  = "orchestrationService.ap_enabled_users"
+      value = "TODO"
+    },
   ]
 }
 #
