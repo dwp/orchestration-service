@@ -310,7 +310,7 @@ variable "component_tags" {
     }
     integration = {
       hue             = "0.0.102"
-      rstudio_oss     = "0.0.62"
+      rstudio_oss     = "0.0.61"
       jupyter_hub     = "0.0.77"
       headless_chrome = "0.0.15"
       guacd           = "0.0.21"
