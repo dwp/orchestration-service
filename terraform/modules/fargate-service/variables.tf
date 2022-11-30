@@ -42,7 +42,7 @@ variable "ecs_cluster_arn" {
 }
 
 variable "private_subnets" {
-  type        = list
+  type        = list(any)
   description = "(Required) The private subnets associated with the task or service."
 }
 
@@ -88,7 +88,7 @@ variable "enable_ecs_managed_tags" {
 }
 
 variable "ordered_placement_strategy" {
-  type        = list
+  type        = list(any)
   description = "(Optional) Service level strategy rules that are taken into consideration during task placement. List from top to bottom in order of precedence. The maximum number of ordered_placement_strategy blocks is 5. This is a list of maps where each map should contain \"id\" and \"field\""
   default     = []
 }
@@ -100,19 +100,19 @@ variable "health_check_grace_period_seconds" {
 }
 
 variable "placement_constraints" {
-  type        = list
+  type        = list(any)
   description = "(Optional) rules that are taken into consideration during task placement. Maximum number of placement_constraints is 10. This is a list of maps, where each map should contain \"type\" and \"expression\""
   default     = []
 }
 
 variable "service_registries" {
-  type        = map
+  type        = map(any)
   description = "(Optional) The service discovery registries for the service. The maximum number of service_registries blocks is 1. This is a map that should contain the following fields \"registry_arn\", \"port\", \"container_port\" and \"container_name\""
   default     = {}
 }
 
 variable "security_groups" {
-  type        = list
+  type        = list(any)
   description = "(Optional) The security groups associated with the task or service. If you do not specify a security group, the default security group for the VPC is used."
   default     = []
 }

@@ -228,13 +228,13 @@ variable "working_directory" {
 # AWS ECS Task Definition Variables
 # ---------------------------------------------------------------------------------------------------------------------
 variable "placement_constraints" {
-  type        = list
+  type        = list(any)
   description = "(Optional) A set of placement constraints rules that are taken into consideration during task placement. Maximum number of placement_constraints is 10. This is a list of maps, where each map should contain \"type\" and \"expression\""
   default     = []
 }
 
 variable "proxy_configuration" {
-  type        = list
+  type        = list(any)
   description = "(Optional) The proxy configuration details for the App Mesh proxy. This is a list of maps, where each map should contain \"container_name\", \"properties\" and \"type\""
   default     = []
 }

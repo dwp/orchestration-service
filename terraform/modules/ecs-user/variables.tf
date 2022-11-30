@@ -37,53 +37,53 @@ variable "auto_scaling" {
   })
 }
 
-variable frontend_alb_sg_id {
+variable "frontend_alb_sg_id" {
   type        = string
   description = "(Required) Source ALB Security group"
 }
 
-variable guacamole_port {
+variable "guacamole_port" {
   type        = number
   description = "Port used for listening by the user guacamole container"
 }
 
-variable management_account {
+variable "management_account" {
   type        = string
   description = "(Required) - The mgmt account where images reside"
 }
 
-variable livy_port {
+variable "livy_port" {
   type        = number
   description = "Port that EMR livy listens on"
   default     = 8998
 }
 
-variable emr_sg_id {
+variable "emr_sg_id" {
   type        = string
   description = "Security Group id of EMR cluster"
 }
 
-variable livy_proxy_sg_id {
+variable "livy_proxy_sg_id" {
   type        = string
   description = "Security Group id of Livy"
 }
 
-variable pushgateway_sg_id {
+variable "pushgateway_sg_id" {
   type        = string
   description = "Security Group ID of the Pushgateway"
 }
 
-variable pushgateway_port {
+variable "pushgateway_port" {
   type        = string
   description = "Port that the Pushgateway listens on "
   default     = 9091
 }
 
-variable github_proxy_vpce_sg_id {
+variable "github_proxy_vpce_sg_id" {
   type = string
 }
 
-variable hiveserver2_port {
+variable "hiveserver2_port" {
   type        = string
   description = "Port that the Hive Server listens on"
   default     = 10000
