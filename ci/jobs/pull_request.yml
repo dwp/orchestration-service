@@ -1,5 +1,7 @@
 jobs:
   - name: orchestration-service-pr
+    max_in_flight: 1
+    serial_groups: [qa-applies]
     plan:
       - get: orchestration-service-pr
         trigger: true
@@ -57,6 +59,8 @@ jobs:
             status: success
 
   - name: orchestration-service-pr-ami
+    max_in_flight: 1
+    serial_groups: [qa-applies]
     plan:
       - in_parallel:
           - put: meta
