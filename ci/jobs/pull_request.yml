@@ -124,6 +124,11 @@ jobs:
           config:
             params:
               RESULT: FAILED
+        - put: orchestration-service-pr
+          params:
+            context: $BUILD_JOB_NAME
+            path: orchestration-service-pr
+            status: failure
     on_success:
       do:
         - .: (( inject meta.plan.ami-test-results ))
@@ -131,3 +136,8 @@ jobs:
           config:
             params:
               RESULT: SUCCESS
+        - put: orchestration-service-pr
+          params:
+            context: $BUILD_JOB_NAME
+            path: orchestration-service-pr
+            status: success
