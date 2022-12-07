@@ -168,10 +168,10 @@ resource "aws_launch_template" "user_host" {
     }
   }
 
-  block_device_mappings {
-    device_name = "/dev/sda1"
-    no_device   = true
-  }
+  # block_device_mappings {
+  #   device_name = "/dev/sda1"
+  #   no_device   = true
+  # }
 
   iam_instance_profile {
     arn = aws_iam_instance_profile.user_host.arn
