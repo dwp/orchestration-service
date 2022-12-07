@@ -159,7 +159,7 @@ resource "aws_launch_template" "user_host" {
   user_data = data.template_cloudinit_config.ecs_config.rendered
 
   block_device_mappings {
-    device_name = "/dev/sda1"
+    device_name = "/dev/sdf1"
 
     ebs {
       delete_on_termination = true
@@ -168,10 +168,10 @@ resource "aws_launch_template" "user_host" {
     }
   }
 
-  # block_device_mappings {
-  #   device_name = "/dev/sda1"
-  #   no_device   = true
-  # }
+  block_device_mappings {
+    device_name = "/dev/sda1"
+    no_device   = true
+  }
 
   iam_instance_profile {
     arn = aws_iam_instance_profile.user_host.arn
