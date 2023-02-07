@@ -43,7 +43,7 @@ jobs:
           inputs:
             - name: previous_success
       - .: (( inject meta.plan.terminate-ecs-instances ))
-      - .: (( inject meta.plan.test-ecs-ami-2 ))
+      - .: (( inject meta.plan.test-ecs-ami ))
     on_failure:
       do:
         - .: (( inject meta.plan.ami-test-results ))
