@@ -115,3 +115,8 @@ variable "region" {
   description = "(Required) The region to deploy into"
   default     = "eu-west-2"
 }
+
+variable "account" {
+  type        = string
+  description = "(Required) The account id of the account we are deploying into"
+}

@@ -2,12 +2,6 @@ locals {
 
   environment = terraform.workspace == "default" ? "development" : terraform.workspace
 
-  account = {
-    {% for key, value in accounts.items() %}
-      {{key}} = "{{value}}"
-    {% endfor %}
-  }
-
   # Configured as per Tagging doc requirements https://engineering.dwp.gov.uk/policies/hcs-cloud-hosting-policies/resource-identification-tagging/
   hcs_environment = {
     development    = "Dev"
