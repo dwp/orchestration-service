@@ -207,7 +207,7 @@ EOF
 
     echo "Setup hcs pre-requisites"
     chmod u+x /usr/local/src/config_hcs.sh
-    /usr/local/src/config_hcs.sh ${local.hcs_environment[local.environment]} ${data.terraform_remote_state.aws_analytical_env_infra.outputs.internet_proxy_dns_name} ${var.proxy_port}
+    /usr/local/src/config_hcs.sh ${local.hcs_environment[local.environment]} ${var.proxy_host} ${var.proxy_port}
 
     echo "Creating userhost user"
     useradd userhost -m
