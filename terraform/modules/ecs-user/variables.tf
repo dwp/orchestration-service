@@ -109,3 +109,9 @@ variable "proxy_port" {
   type        = string
   default     = "3128"
 }
+
+variable "region" {
+  type        = string
+  description = "(Required) The region to deploy into"
+  default     = "eu-west-2"
+}
