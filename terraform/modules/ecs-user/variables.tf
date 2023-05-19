@@ -110,6 +110,11 @@ variable "proxy_port" {
   default     = "3128"
 }
 
+variable "proxy_host" {
+  description = "proxy host"
+  type        = string
+}
+
 variable "region" {
   type        = string
   description = "(Required) The region to deploy into"

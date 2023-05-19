@@ -166,22 +166,3 @@ resource "aws_security_group_rule" "ingress_emr_livy_from_host_hue" {
   type                     = "ingress"
 }
 
-resource "aws_security_group_rule" "to_internet_proxy" {
-  description              = "Allow instances to connect to internet proxy for Tenable"
-  protocol                 = "tcp"
-  from_port                = 3128
-  to_port                  = 3128
-  security_group_id        = aws_security_group.user_host.id
-  source_security_group_id = data.terraform_remote_state.aws_analytical_env_infra.outputs.internet_proxy_sg
-  type                     = "egress"
-}
-
-resource "aws_security_group_rule" "internet_proxy_from_host" {
-  description              = "Accept proxy traffic"
-  protocol                 = "tcp"
-  from_port                = 3128
-  to_port                  = 3128
-  security_group_id        = data.terraform_remote_state.aws_analytical_env_infra.outputs.internet_proxy_sg
-  source_security_group_id = aws_security_group.user_host.id
-  type                     = "ingress"
-}
