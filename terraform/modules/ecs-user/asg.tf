@@ -207,7 +207,7 @@ EOF
 
     echo "Setup hcs pre-requisites"
     chmod u+x /usr/local/src/config_hcs.sh
-    /usr/local/src/config_hcs.sh "${hcs_environment}" "${proxy_host}" "${proxy_port}"
+    /usr/local/src/config_hcs.sh ${local.hcs_environment[local.environment]} ${data.terraform_remote_state.aws_analytical_env_infra.outputs.internet_proxy_dns_name} ${var.proxy_port}
 
     echo "Creating userhost user"
     useradd userhost -m
@@ -227,12 +227,6 @@ resource "aws_launch_template" "user_host" {
   tags                                 = merge(var.common_tags, { Name = "${var.name_prefix}-lt" })
 
   user_data = data.template_cloudinit_config.ecs_config.rendered
-
-  region                                           = var.region
-  name                                             = "user-host"
-  proxy_port                                       = var.proxy_port
-  proxy_host                                       = data.terraform_remote_state.aws_analytical_env_infra.outputs.internet_proxy_dns_name
-  hcs_environment                                  = local.hcs_environment[local.environment]
 
   block_device_mappings {
     device_name = "/dev/sda1"
