@@ -101,7 +101,7 @@ data "aws_iam_policy_document" "user_host" {
       "ec2:ModifyInstanceMetadataOptions",
       "ec2:*Tags",
     ]
-    resources = ["arn:aws:ec2:${var.region}:${var.account[local.environment]}:instance/*"]
+    resources = ["arn:aws:ec2:${var.region}:${var.account}:instance/*"]
   }
 
   statement {
