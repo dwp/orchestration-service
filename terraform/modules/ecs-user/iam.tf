@@ -80,6 +80,8 @@ data "aws_iam_policy_document" "user_host" {
 
     resources = ["arn:aws:ecr:${data.aws_region.current.name}:${var.management_account}:repository/orchestration-service/*"]
 
+  }
+
   statement {
     sid    = "AllowAccessLogGroups"
     effect = "Allow"
@@ -100,7 +102,6 @@ data "aws_iam_policy_document" "user_host" {
       "ec2:*Tags",
     ]
     resources = ["arn:aws:ec2:${var.region}:${local.account[local.environment]}:instance/*"]
-  }
   }
 
   statement {
