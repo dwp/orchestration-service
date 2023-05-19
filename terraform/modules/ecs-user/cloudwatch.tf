@@ -12,7 +12,7 @@ resource "aws_cloudwatch_log_group" "user_container_log_group" {
 ## ECS Instance Log Group
 ## ---------------------------------------------------------------------------------------------------------------------
 resource "aws_cloudwatch_log_group" "userhost_instance_log_group" {
-  name              = local.cw_userhost_instance_log_group_name
+  name              = local.cw_userhost_agent_log_group_name
   retention_in_days = 180
-  tags              = local.common_tags
+  tags              = var.common_tags
 }

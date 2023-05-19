@@ -1,5 +1,18 @@
 locals {
 
+  environment = terraform.workspace == "default" ? "development" : terraform.workspace
+
+  # Configured as per Tagging doc requirements https://engineering.dwp.gov.uk/policies/hcs-cloud-hosting-policies/resource-identification-tagging/
+  hcs_environment = {
+    development    = "Dev"
+    qa             = "Test"
+    integration    = "Stage"
+    preprod        = "Stage"
+    production     = "Production"
+    management     = "SP_Tooling"
+    management-dev = "DT_Tooling"
+  }
+
   cw_userhost_agent_namespace                 = "/aws/ecs/${var.name_prefix}/userhost-instance-logs/"
   cw_userhost_agent_log_group_name            = "/aws/ecs/${var.name_prefix}/userhost-instance-logs/" 
 
