@@ -71,6 +71,21 @@ write_files:
     owner: root:root
     path: /usr/local/src/ecs_instance_health_check.py
     permissions: '0644'
+  - encoding: b64
+    content: ${filebase64("${path.module}/files/userhost/userhost_config_hcs.sh")}
+    owner: root:root
+    path: /usr/local/src/config_hcs.sh
+    permissions: '0644'
+  - encoding: b64
+    content: ${filebase64("${path.module}/files/userhost/userhost_logging.sh")}
+    owner: root:root
+    path: /usr/local/src/logging.sh
+    permissions: '0644'
+  - encoding: b64
+    content: ${filebase64("${path.module}/files/userhost/userhost.logrotate")}
+    owner: root:root
+    path: /etc/logrotate.d/userhost/userhost.logrotate
+    permissions: '0644'
 EOF
   }
 
@@ -179,6 +194,29 @@ EOF
 
 EOF
   }
+
+  part {
+    content_type = "text/x-shellscript"
+    content      = <<EOF
+    #!/bin/bash
+
+    # Logging and HCS config
+
+    echo "Creating directories"
+    mkdir -p /var/log/userhost
+
+    echo "Setup hcs pre-requisites"
+    chmod u+x /usr/local/src/config_hcs.sh
+    /usr/local/src/config_hcs.sh "${hcs_environment}" "${proxy_host}" "${proxy_port}"
+
+    echo "Creating userhost user"
+    useradd userhost -m
+
+    echo "Changing permissions"
+    chown userhost:userhost -R  /var/log/userhost
+
+EOF
+  }
 }
 
 resource "aws_launch_template" "user_host" {
@@ -189,6 +227,12 @@ resource "aws_launch_template" "user_host" {
   tags                                 = merge(var.common_tags, { Name = "${var.name_prefix}-lt" })
 
   user_data = data.template_cloudinit_config.ecs_config.rendered
+
+  region                                           = var.region
+  name                                             = "user-host"
+  proxy_port                                       = var.proxy_port
+  proxy_host                                       = data.terraform_remote_state.aws_analytical_env_infra.outputs.internet_proxy_dns_name
+  hcs_environment                                  = local.hcs_environment[local.environment]
 
   block_device_mappings {
     device_name = "/dev/sda1"
@@ -211,7 +255,7 @@ resource "aws_launch_template" "user_host" {
 
   tag_specifications {
     resource_type = "instance"
-    tags          = merge(var.common_tags, { Name = var.name_prefix, "SSMEnabled" = "True", "Persistence" = "True" })
+    tags          = merge(var.common_tags, { Name = var.name_prefix, "SSMEnabled" = local.userhost_asg_ssmenabled[local.environment], "Persistence" = "True" })
   }
 
   tag_specifications {

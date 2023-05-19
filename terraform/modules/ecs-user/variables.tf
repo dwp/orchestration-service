@@ -103,3 +103,9 @@ variable "scaling" {
     step = number
   })
 }
+
+variable "proxy_port" {
+  description = "proxy port"
+  type        = string
+  default     = "3128"
+}

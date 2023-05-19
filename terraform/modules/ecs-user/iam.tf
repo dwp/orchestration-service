@@ -79,6 +79,28 @@ data "aws_iam_policy_document" "user_host" {
     ]
 
     resources = ["arn:aws:ecr:${data.aws_region.current.name}:${var.management_account}:repository/orchestration-service/*"]
+
+  statement {
+    sid    = "AllowAccessLogGroups"
+    effect = "Allow"
+    actions = [
+      "logs:CreateLogStream",
+      "logs:PutLogEvents",
+      "logs:DescribeLogStreams"
+    ]
+    resources = [aws_cloudwatch_log_group.userhost_instance_log_group.arn]
+  }
+
+  statement {
+    sid    = "EnableEC2TaggingHost"
+    effect = "Allow"
+
+    actions = [
+      "ec2:ModifyInstanceMetadataOptions",
+      "ec2:*Tags",
+    ]
+    resources = ["arn:aws:ec2:${var.region}:${local.account[local.environment]}:instance/*"]
+  }
   }
 
   statement {
