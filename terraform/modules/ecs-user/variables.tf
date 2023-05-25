@@ -103,3 +103,25 @@ variable "scaling" {
     step = number
   })
 }
+
+variable "proxy_port" {
+  description = "proxy port"
+  type        = string
+  default     = "3128"
+}
+
+variable "proxy_host" {
+  description = "proxy host"
+  type        = string
+}
+
+variable "region" {
+  type        = string
+  description = "(Required) The region to deploy into"
+  default     = "eu-west-2"
+}
+
+variable "account" {
+  type        = string
+  description = "(Required) The account id of the account we are deploying into"
+}

@@ -165,3 +165,4 @@ resource "aws_security_group_rule" "ingress_emr_livy_from_host_hue" {
   source_security_group_id = aws_security_group.user_host.id
   type                     = "ingress"
 }
+

@@ -282,6 +282,8 @@ module "ecs-user-host" {
   github_proxy_vpce_sg_id = data.terraform_remote_state.aws_analytical_env_infra.outputs.internet_proxy_sg
   scaling                 = local.scaling[local.environment]
   ap_vpce_sg              = data.terraform_remote_state.ap_infrastructure.outputs.ap_vpce_sg
+  account                 = local.account[local.environment]
+  proxy_host              = data.terraform_remote_state.aws_analytical_env_infra.outputs.internet_proxy_dns_name
 
   s3_packages = {
     bucket     = data.terraform_remote_state.common.outputs.config_bucket.id
