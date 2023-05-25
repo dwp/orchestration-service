@@ -14,7 +14,7 @@ locals {
   }
 
   cw_userhost_agent_namespace                 = "/aws/ecs/${var.name_prefix}/userhost-instance-logs/"
-  cw_userhost_agent_log_group_name            = "/aws/ecs/${var.name_prefix}/userhost-instance-logs/" 
+  cw_userhost_agent_log_group_name            = "/aws/ecs/${var.name_prefix}/userhost-instance-logs" 
 
   cw_agent_metrics_collection_interval                  = 60
   cw_agent_cpu_metrics_collection_interval              = 60
