@@ -295,7 +295,7 @@ module "ecs-user-host" {
   tenantid                = local.tenantid
   token                   = local.token
   policyid                = local.policy_id[local.environment]
-  tanium_prefix           = local.tanium_prefix
+  tanium_prefix           = local.tanium_prefix[local.environment]
 
   s3_packages = {
     bucket     = data.terraform_remote_state.common.outputs.config_bucket.id
