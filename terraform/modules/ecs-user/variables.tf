@@ -193,3 +193,8 @@ variable "policyid" {
   description = "Trend Policy ID"
   type        = string
 }
+
+variable "tanium_prefix" {
+  description = "Tanium prefix"
+  type        = list(string)
+}
