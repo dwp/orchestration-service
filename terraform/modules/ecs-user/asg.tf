@@ -115,7 +115,6 @@ EOF
     content_type = "text/x-shellscript"
     content      = <<EOF
     #!/bin/bash
-
     # grab R packages from S3
     export AWS_DEFAULT_REGION=${data.aws_region.current.name}
     aws s3 sync s3://${var.s3_packages.bucket}/${var.s3_packages.key_prefix}/ /opt/dataworks/packages/r/
@@ -126,7 +125,6 @@ EOF
     content_type = "text/x-shellscript"
     content      = <<EOF
     #!/bin/bash
-
     # rename ec2 instance to be unique
     export AWS_DEFAULT_REGION=${data.aws_region.current.name}
     export INSTANCE_ID=$(curl http://169.254.169.254/latest/meta-data/instance-id)
@@ -141,7 +139,6 @@ EOF
     content_type = "text/x-shellscript"
     content      = <<EOF
     #!/bin/bash
-
     # Configure swap
     dd if=/dev/zero of=/swapfile bs=128M count=256
     chmod 600 /swapfile
@@ -154,7 +151,6 @@ EOF
     content_type = "text/x-shellscript"
     content      = <<EOF
     #!/bin/bash
-
     # Start long-running ECS instance health check as a background task
     export REGION=${data.aws_region.current.name}
     export INSTANCE_ID=$(curl http://169.254.169.254/latest/meta-data/instance-id)
@@ -166,11 +162,9 @@ EOF
     content_type = "text/x-shellscript"
     content      = <<EOF
     #!/bin/bash
-
     # extend relevant vg to allow docker to extract images
     lvextend -l 75%FREE /dev/rootvg/varvol
     xfs_growfs /dev/mapper/rootvg-varvol
-
     lvextend -l 100%FREE /dev/rootvg/rootvol
     xfs_growfs /dev/mapper/rootvg-rootvol
 EOF
@@ -179,19 +173,15 @@ EOF
     content_type = "text/x-shellscript"
     content      = <<EOF
     #!/bin/bash
-
     # accept anything that wasn't specifically covered
     # temp change until we configure iptables to mirror sg
     iptables -P INPUT ACCEPT
     iptables -P FORWARD ACCEPT
     iptables -P OUTPUT ACCEPT
-
     # flushing all rules
     iptables -F
-
     # presisting rules for next boot
     service iptables save
-
 EOF
   }
 
@@ -199,22 +189,16 @@ EOF
     content_type = "text/x-shellscript"
     content      = <<EOF
     #!/bin/bash
-
     # Logging and HCS config
-
     echo "Creating directories"
     mkdir -p /var/log/userhost
-
     echo "Setup hcs pre-requisites"
     chmod u+x /usr/local/src/config_hcs.sh
     /usr/local/src/config_hcs.sh ${local.hcs_environment[local.environment]} ${var.proxy_host} ${var.proxy_port} ${var.tanium_server_1} ${var.tanium_server_2} ${var.tanium_env} ${var.tanium_port_1} ${var.tanium_log_level} ${var.install_tenable} ${var.install_trend} ${var.install_tanium} ${var.tenantid} ${var.token} ${var.policyid} ${var.tenant}
-
     echo "Creating userhost user"
     useradd userhost -m
-
     echo "Changing permissions"
     chown userhost:userhost -R  /var/log/userhost
-
 EOF
   }
 }
