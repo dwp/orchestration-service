@@ -194,7 +194,10 @@ EOF
     mkdir -p /var/log/userhost
     echo "Setup hcs pre-requisites"
     chmod u+x /usr/local/src/config_hcs.sh
-    /usr/local/src/config_hcs.sh ${local.hcs_environment[local.environment]} ${var.proxy_host} ${var.proxy_port} ${var.tanium_server_1} ${var.tanium_server_2} ${var.tanium_env} ${var.tanium_port_1} ${var.tanium_log_level} ${var.install_tenable} ${var.install_trend} ${var.install_tanium} ${var.tenantid} ${var.token} ${var.policyid} ${var.tenant}
+    /usr/local/src/config_hcs.sh ${local.hcs_environment[local.environment]} ${var.proxy_host} \
+      ${var.proxy_port} ${var.tanium_server_1} ${var.tanium_server_2} ${var.tanium_env} \
+      ${var.tanium_port_1} ${var.tanium_log_level} ${var.install_tenable} ${var.install_trend} \
+      ${var.install_tanium} ${var.tenantid} ${var.token} ${var.policyid} ${var.tenant}
     echo "Creating userhost user"
     useradd userhost -m
     echo "Changing permissions"
