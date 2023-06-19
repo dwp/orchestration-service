@@ -6,6 +6,7 @@ echo ECS_AWSVPC_BLOCK_IMDS=true >> /etc/ecs/ecs.config
 echo "Creating directories"
 mkdir -p /opt/userhost
 mkdir -p /opt/userhost/config
+mkdir -p /var/log/userhost
 
 # Force LC update when any of these files are changed
 echo "${s3_script_hash_cloudwatch_shell}" > /dev/null
@@ -42,6 +43,12 @@ systemctl daemon-reload
 systemctl enable sysdig
 systemctl start sysdig
 
+# Configure swap
+dd if=/dev/zero of=/swapfile bs=128M count=256
+chmod 600 /swapfile
+mkswap /swapfile
+swapon /swapfile
+
 # grab R packages from S3
 export AWS_DEFAULT_REGION=${region}
 aws s3 sync s3://${s3_packages_bucket}/${s3_packages_prefix}/ /opt/dataworks/packages/r/
@@ -53,12 +60,6 @@ UUID=$(dbus-uuidgen | cut -c 1-8)
 export HOSTNAME=${name_prefix}-user-host-$UUID
 hostnamectl set-hostname $HOSTNAME
 aws ec2 create-tags --resources $INSTANCE_ID --tags Key=Name,Value=$HOSTNAME
-
-# Configure swap
-dd if=/dev/zero of=/swapfile bs=128M count=256
-chmod 600 /swapfile
-mkswap /swapfile
-swapon /swapfile
 
 # Start long-running ECS instance health check as a background task
 export REGION=${region}
@@ -90,8 +91,6 @@ chmod u+x /opt/userhost/cloudwatch.sh
     "$AWS_DEFAULT_REGION"
 
 # Logging and HCS config
-echo "Creating directories"
-mkdir -p /var/log/userhost
 echo "Setup hcs pre-requisites"
 chmod u+x /usr/local/src/config_hcs.sh
 /usr/local/src/config_hcs.sh \
