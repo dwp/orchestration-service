@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo ECS_CLUSTER=${var.name_prefix} >> /etc/ecs/ecs.config
+echo ECS_CLUSTER=${name_prefix} >> /etc/ecs/ecs.config
 echo ECS_AWSVPC_BLOCK_IMDS=true >> /etc/ecs/ecs.config
 
 echo "Creating directories"
@@ -43,14 +43,14 @@ systemctl enable sysdig
 systemctl start sysdig
 
 # grab R packages from S3
-export AWS_DEFAULT_REGION=${data.aws_region.current.name}
-aws s3 sync s3://${var.s3_packages.bucket}/${var.s3_packages.key_prefix}/ /opt/dataworks/packages/r/
+export AWS_DEFAULT_REGION=${region}
+aws s3 sync s3://${s3_packages_bucket}/${s3_packages_prefix}/ /opt/dataworks/packages/r/
 
 # rename ec2 instance to be unique
-export AWS_DEFAULT_REGION=${data.aws_region.current.name}
+export AWS_DEFAULT_REGION=${region}
 export INSTANCE_ID=$(curl http://169.254.169.254/latest/meta-data/instance-id)
 UUID=$(dbus-uuidgen | cut -c 1-8)
-export HOSTNAME=${var.name_prefix}-user-host-$UUID
+export HOSTNAME=${name_prefix}-user-host-$UUID
 hostnamectl set-hostname $HOSTNAME
 aws ec2 create-tags --resources $INSTANCE_ID --tags Key=Name,Value=$HOSTNAME
 
@@ -61,7 +61,7 @@ mkswap /swapfile
 swapon /swapfile
 
 # Start long-running ECS instance health check as a background task
-export REGION=${data.aws_region.current.name}
+export REGION=${region}
 export INSTANCE_ID=$(curl http://169.254.169.254/latest/meta-data/instance-id)
 nohup python /usr/local/src/ecs_instance_health_check.py &
 

@@ -46,6 +46,11 @@ resource "aws_launch_template" "user_host" {
 
   user_data = base64encode(templatefile("${path.module}/userdata.tpl", {
 
+    region                                           = data.aws_region.current.name  
+    name_prefix                                      = "${var.name_prefix}-"
+    s3_packages_bucket                               = var.s3_packages_bucket
+    s3_packages_prefix                               = var.s3_packages.key_prefix
+
     cwa_metrics_collection_interval                  = local.cw_agent_metrics_collection_interval
     cwa_namespace                                    = local.cw_userhost_agent_namespace
     cwa_cpu_metrics_collection_interval              = local.cw_agent_cpu_metrics_collection_interval
