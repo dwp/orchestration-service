@@ -44,7 +44,7 @@ resource "aws_launch_template" "user_host" {
   instance_initiated_shutdown_behavior = "terminate"
   tags                                 = merge(var.common_tags, { Name = "${var.name_prefix}-lt" })
 
-  user_data = base64encode(templatefile("userdata.tpl", {
+  user_data = base64encode(templatefile("${path.module}/userdata.tpl", {
 
     cwa_metrics_collection_interval                  = local.cw_agent_metrics_collection_interval
     cwa_namespace                                    = local.cw_userhost_agent_namespace
