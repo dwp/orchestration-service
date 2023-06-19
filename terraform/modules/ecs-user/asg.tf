@@ -212,13 +212,13 @@ data "template_file" "userdata_host" {
 
   vars = {
     cwa_metrics_collection_interval                  = local.cw_agent_metrics_collection_interval
-    cwa_namespace                                    = "${local.cw_agent_namespace_prefix}-${element(local.managed_envs[local.environment], count.index)}"
+    cwa_namespace                                    = local.cw_userhost_agent_namespace
     cwa_cpu_metrics_collection_interval              = local.cw_agent_cpu_metrics_collection_interval
     cwa_disk_measurement_metrics_collection_interval = local.cw_agent_disk_measurement_metrics_collection_interval
     cwa_disk_io_metrics_collection_interval          = local.cw_agent_disk_io_metrics_collection_interval
     cwa_mem_metrics_collection_interval              = local.cw_agent_mem_metrics_collection_interval
     cwa_netstat_metrics_collection_interval          = local.cw_agent_netstat_metrics_collection_interval
-    cwa_log_group_name                               = "${local.cw_agent_log_group_name_prefix}-${element(local.managed_envs[local.environment], count.index)}"
+    cwa_log_group_name                               = local.cw_userhost_agent_log_group_name
 
     s3_scripts_bucket                                = var.s3_scripts_bucket
 
@@ -246,8 +246,8 @@ data "template_file" "userdata_host" {
     install_tenable                                  = var.install_tenable
     install_trend                                    = var.install_trend
     install_tanium                                   = var.install_tanium
-    tanium_server_1                                  = var.tanium_server1
-    tanium_server_2                                  = var.tanium_server1
+    tanium_server_1                                  = var.tanium_server_1
+    tanium_server_2                                  = var.tanium_server_2
     tanium_env                                       = var.tanium_env
     tanium_port                                      = var.tanium_port_1
     tanium_log_level                                 = var.tanium_log_level
