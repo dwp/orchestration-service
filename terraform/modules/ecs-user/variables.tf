@@ -204,6 +204,11 @@ variable "config_bucket_id" {
   type        = string
 }
 
+variable "config_bucket_arn" {
+  description = "Config bucket arn"
+  type        = string
+}
+
 variable "config_bucket_cmk_arn" {
   description = "Config bucket cmk arn"
   type        = string

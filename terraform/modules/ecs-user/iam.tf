@@ -145,7 +145,7 @@ data "aws_iam_policy_document" "user_host" {
       "s3:GetBucketLocation",
     ]
 
-    resources = [data.terraform_remote_state.management.outputs.config_bucket.arn]
+    resources = [var.config_bucket_arn]
   }
 
   statement {
@@ -153,7 +153,7 @@ data "aws_iam_policy_document" "user_host" {
     sid    = "AllowAccessToConfigBucketObjects"
 
     actions   = ["s3:GetObject"]
-    resources = ["${data.terraform_remote_state.management.outputs.config_bucket.arn}/*"]
+    resources = ["${var.config_bucket_arn}/*"]
   }
 
   statement {
@@ -165,7 +165,7 @@ data "aws_iam_policy_document" "user_host" {
       "kms:GenerateDataKey",
     ]
 
-    resources = [data.terraform_remote_state.management.outputs.config_bucket.cmk_arn]
+    resources = [var.config_bucket_cmk_arn]
   }
 
 }
