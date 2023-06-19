@@ -98,7 +98,4 @@ chmod u+x /usr/local/src/config_hcs.sh
     "${proxy_port}" "${tanium_server_1}" "${tanium_server_2}" "${tanium_env}" \
     "${tanium_port}" "${tanium_log_level}" "${install_tenable}" "${install_trend}" \
     "${install_tanium}" "${tenantid}" "${token}" "${policyid}" "${tenant}"
-echo "Creating userhost user"
-useradd userhost -m
-echo "Changing permissions"
-chown userhost:userhost -R  /var/log/userhost
+

@@ -164,12 +164,12 @@ cat >> /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json <<CWAGE
 					},
 					{
 						"file_path": "/var/log/sysdig.log",
-						"log_group_name": "${cloudwatch_log_group}",
+						"log_group_name": "${cwa_log_group_name}",
 						"log_stream_name": "sysdig"
 					},
 					{
 						"file_path": "/var/log/ecs_instance_health_check.log",
-						"log_group_name": "${cloudwatch_log_group}",
+						"log_group_name": "${cwa_log_group_name}",
 						"log_stream_name": "ecs_instance_health_check"
 					}
 				]
