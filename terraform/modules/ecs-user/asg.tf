@@ -37,11 +37,15 @@ resource "aws_autoscaling_schedule" "scale_down_midnight" {
   autoscaling_group_name = aws_autoscaling_group.user_host.name
 }
 
-data "template_file" "userdata_host" {
+resource "aws_launch_template" "user_host" {
+  name_prefix                          = "${var.name_prefix}-"
+  image_id                             = var.ami_id
+  instance_type                        = var.instance_type
+  instance_initiated_shutdown_behavior = "terminate"
+  tags                                 = merge(var.common_tags, { Name = "${var.name_prefix}-lt" })
 
-  template = "${file("${path.module}/userdata.tpl")}"
+  user_data = base64encode(templatefile("userdata.tpl", {
 
-  vars = {
     cwa_metrics_collection_interval                  = local.cw_agent_metrics_collection_interval
     cwa_namespace                                    = local.cw_userhost_agent_namespace
     cwa_cpu_metrics_collection_interval              = local.cw_agent_cpu_metrics_collection_interval
@@ -86,17 +90,7 @@ data "template_file" "userdata_host" {
     tenantid                                         = var.tenantid
     token                                            = var.token
     policyid                                         = var.policyid
-  }
-}
-
-resource "aws_launch_template" "user_host" {
-  name_prefix                          = "${var.name_prefix}-"
-  image_id                             = var.ami_id
-  instance_type                        = var.instance_type
-  instance_initiated_shutdown_behavior = "terminate"
-  tags                                 = merge(var.common_tags, { Name = "${var.name_prefix}-lt" })
-
-  user_data = data.template_file.userdata_host.rendered
+  }))
 
   block_device_mappings {
     device_name = "/dev/sda1"
