@@ -19,6 +19,7 @@ locals {
 
   cloudwatch_log_group                             = local.log_group
 
+
   cw_agent_metrics_collection_interval                  = 60
   cw_agent_cpu_metrics_collection_interval              = 60
   cw_agent_disk_measurement_metrics_collection_interval = 60
@@ -55,7 +56,9 @@ locals {
       cwa_mem_metrics_collection_interval              = local.cw_agent_mem_metrics_collection_interval
       cwa_netstat_metrics_collection_interval          = local.cw_agent_netstat_metrics_collection_interval
     }
-  )
+  )*/
+
+  
   autoscaling_tags = [
     for key, value in var.common_tags :
     {
@@ -63,6 +66,6 @@ locals {
       value               = value
       propagate_at_launch = true
     }
-  ] */
+  ] 
 
 }
