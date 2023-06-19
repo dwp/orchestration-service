@@ -208,7 +208,7 @@ EOF
 
 data "template_file" "userdata_host" {
 
-  template = file("userdata.tpl")
+  template = "${file("${path.module}/userdata.tpl")}"
 
   vars = {
     cwa_metrics_collection_interval                  = local.cw_agent_metrics_collection_interval
