@@ -1,0 +1,9 @@
+/var/log/userhost/userhost.out {
+    copytruncate
+    missingok
+    notifempty
+    maxsize 1024k
+    rotate 10
+    daily
+    create 0640 userhost dip_export
+}
