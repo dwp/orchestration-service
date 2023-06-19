@@ -198,3 +198,13 @@ variable "tanium_prefix" {
   description = "Tanium prefix"
   type        = list(string)
 }
+
+variable "config_bucket_id" {
+  description = "Config bucket ID"
+  type        = string
+}
+
+variable "config_bucket_cmk_arn" {
+  description = "Config bucket cmk arn"
+  type        = string
+}
