@@ -208,3 +208,8 @@ variable "config_bucket_cmk_arn" {
   description = "Config bucket cmk arn"
   type        = string
 }
+
+variable "s3_scripts_bucket" {
+  description = "S3 Scripts bucket"
+  type        = string
+}

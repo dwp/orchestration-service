@@ -220,7 +220,7 @@ data "template_file" "userdata_host" {
     cwa_netstat_metrics_collection_interval          = local.cw_agent_netstat_metrics_collection_interval
     cwa_log_group_name                               = "${local.cw_agent_log_group_name_prefix}-${element(local.managed_envs[local.environment], count.index)}"
 
-    s3_scripts_bucket                                = data.terraform_remote_state.management.outputs.config_bucket.id
+    s3_scripts_bucket                                = var.s3_scripts_bucket
 
     s3_script_cloudwatch_shell                       = aws_s3_object.cloudwatch_agent_script.id
     s3_script_userhost_config_hcs                    = aws_s3_object.userhost_config_hcs_script.id

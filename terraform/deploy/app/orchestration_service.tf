@@ -298,6 +298,7 @@ module "ecs-user-host" {
   tanium_prefix           = local.tanium_prefix[local.environment]
   config_bucket_id        = data.terraform_remote_state.management.outputs.config_bucket.id
   config_bucket_cmk_arn   = data.terraform_remote_state.management.outputs.config_bucket.cmk_arn
+  s3_scripts_bucket       = data.terraform_remote_state.management.outputs.config_bucket.id
 
   s3_packages = {
     bucket     = data.terraform_remote_state.common.outputs.config_bucket.id
