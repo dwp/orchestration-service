@@ -37,7 +37,7 @@ resource "aws_autoscaling_schedule" "scale_down_midnight" {
   autoscaling_group_name = aws_autoscaling_group.user_host.name
 }
 
-data "template_cloudinit_config" "ecs_config" {
+/* data "template_cloudinit_config" "ecs_config" {
   gzip          = true
   base64_encode = true
 
@@ -204,6 +204,58 @@ EOF
     chown userhost:userhost -R  /var/log/userhost
 EOF
   }
+} */
+
+data "template_file" "userdata_host" {
+
+  template = file("userdata.tpl")
+
+  vars = {
+    cwa_metrics_collection_interval                  = local.cw_agent_metrics_collection_interval
+    cwa_namespace                                    = "${local.cw_agent_namespace_prefix}-${element(local.managed_envs[local.environment], count.index)}"
+    cwa_cpu_metrics_collection_interval              = local.cw_agent_cpu_metrics_collection_interval
+    cwa_disk_measurement_metrics_collection_interval = local.cw_agent_disk_measurement_metrics_collection_interval
+    cwa_disk_io_metrics_collection_interval          = local.cw_agent_disk_io_metrics_collection_interval
+    cwa_mem_metrics_collection_interval              = local.cw_agent_mem_metrics_collection_interval
+    cwa_netstat_metrics_collection_interval          = local.cw_agent_netstat_metrics_collection_interval
+    cwa_log_group_name                               = "${local.cw_agent_log_group_name_prefix}-${element(local.managed_envs[local.environment], count.index)}"
+
+    s3_scripts_bucket                                = data.terraform_remote_state.management.outputs.config_bucket.id
+
+    s3_script_cloudwatch_shell                       = aws_s3_object.cloudwatch_agent_script.id
+    s3_script_userhost_config_hcs                    = aws_s3_object.userhost_config_hcs_script.id
+    s3_script_userhost_logging                       = aws_s3_object.userhost_logging_script.id
+    s3_script_userhost_logrotate                     = aws_s3_object.userhost_logrotate_script.id
+    s3_script_sysdig_service                         = aws_s3_object.sysdig_service.id
+    s3_script_json_lua                               = aws_s3_object.json_lua.id
+    s3_script_spylog_lua                             = aws_s3_object.spylog_lua.id
+    s3_script_ecs_instance_health_check              = aws_s3_object.ecs_healthcheck.id
+    
+    s3_script_hash_cloudwatch_shell                  = md5(data.local_file.cloudwatch_agent_script.content)
+    s3_script_hash_userhost_config_hcs               = md5(data.local_file.userhost_config_hcs_script.content)
+    s3_script_hash_userhost_logging                  = md5(data.local_file.userhost_logging_script.content)
+    s3_script_hash_userhost_logrotate                = md5(data.local_file.userhost_logrotate_script.content)
+    s3_script_hash_sysdig_service                    = md5(data.local_file.sysdig_service.content)
+    s3_script_hash_json_lua                          = md5(data.local_file.json_lua.content)
+    s3_script_hash_spy_log_lua                       = md5(data.local_file.spylog_lua.content)
+    s3_script_hash_ecs_instance_health_check         = md5(data.local_file.ecs_healthcheck.content)
+    
+    proxy_host                                       = var.proxy_host
+    proxy_port                                       = var.proxy_port
+    hcs_environment                                  = local.hcs_environment[local.environment]
+    install_tenable                                  = var.install_tenable
+    install_trend                                    = var.install_trend
+    install_tanium                                   = var.install_tanium
+    tanium_server_1                                  = var.tanium_server1
+    tanium_server_2                                  = var.tanium_server1
+    tanium_env                                       = var.tanium_env
+    tanium_port                                      = var.tanium_port_1
+    tanium_log_level                                 = var.tanium_log_level
+    tenant                                           = var.tenant
+    tenantid                                         = var.tenantid
+    token                                            = var.token
+    policyid                                         = var.policyid
+  }
 }
 
 resource "aws_launch_template" "user_host" {
@@ -213,7 +265,7 @@ resource "aws_launch_template" "user_host" {
   instance_initiated_shutdown_behavior = "terminate"
   tags                                 = merge(var.common_tags, { Name = "${var.name_prefix}-lt" })
 
-  user_data = data.template_cloudinit_config.ecs_config.rendered
+  user_data = data.template_file.userdata_host.rendered
 
   block_device_mappings {
     device_name = "/dev/sda1"

@@ -136,6 +136,38 @@ data "aws_iam_policy_document" "user_host" {
     resources = [aws_autoscaling_group.user_host.arn]
   }
 
+  statement {
+    effect = "Allow"
+    sid    = "AllowAccessToConfigBucket"
+
+    actions = [
+      "s3:ListBucket",
+      "s3:GetBucketLocation",
+    ]
+
+    resources = [data.terraform_remote_state.management.outputs.config_bucket.arn]
+  }
+
+  statement {
+    effect = "Allow"
+    sid    = "AllowAccessToConfigBucketObjects"
+
+    actions   = ["s3:GetObject"]
+    resources = ["${data.terraform_remote_state.management.outputs.config_bucket.arn}/*"]
+  }
+
+  statement {
+    sid    = "AllowKMSDecryptionOfS3BucketObj"
+    effect = "Allow"
+
+    actions = [
+      "kms:Decrypt",
+      "kms:GenerateDataKey",
+    ]
+
+    resources = [data.terraform_remote_state.management.outputs.config_bucket.cmk_arn]
+  }
+
 }
 
 resource "aws_iam_role_policy" "user_host" {
