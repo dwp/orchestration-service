@@ -48,7 +48,7 @@ resource "aws_launch_template" "user_host" {
 
     region                                           = data.aws_region.current.name  
     name_prefix                                      = "${var.name_prefix}-"
-    s3_packages_bucket                               = var.s3_packages_bucket
+    s3_packages_bucket                               = var.s3_packages.bucket
     s3_packages_prefix                               = var.s3_packages.key_prefix
 
     cwa_metrics_collection_interval                  = local.cw_agent_metrics_collection_interval

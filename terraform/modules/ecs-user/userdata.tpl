@@ -81,7 +81,6 @@ iptables -F
 # presisting rules for next boot
 service iptables save
 
-
 echo "Setup cloudwatch logs"
 chmod u+x /opt/userhost/cloudwatch.sh
 /opt/userhost/cloudwatch.sh \
