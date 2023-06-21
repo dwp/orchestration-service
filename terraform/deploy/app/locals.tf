@@ -15,4 +15,5 @@ locals {
     preprod     = { max : 10, step : 1 },
     production  = { max : 10, step : 1 }
   }
+
 }

@@ -13,8 +13,12 @@ locals {
     management-dev = "DT_Tooling"
   }
 
-  cw_userhost_agent_namespace                 = "/aws/ecs/${var.name_prefix}/userhost-instance-logs/"
-  cw_userhost_agent_log_group_name            = "/aws/ecs/${var.name_prefix}/userhost-instance-logs" 
+  log_group                                   = "/aws/ecs/${var.name_prefix}/user-container-logs/"
+  cw_userhost_agent_namespace                 = "/aws/ecs/${var.name_prefix}/userhost-instance-logs-${local.environment}"
+  cw_userhost_agent_log_group_name            = "/aws/ecs/${var.name_prefix}/userhost-instance-logs-${local.environment}" 
+
+  cloudwatch_log_group                             = local.log_group
+
 
   cw_agent_metrics_collection_interval                  = 60
   cw_agent_cpu_metrics_collection_interval              = 60
@@ -39,8 +43,8 @@ locals {
     production  = "True"
   }
   
-  log_group = "/aws/ecs/${var.name_prefix}/user-container-logs/"
-  cloudwatch_agent_config_file = templatefile("${path.module}/templates/cloudwatch_agent.json",
+
+  /* cloudwatch_agent_config_file = templatefile("${path.module}/templates/cloudwatch_agent.json",
     {
       cloudwatch_log_group                             = local.log_group
       cwa_namespace                                    = local.cw_userhost_agent_namespace
@@ -52,7 +56,9 @@ locals {
       cwa_mem_metrics_collection_interval              = local.cw_agent_mem_metrics_collection_interval
       cwa_netstat_metrics_collection_interval          = local.cw_agent_netstat_metrics_collection_interval
     }
-  )
+  )*/
+
+
   autoscaling_tags = [
     for key, value in var.common_tags :
     {
@@ -60,5 +66,6 @@ locals {
       value               = value
       propagate_at_launch = true
     }
-  ]
+  ] 
+
 }

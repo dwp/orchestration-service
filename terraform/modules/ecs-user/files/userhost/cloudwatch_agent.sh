@@ -1,3 +1,21 @@
+#!/bin/bash
+
+set -Eeuo pipefail
+
+cwa_metrics_collection_interval="$1"
+cwa_namespace="$2"
+cwa_cpu_metrics_collection_interval="$3"
+cwa_disk_measurement_metrics_collection_interval="$4"
+cwa_disk_io_metrics_collection_interval="$5"
+cwa_mem_metrics_collection_interval="$6"
+cwa_netstat_metrics_collection_interval="$7"
+cwa_log_group_name="$8"
+
+export AWS_DEFAULT_REGION="${9}"
+
+# Create config file required for CloudWatch Agent
+mkdir -p /opt/aws/amazon-cloudwatch-agent/etc
+cat >> /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json <<CWAGENTCONFIG
 {
 	"agent": {
 		"run_as_user": "root",
@@ -146,12 +164,12 @@
 					},
 					{
 						"file_path": "/var/log/sysdig.log",
-						"log_group_name": "${cloudwatch_log_group}",
+						"log_group_name": "${cwa_log_group_name}",
 						"log_stream_name": "sysdig"
 					},
 					{
 						"file_path": "/var/log/ecs_instance_health_check.log",
-						"log_group_name": "${cloudwatch_log_group}",
+						"log_group_name": "${cwa_log_group_name}",
 						"log_stream_name": "ecs_instance_health_check"
 					}
 				]
@@ -159,3 +177,7 @@
 		}
 	}
 }
+CWAGENTCONFIG
+
+sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+systemctl start amazon-cloudwatch-agent
