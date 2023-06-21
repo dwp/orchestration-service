@@ -1,5 +1,5 @@
 data "local_file" "cloudwatch_agent_script" {
-  filename = "files/userhost/cloudwatch_agent.sh"
+  filename = "${path.module}/files/userhost/cloudwatch_agent.sh"
 }
 
 resource "aws_s3_object" "cloudwatch_agent_script" {
@@ -10,7 +10,7 @@ resource "aws_s3_object" "cloudwatch_agent_script" {
 }
 
 data "local_file" "userhost_config_hcs_script" {
-  filename = "files/userhost/userhost_config_hcs.sh"
+  filename = "${path.module}/files/userhost/userhost_config_hcs.sh"
 }
 
 resource "aws_s3_object" "userhost_config_hcs_script" {
@@ -21,7 +21,7 @@ resource "aws_s3_object" "userhost_config_hcs_script" {
 }
 
 data "local_file" "userhost_logging_script" {
-  filename = "files/userhost/userhost_logging.sh"
+  filename = "${path.module}/files/userhost/userhost_logging.sh"
 }
 
 resource "aws_s3_object" "userhost_logging_script" {
@@ -32,7 +32,7 @@ resource "aws_s3_object" "userhost_logging_script" {
 }
 
 data "local_file" "userhost_logrotate_script" {
-  filename = "files/userhost/userhost.logrotate"
+  filename = "${path.module}/files/userhost/userhost.logrotate"
 }
 
 resource "aws_s3_object" "userhost_logrotate_script" {
@@ -43,7 +43,7 @@ resource "aws_s3_object" "userhost_logrotate_script" {
 }
 
 data "local_file" "sysdig_service" {
-  filename = "audit/sysdig.service"
+  filename = "${path.module}/audit/sysdig.service"
 }
 
 resource "aws_s3_object" "sysdig_service" {
@@ -54,7 +54,7 @@ resource "aws_s3_object" "sysdig_service" {
 }
 
 data "local_file" "json_lua" {
-  filename = "audit/json.lua"
+  filename = "${path.module}/audit/json.lua"
 }
 
 resource "aws_s3_object" "json_lua" {
@@ -65,7 +65,7 @@ resource "aws_s3_object" "json_lua" {
 }
 
 data "local_file" "spylog_lua" {
-  filename = "audit/spy_log.lua"
+  filename = "${path.module}/audit/spy_log.lua"
 }
 
 resource "aws_s3_object" "spylog_lua" {
@@ -76,7 +76,7 @@ resource "aws_s3_object" "spylog_lua" {
 }
 
 data "local_file" "ecs_healthcheck" {
-  filename = "scripts/ecs_instance_health_check.py"
+  filename = "${path.module}/scripts/ecs_instance_health_check.py"
 }
 
 resource "aws_s3_object" "ecs_healthcheck" {
