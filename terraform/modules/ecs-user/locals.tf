@@ -14,8 +14,8 @@ locals {
   }
 
   log_group                                   = "/aws/ecs/${var.name_prefix}/user-container-logs/"
-  cw_userhost_agent_namespace                 = "/aws/ecs/${var.name_prefix}/userhost-instance-logs-${local.environment}"
-  cw_userhost_agent_log_group_name            = "/aws/ecs/${var.name_prefix}/userhost-instance-logs-${local.environment}" 
+  cw_userhost_agent_namespace                 = "/aws/ecs/${var.name_prefix}/userhost-instance-logs/"
+  cw_userhost_agent_log_group_name            = "/aws/ecs/${var.name_prefix}/userhost-instance-logs"
 
   cloudwatch_log_group                             = local.log_group
 
