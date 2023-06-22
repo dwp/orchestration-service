@@ -47,7 +47,7 @@ resource "aws_launch_template" "user_host" {
   user_data = base64encode(templatefile("${path.module}/userdata.tpl", {
 
     region                                           = data.aws_region.current.name  
-    name_prefix                                      = "${var.name_prefix}-"
+    name_prefix                                      = "${var.name_prefix}"
     s3_packages_bucket                               = var.s3_packages.bucket
     s3_packages_prefix                               = var.s3_packages.key_prefix
 
