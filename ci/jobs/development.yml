@@ -4,8 +4,11 @@ jobs:
   - get: dw-al2-ecs-ami
     trigger: true
   - get: orchestration-service
+  - get: orchestration-service-dev
     trigger: true
   - .: (( inject meta.plan.terraform-bootstrap ))
+    input_mapping:
+      orchestration-service: orchestration-service-dev
     config:
       params:
         DEPLOY_PATH: app
@@ -16,6 +19,8 @@ jobs:
       run:
         dir: 'orchestration-service/terraform/deploy/app'
   - .: (( inject meta.plan.terraform-plan ))
+    input_mapping:
+      orchestration-service: orchestration-service-dev
     config:
       run:
         dir: 'orchestration-service/terraform/deploy/app'
