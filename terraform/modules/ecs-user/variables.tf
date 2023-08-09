@@ -218,3 +218,8 @@ variable "s3_scripts_bucket" {
   description = "S3 Scripts bucket"
   type        = string
 }
+
+variable "tanium_vpce_sg" {
+  description = "Tanium VPCE sg"
+  type        = string
+}
