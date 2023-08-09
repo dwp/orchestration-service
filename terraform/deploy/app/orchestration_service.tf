@@ -287,7 +287,7 @@ module "ecs-user-host" {
   install_tenable         = local.tenable_install[local.environment]
   install_trend           = local.trend_install[local.environment]
   install_tanium          = local.tanium_install[local.environment]
-  tanium_server_1         = local.tanium1
+  tanium_server_1         = data.terraform_remote_state.aws_analytical_env_infra.outputs.tanium_service_endpoint.dns
   tanium_server_2         = local.tanium2
   tanium_env              = local.tanium_env[local.environment]
   tanium_log_level        = local.tanium_log_level[local.environment]
@@ -300,6 +300,7 @@ module "ecs-user-host" {
   config_bucket_arn       = data.terraform_remote_state.common.outputs.config_bucket.arn
   config_bucket_cmk_arn   = data.terraform_remote_state.common.outputs.config_bucket_cmk.arn
   s3_scripts_bucket       = data.terraform_remote_state.common.outputs.config_bucket.id
+  tanium_vpce_sg          = data.terraform_remote_state.aws_analytical_env_infra.outputs.tanium_service_endpoint.sg
 
   s3_packages = {
     bucket     = data.terraform_remote_state.common.outputs.config_bucket.id
