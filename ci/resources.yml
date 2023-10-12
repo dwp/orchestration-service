@@ -16,6 +16,15 @@ resources:
   check_every: 720h
   webhook_token: ((dataworks.concourse_github_webhook_token))
 
+- name: orchestration-service-dev
+  type: git
+  source:
+    branch: rstudio-4.3.1
+    access_token: ((dataworks-secrets.concourse_github_pat))
+    uri: https://github.com/dwp/orchestration-service.git
+  check_every: 720h
+  webhook_token: ((dataworks.concourse_github_webhook_token))
+
 - name: orchestration-service-update-pipeline
   type: git
   source:

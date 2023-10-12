@@ -26,7 +26,7 @@ resource "aws_iam_role_policy" "cleanup_lambda_dynamo_policy" {
   policy = data.aws_iam_policy_document.cleanup_lambda_dynamo_policy_document.json
 }
 
-data aws_iam_policy_document cleanup_lambda_dynamo_policy_document {
+data "aws_iam_policy_document" "cleanup_lambda_dynamo_policy_document" {
   statement {
     sid = "cleanupLambdaDynamo"
     actions = [
@@ -41,7 +41,7 @@ resource "aws_iam_role_policy" "cleanup_lambda_logging_policy" {
   policy = data.aws_iam_policy_document.cleanup_lambda_logging_policy_document.json
 }
 
-data aws_iam_policy_document cleanup_lambda_logging_policy_document {
+data "aws_iam_policy_document" "cleanup_lambda_logging_policy_document" {
   statement {
     sid = "cleanupLambdaLogging"
     actions = [
@@ -57,7 +57,7 @@ resource "aws_iam_role_policy" "cleanup_lambda_ec2_policy_policy" {
   policy = data.aws_iam_policy_document.cleanup_lambda_ec2_policy_document.json
 }
 
-data aws_iam_policy_document cleanup_lambda_ec2_policy_document {
+data "aws_iam_policy_document" "cleanup_lambda_ec2_policy_document" {
   statement {
     sid = "cleanupLambdaEc2"
     actions = [

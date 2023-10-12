@@ -5,7 +5,7 @@ resource "aws_security_group" "cleanup_lambda_sg" {
   tags        = merge(var.common_tags, { Name = "${var.name_prefix}-sg" })
 }
 
-resource aws_security_group_rule ingress_from_cleanup_lambda {
+resource "aws_security_group_rule" "ingress_from_cleanup_lambda" {
   description              = "ingress_from_cleanup_lambda"
   from_port                = 443
   protocol                 = "tcp"
@@ -15,7 +15,7 @@ resource aws_security_group_rule ingress_from_cleanup_lambda {
   source_security_group_id = aws_security_group.cleanup_lambda_sg.id
 }
 
-resource aws_security_group_rule egress_from_cleanup_lambda {
+resource "aws_security_group_rule" "egress_from_cleanup_lambda" {
   description              = "egress_from_cleanup_lambda"
   from_port                = 443
   protocol                 = "tcp"
@@ -25,7 +25,7 @@ resource aws_security_group_rule egress_from_cleanup_lambda {
   source_security_group_id = var.alb_sg
 }
 
-resource aws_security_group_rule egress_from_cleanup_lambda_to_vpce {
+resource "aws_security_group_rule" "egress_from_cleanup_lambda_to_vpce" {
   description              = "egress_from_cleanup_lambda_to_vpce"
   from_port                = 443
   protocol                 = "tcp"
@@ -35,7 +35,7 @@ resource aws_security_group_rule egress_from_cleanup_lambda_to_vpce {
   source_security_group_id = var.interface_vpce_sg_id
 }
 
-resource aws_security_group_rule egress_to_dynamodb_pl {
+resource "aws_security_group_rule" "egress_to_dynamodb_pl" {
   description       = "egress_to_dynamodb_pl"
   from_port         = 443
   protocol          = "tcp"

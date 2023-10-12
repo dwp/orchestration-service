@@ -5,6 +5,7 @@ jobs:
     trigger: true
   - get: orchestration-service
     trigger: true
+    resource: orchestration-service-dev
   - .: (( inject meta.plan.terraform-bootstrap ))
     config:
       params:
