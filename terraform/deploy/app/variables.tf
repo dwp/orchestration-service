@@ -297,7 +297,7 @@ variable "component_tags" {
       headless_chrome = "0.0.15"
       guacd           = "0.0.21"
       guacamole       = "0.0.21"
-      s3fs            = "0.0.88"
+      s3fs            = "0.0.81"
     }
     qa = {
       hue             = "0.0.102"
