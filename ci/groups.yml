@@ -22,3 +22,7 @@ groups:
 - name: ami-test
   jobs:
     - apply-and-test-with-ami
+
+- name: rstudio-qa
+  jobs:
+    - qa-test

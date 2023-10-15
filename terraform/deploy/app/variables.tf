@@ -5,7 +5,7 @@
 variable "assume_role" {
   type        = string
   description = "(Optional) The role to assume when doing an apply, defaults to ci"
-  default     = "ci"
+  default     = "administrator"
 }
 
 variable "region" {
@@ -292,7 +292,7 @@ variable "component_tags" {
   default = {
     development = {
       hue             = "0.0.102"
-      rstudio_oss     = "0.0.21"
+      rstudio_oss     = "0.0.22"
       jupyter_hub     = "0.0.78"
       headless_chrome = "0.0.15"
       guacd           = "0.0.21"
@@ -301,7 +301,7 @@ variable "component_tags" {
     }
     qa = {
       hue             = "0.0.102"
-      rstudio_oss     = "0.0.59"
+      rstudio_oss     = "0.0.22"
       jupyter_hub     = "0.0.78"
       headless_chrome = "0.0.15"
       guacd           = "0.0.21"
