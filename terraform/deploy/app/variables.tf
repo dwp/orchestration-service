@@ -5,7 +5,7 @@
 variable "assume_role" {
   type        = string
   description = "(Optional) The role to assume when doing an apply, defaults to ci"
-  default     = "administrator"
+  default     = "ci"
 }
 
 variable "region" {
