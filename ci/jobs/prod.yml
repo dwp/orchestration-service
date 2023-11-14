@@ -2,6 +2,7 @@ jobs:
 - name: production
   plan:
   - get: dw-al2-ecs-ami
+    resource: dw-al2-ecs-orchestration-ami
     trigger: true
     passed:
       - preprod

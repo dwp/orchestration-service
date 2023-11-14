@@ -2,6 +2,7 @@ jobs:
 - name: development
   plan:
   - get: dw-al2-ecs-ami
+    resource: dw-al2-ecs-orchestration-ami
     trigger: true
   - get: orchestration-service
     trigger: true
