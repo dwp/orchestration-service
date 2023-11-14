@@ -52,7 +52,7 @@ jobs:
             params:
               RESULT: FAILED
         - get: dw-al2-ecs-ami-restored
-          resource: dw-al2-ecs-ami
+          resource: dw-al2-ecs-orchestration-ami
           trigger: false
         - .: (( inject meta.plan.terraform-bootstrap ))
           config:
