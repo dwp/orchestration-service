@@ -296,7 +296,7 @@ variable "component_tags" {
       jupyter_hub     = "0.0.78"
       headless_chrome = "0.0.15"
       guacd           = "0.0.21"
-      guacamole       = "0.0.21"
+      guacamole       = "0.0.16" # New version from Gitlab
       s3fs            = "0.0.88"
     }
     qa = {
@@ -305,7 +305,7 @@ variable "component_tags" {
       jupyter_hub     = "0.0.78"
       headless_chrome = "0.0.15"
       guacd           = "0.0.21"
-      guacamole       = "0.0.21"
+      guacamole       = "0.0.16" # New version from Gitlab
       s3fs            = "0.0.88"
     }
     integration = {
