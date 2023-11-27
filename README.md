@@ -17,7 +17,7 @@ The tooling environment uses the following supporting containers:
  
  * Headless Chromium - [Docker Image](https://github.com/dwp/docker-headless-chrome) - Chromium container to access user interfaces for the services mentioned above
  * S3FS - [Docker Image](https://github.com/dwp/dataworks-hardened-images/tree/master/s3fs) - Sidecar container with elevated privileges that creates FUSE mounts to user and team S3 locations, which are also mounted into the tooling environment images
- * Guacamole Web Application - [Docker Image](https://github.com/dwp/cognito-guacamole-extension/tree/master/docker) - Tomcat app that serves the guacamole web interface and provides the third   authentication layer for the analytical environment
+ * Guacamole Web Application - [Docker Image](https://gitlab.com/dwp/dataworks/aws/deployments/docker/cognito-guacamole-extension/-/tree/main/docker) - Tomcat app that serves the guacamole web interface and provides the third   authentication layer for the analytical environment
  * Guacd - [Docker Image](https://github.com/dwp/dataworks-hardened-images/tree/master/guacd) - Server side proxy that handles remote desktop connections for the Guacamole Web Application
 
 ### Endpoint ot submit request for user containers
